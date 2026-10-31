@@ -11,3 +11,6 @@ dist/
 
 # macOS runtime spike: deferred by product decision (2026-10-31)
 experiments/
+
+# Windows build outputs (build_windows.bat)
+.build-venv/

@@ -1,0 +1,7 @@
+alpha=2
+
+
+beta=1
+
+
+gamma=1

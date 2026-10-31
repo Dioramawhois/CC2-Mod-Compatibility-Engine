@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "kind": "synthetic",
+  "complete": false,
+  "game": {"version": "synthetic-v1", "executable_sha256": null},
+  "files": [
+    {
+      "logical_path": "constants.txt",
+      "source_path": "content/constants.txt",
+      "sha256": "fdbbf48d7debb323e5f6e57b0312ebafa11b4912d270d02feee3debda2fff48a"
+    }
+  ]
+}

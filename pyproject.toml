@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cc2-mce"
+version = "0.1.0"
+description = "Read-only discovery and dry-run compatibility analysis for Carrier Command 2 mods"
+readme = "README.md"
+requires-python = ">=3.12"
+# License selection is deliberately deferred to the project owner before publication.
+dependencies = ["jsonschema>=4.23,<5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<9", "ruff>=0.11,<1", "mypy>=1.15,<2", "types-jsonschema>=4.23,<5"]
+
+[project.scripts]
+cc2-mce = "cc2_mce.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["cc2_mce*"]
+
+[tool.setuptools.package-data]
+cc2_mce = ["schemas/*.json", "py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["cc2_mce"]

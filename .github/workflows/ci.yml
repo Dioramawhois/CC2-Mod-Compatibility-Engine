@@ -1,0 +1,37 @@
+name: Cross-platform dry-run core
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-14]
+        python: ["3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.23"
+      - name: Restore locked development dependencies
+        run: uv sync --frozen --extra dev
+      - name: Lint
+        run: uv run --frozen ruff check cc2_mce tests
+      - name: Check formatting
+        run: uv run --frozen ruff format --check cc2_mce tests
+      - name: Type check
+        run: uv run --frozen mypy cc2_mce
+      - name: Test real Git and synthetic regression corpus
+        run: uv run --frozen pytest -q
+      - name: Installed CLI smoke
+        run: uv run --frozen cc2-mce --version
+      - name: Golden dry run (same expected SHA-256 on every host)
+        run: uv run --frozen cc2-mce --config examples/mce.synthetic.toml build --dry-run

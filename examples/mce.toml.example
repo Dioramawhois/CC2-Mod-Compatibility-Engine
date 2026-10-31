@@ -1,0 +1,13 @@
+# Supported keys; demonstration paths only. Packaging remains unavailable.
+# A verified baseline-manifest.json is required; use mce.synthetic.toml for a runnable demo.
+schema_version = 1
+profile = "singleplayer-test"
+game_dir = "D:/SteamLibrary/steamapps/common/Carrier Command 2"
+baseline_dir = "D:/SteamLibrary/steamapps/common/Carrier Command 2/mod_dev_kit"
+local_mods_dir = "C:/Users/USER/AppData/Roaming/Carrier Command 2/mods"
+workshop_dirs = ["D:/SteamLibrary/steamapps/workshop/content/1489630"]
+output_dir = "D:/CC2-MCE/staging"
+mod_order = ["mod-a", "mod-b"]
+strict_validation = true
+native_plugin_policy = "block"
+binary_conflict_policy = "block"

@@ -1,0 +1,8 @@
+schema_version = 1
+profile = "synthetic-golden"
+baseline_dir = "../tests/fixtures/golden/base"
+local_mods_dir = "../tests/fixtures/golden/mods"
+mod_order = ["mod-a", "mod-b"]
+strict_validation = true
+native_plugin_policy = "block"
+binary_conflict_policy = "block"

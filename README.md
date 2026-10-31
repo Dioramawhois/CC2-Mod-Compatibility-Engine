@@ -2,6 +2,8 @@
 
 [Русский](#русский) · [English](#english)
 
+**Внешний полигон / External test corpus:** [totolerigolo118/carrier-command-2-mods](https://github.com/totolerigolo118/carrier-command-2-mods) — [план проверки / test scope](docs/16-EXTERNAL-TEST-CORPUS.md). Registered for future experiments; compatibility and gameplay are not yet verified.
+
 ---
 
 ## Русский
@@ -43,7 +45,7 @@ cc2-mce build --dry-run ...                                           # толь
 
 ### Сборка для Windows
 
-Запустите `build_windows.bat` на Windows (Python 3.11+). Результат: `dist\CC2ModLoader-0.1.0.exe`. PyInstaller собирает программу только под ОС, на которой запущен.
+Запустите `build_windows.bat` на Windows (Python 3.12+). Результат: `dist\CC2ModLoader-0.1.0.exe`. PyInstaller собирает программу только под ОС, на которой запущен.
 
 ### Тесты
 
@@ -116,7 +118,7 @@ The report stays the read-only v1 schema (`installable: false`).
 
 ### Windows build
 
-Run `build_windows.bat` on Windows (Python 3.11+). Output: `dist\CC2ModLoader-0.1.0.exe`. PyInstaller builds only for the OS it runs on.
+Run `build_windows.bat` on Windows (Python 3.12+). Output: `dist\CC2ModLoader-0.1.0.exe`. PyInstaller builds only for the OS it runs on.
 
 ### Tests
 

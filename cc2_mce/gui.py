@@ -36,11 +36,32 @@ def make_baseline(scripts: Path) -> Path:
 
     from cc2_mce.baseline import Baseline  # noqa: F401  (ensures the module is importable)
 
-    root = Path(tempfile.mkdtemp(prefix="cc2-mce-baseline-"))
-    target = root / "scripts"
-    target.mkdir(parents=True)
+    import hashlib
+    import json
+
+    # Resolve symlinks (macOS /var -> /private/var): the CLI rejects link-containing roots.
+    root = Path(tempfile.mkdtemp(prefix="cc2-mce-baseline-")).resolve()
+    entries = []
     for source in sorted(scripts.glob("*.lua")):
-        (target / source.name).write_bytes(source.read_bytes())
+        data = source.read_bytes()
+        logical = f"scripts/{source.name}"
+        target = root / "content" / logical
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        entries.append({
+            "logical_path": logical,
+            "source_path": f"content/{logical}",
+            "sha256": hashlib.sha256(data).hexdigest(),
+        })
+    # Honest identity: stock scripts only, not verified against a real game executable.
+    manifest = {
+        "schema_version": 1,
+        "kind": "synthetic",
+        "complete": False,
+        "game": {"version": "synthetic-stock-scripts", "executable_sha256": None},
+        "files": entries,
+    }
+    (root / "baseline-manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return root
 
 

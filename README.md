@@ -1,79 +1,149 @@
-# CC2 Mod Compatibility Engine (CC2-MCE)
+# CC2 Mod Loader (CC2-MCE)
 
-> **Статус:** первый read-only срез M1 / M0 не завершён · **Версия:** 0.1.0.dev1 · **Дата:** 2026-10-26.
+[Русский](#русский) · [English](#english)
+
+---
+
+## Русский
+
+> **Версия:** 0.1.0 · **Статус:** предварительная сборка для тестирования. Не финальный продукт.
 >
-> **Пользовательское приложение с окнами пока не реализовано.** Команда `build` уже записывает объединённые файлы при чистом плане (см. CHANGELOG). Есть техническое ядро с read-only анализом и отдельный [эксперимент Mac Lua bridge](experiments/mac_runtime/README.md); готовый мод не создаётся. Целевой MVP — простое графическое приложение для Windows и macOS **без консольных команд и ручной установки инструментов**. Игровая совместимость и Windows CI пока не подтверждены.
+> Есть исходники окна на `tkinter`, встроенное текстовое слияние и запись объединённых файлов. **Готового Windows `.exe` и проверенного установочного пакета мода пока нет.** Работа в Windows-игре не подтверждена. Поддержка macOS отложена.
 
-## Миссия
+### Что делает
 
-**Конфликтуют не файлы, а несовместимые изменения.** CC2-MCE снижает количество ложных конфликтов между модами Carrier Command 2, когда моды замещают один и тот же файл, но изменяют независимые участки.
+Объединяет моды Carrier Command 2, которые меняют **разные строки одного файла**. Если два мода меняют **одну и ту же строку** — программа показывает конфликт и ничего не записывает. Победитель не выбирается молча.
 
-В игре конфликт по совпадающему пути файла блокирует совместное включение модов. Целевой CC2-MCE сканирует исходные моды, сравнивает файлы с корректной **оригинальной версией той же сборки игры**, создаёт отдельный локальный объединённый мод и показывает конфликты до применения. Текущий срез выполняет только анализ и вычисляет хеш предполагаемого результата; упаковка отложена до M2. **Семантическая совместимость поведения не гарантируется.**
+Оригинальные моды и файлы игры **не изменяются**.
 
-## Принятое направление
+### Как пользоваться
 
-- **Пользовательский MVP:** обычное офлайн-приложение с окнами под **Windows и macOS — обе ОС обязательны**. Открыть приложение → выбрать моды → проверить → создать отдельный мод. GUI обязателен в первой пользовательской версии; терминал не является способом работы игрока. См. [UX/UI](docs/13-UX-UI.md) и [ADR-0007](docs/adr/0007-gui-first-user-experience.md).
-- **Установка:** готовая сборка для своей ОС, запуск обычным способом. Пользователь не устанавливает Python, Git, Lua или пакетный менеджер, не правит конфиги и не копирует команды. Проверенные инструменты — забота поставки приложения, без CC2X и хуков игры.
-- **Мультиплатформенность:** один пользовательский сценарий и правила безопасности, тесты/CI на обеих ОС, воспроизводимый payload при одинаковых входах, политиках и версиях инструментов. Поддержка macOS относится к CC2-MCE, а не к Windows-only CC2X или неподтверждённому запуску самой игры на Mac; см. [ADR-0005](docs/adr/0005-windows-macos-support.md).
-- **Merge backend:** тонкий собственный адаптер к `git merge-file`, без копирования Witcher-specific кода `w3scriptmerge`; см. [ADR-0006](docs/adr/0006-read-only-first-slice.md). Собственный diff3 не разрабатываем.
-- **Позже:** XML-aware merge, экспериментальный Lua AST merge через `tree-sitter-lua` и идеи `semantic-merge`, расширенные профили, интеграция в CC2X. Базовый GUI не откладывается на эти этапы.
-- **По умолчанию:** read-only к оригиналам, только отдельный staged output, `dry-run`, отсутствие тихого выбора победителя.
-- **Нативные плагины CC2X:** обнаружение и блокировка автоматической сборки до явного решения пользователя/политики — никакого «слияния» DLL.
+1. Запустите приложение (или `python -m cc2_mce.gui` из исходников).
+2. Автопоиск стоковых скриптов реализован частично. Подготовка совместимого манифеста базы ещё не завершена; для сборки требуется корректная база с `baseline-manifest.json`.
+3. Выберите папку с модами и отметьте моды.
+4. Выберите пустую папку для результата и нажмите **«Объединить»**.
 
-## Навигация по документации
+Инструкция для тестировщика: [TESTING.md](TESTING.md).
+
+### Ограничения
+
+- **Revolution и Island Airfields** меняют одни и те же экраны (`screen_vehicle_control.lua`, `screen_holomap.lua`) с пересекающимися правками. Автоматически не объединяются.
+- Слияние проверено на текстовых файлах. Lua, XML и бинарные ресурсы обрабатываются иначе или не объединяются.
+- Объединённый мод **не проверен в игре**.
+- Нативные плагины (DLL) не объединяются — по политике безопасности.
+
+### Командная строка (для разработчиков)
+
+```bash
+cc2-mce build --mods-dir DIR --mods A B --baseline DIR --output OUT   # записывает при чистом плане
+cc2-mce build --dry-run ...                                           # только анализ
+```
+
+Отчёт остаётся схемой v1 только для чтения (`installable: false`).
+
+### Сборка для Windows
+
+Запустите `build_windows.bat` на Windows (Python 3.11+). Результат: `dist\CC2ModLoader-0.1.0.exe`. PyInstaller собирает программу только под ОС, на которой запущен.
+
+### Тесты
+
+```bash
+pytest          # 94 теста
+mypy cc2_mce    # проверка типов
+```
+
+### Документация
 
 | Файл | Назначение |
 |---|---|
-| [docs/01-PRODUCT-REQUIREMENTS.md](docs/01-PRODUCT-REQUIREMENTS.md) | Цель, границы, требования и критерии приёмки |
-| [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md) | Компоненты, потоки данных, invariants, алгоритм N-way |
-| [docs/03-MERGE-SPEC.md](docs/03-MERGE-SPEC.md) | Правила слияния Lua/XML/текста/бинарных файлов |
-| [docs/04-CC2-INTEGRATION.md](docs/04-CC2-INTEGRATION.md) | Формат модов CC2, CC2X, Workshop и ограничения |
-| [docs/05-CLI-AND-DATA-CONTRACTS.md](docs/05-CLI-AND-DATA-CONTRACTS.md) | Планируемая CLI, JSON-отчёт, конфигурация, manifest |
-| [docs/06-TEST-STRATEGY.md](docs/06-TEST-STRATEGY.md) | Тестовые матрицы и критерии качества |
-| [docs/07-ROADMAP.md](docs/07-ROADMAP.md) | Этапы, P0/P1/P2, выходы из milestone |
-| [docs/08-DEPENDENCIES-LICENSES.md](docs/08-DEPENDENCIES-LICENSES.md) | Прототипы, зависимости, лицензии и ограничения |
-| [docs/09-RISKS-QUESTIONS.md](docs/09-RISKS-QUESTIONS.md) | Риски, проверки гипотез, открытые вопросы |
-| [docs/10-SECURITY-AND-RELEASE.md](docs/10-SECURITY-AND-RELEASE.md) | Безопасная обработка чужих модов, релизный чеклист |
-| [docs/adr/](docs/adr/) | Зафиксированные архитектурные решения (ADR) |
-| [AGENTS.md](AGENTS.md) | Контекст и границы для Claude Code/Codex/других агентов |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Процесс изменений, ADR и code review |
-| [docs/11-SOURCES.md](docs/11-SOURCES.md) | Проверенные первоисточники на момент фиксации |
-| [docs/12-M0-VALIDATION.md](docs/12-M0-VALIDATION.md) | Фактические локальные проверки и открытые gates M0 |
-| [docs/13-UX-UI.md](docs/13-UX-UI.md) | Обязательный графический сценарий без терминала |
-| [docs/14-UNIFIED-ENGINE-PLAN.md](docs/14-UNIFIED-ENGINE-PLAN.md) | Проект единой экосистемы: Desktop + CC2X runtime, C3-схемы и план работ |
-| [docs/15-MAC-RUNTIME-FEASIBILITY.md](docs/15-MAC-RUNTIME-FEASIBILITY.md) | Проверка Mac runtime: факты по установленной игре, C3, этапы и ограничения |
-| [CHANGELOG.md](CHANGELOG.md) | Реализованные изменения и ограничения |
+| [TESTING.md](TESTING.md) | Инструкция для тестировщика |
+| [CHANGELOG.md](CHANGELOG.md) | История изменений |
+| [docs/01-PRODUCT-REQUIREMENTS.md](docs/01-PRODUCT-REQUIREMENTS.md) | Цели, границы, требования |
+| [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md) | Компоненты и потоки данных |
+| [docs/03-MERGE-SPEC.md](docs/03-MERGE-SPEC.md) | Правила слияния |
+| [docs/04-CC2-INTEGRATION.md](docs/04-CC2-INTEGRATION.md) | Формат модов CC2, CC2X, Workshop |
+| [docs/10-SECURITY-AND-RELEASE.md](docs/10-SECURITY-AND-RELEASE.md) | Безопасная обработка модов, релиз |
+| [docs/adr/](docs/adr/) | Архитектурные решения |
+| [AGENTS.md](AGENTS.md) | Контекст для агентов и разработчиков |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Процесс внесения изменений |
 
-## Как это будет выглядеть для игрока
+### Что не сделано
 
-1. **Открыть приложение.** Оно проверяет окружение и ищет игру и моды; если не нашло — предлагает выбрать папку обычным окном.
-2. **Отметить нужные моды.** Показаны названия и авторы, а не только номера папок и пути.
-3. **Нажать «Проверить сочетание».** Появляется понятное резюме: какие изменения можно объединить, какие мешают и что делать дальше. Технические подробности скрыты за отдельной кнопкой.
-4. **Нажать «Создать объединённый мод».** Только после успешной проверки. Затем — «Открыть папку» и короткая инструкция по включению в игре. Исходные моды не меняются; активация выполняется пользователем в штатном меню игры.
+- Игровая проверка объединённого мода на Windows.
+- Финальный `.exe`, собранный на Windows.
+- Зависимости библиотек из Workshop и установка через интерфейс.
+- Поддержка macOS (отложена по решению владельца).
+- Независимое ревью безопасности перед публикацией.
 
-При конфликте программа не выбирает победителя: объясняет проблему и предлагает изменить выбор. Успешная проверка текста не выдаётся за гарантию работы всех механик в игре. Полный сценарий и критерии удобства — в [UX/UI](docs/13-UX-UI.md).
+---
 
-## Что доступно сейчас
+## English
 
-Пока реализовано техническое ядро анализа и отдельный Mac runtime spike, **не готовое пользовательское приложение**. Окон, пользовательского установщика и готовых merged-модов ещё нет. CLI остаётся внутренним инструментом разработки/CI; пользоваться им игрок не обязан и не должен.
+> **Version:** 0.1.0 · **Status:** pre-release build for testing. Not a final product.
+>
+> Includes `tkinter` window source, built-in text merging and merged-file output. **No ready Windows `.exe` or verified installable mod package is available yet.** Windows in-game operation is unverified. macOS support is deferred.
 
-Инструкции для разработчиков перенесены в [CONTRIBUTING](CONTRIBUTING.md), внутренние контракты — в [документ 05](docs/05-CLI-AND-DATA-CONTRACTS.md). Фактические проверки и открытые gates — в [M0 validation](docs/12-M0-VALIDATION.md). Наличие тестов ядра и настроенного CI не означает, что пользовательская версия уже выпущена.
+### What it does
 
-## Текущая структура
+Merges Carrier Command 2 mods that edit **different lines of the same file**. If two mods edit **the same line**, it reports a conflict and writes nothing. It never silently picks a winner.
 
-```text
-cc2_mce/
-  cli.py, doctor.py, discovery.py, filesystem.py
-  baseline.py, merge.py, validation.py, planner.py, reports.py
-  schemas/report.schema.json
-tests/
-  test_*.py
-  fixtures/golden/        # только синтетические входы
+Original mod folders and game files are **not modified**.
+
+### How to use
+
+1. Start the application (or run `python -m cc2_mce.gui` from source).
+2. Stock-script auto-discovery is partially implemented. Generation of a compatible baseline manifest is not complete; builds require a valid baseline containing `baseline-manifest.json`.
+3. Choose the mods folder and tick the mods.
+4. Choose an empty output folder and press **Merge**.
+
+Tester instructions: [TESTING.md](TESTING.md).
+
+### Limitations
+
+- **Revolution and Island Airfields** edit the same screens (`screen_vehicle_control.lua`, `screen_holomap.lua`) with overlapping changes. They are not merged automatically.
+- Merging is verified on text files. Lua, XML and binary resources are handled differently or not merged at all.
+- The merged mod is **not yet verified in the game**.
+- Native plugins (DLLs) are not merged — by security policy.
+
+### Command line (for developers)
+
+```bash
+cc2-mce build --mods-dir DIR --mods A B --baseline DIR --output OUT   # writes on a clean plan
+cc2-mce build --dry-run ...                                           # analysis only
 ```
 
-Модули специально малы: merge работает с байтами через Git adapter, filesystem/discovery отвечают за read-only доступ. Разделение на более крупные ports-and-adapters пакеты — по мере роста, без изменения safety-инвариантов.
+The report stays the read-only v1 schema (`installable: false`).
 
-## Источники
+### Windows build
 
-- CC2 / CC2X, скриптовые модули, инструменты Git — ссылки и границы достоверности: [docs/11-SOURCES.md](docs/11-SOURCES.md).
-- Данное ТЗ создано отдельно: **исходный репозиторий CC2X не изменён**.
+Run `build_windows.bat` on Windows (Python 3.11+). Output: `dist\CC2ModLoader-0.1.0.exe`. PyInstaller builds only for the OS it runs on.
+
+### Tests
+
+```bash
+pytest          # 94 tests
+mypy cc2_mce    # type checking
+```
+
+### Documentation
+
+| File | Purpose |
+|---|---|
+| [TESTING.md](TESTING.md) | Tester instructions |
+| [CHANGELOG.md](CHANGELOG.md) | Change history |
+| [docs/01-PRODUCT-REQUIREMENTS.md](docs/01-PRODUCT-REQUIREMENTS.md) | Goals, scope, requirements |
+| [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md) | Components and data flow |
+| [docs/03-MERGE-SPEC.md](docs/03-MERGE-SPEC.md) | Merge rules |
+| [docs/04-CC2-INTEGRATION.md](docs/04-CC2-INTEGRATION.md) | CC2 mod format, CC2X, Workshop |
+| [docs/10-SECURITY-AND-RELEASE.md](docs/10-SECURITY-AND-RELEASE.md) | Safe handling of mods, release |
+| [docs/adr/](docs/adr/) | Architecture decisions |
+| [AGENTS.md](AGENTS.md) | Context for agents and developers |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Change process |
+
+### Not done yet
+
+- In-game verification of the merged mod on Windows.
+- A final `.exe` built on Windows.
+- Workshop library dependencies and installation through the interface.
+- macOS support (deferred by owner decision).
+- Independent security review before publication.

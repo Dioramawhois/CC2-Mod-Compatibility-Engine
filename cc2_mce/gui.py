@@ -5,6 +5,7 @@ result: merged, conflicts, or blocked. Original mod folders are never written.
 """
 from __future__ import annotations
 
+import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -13,16 +14,43 @@ from cc2_mce.cli import main as cli_main
 
 GAME_ID = "1489630"
 # Stock scripts live in the game folder; we only read them and copy into a temp baseline.
-STEAM_GAME_CANDIDATES = [
-    Path("C:/Program Files (x86)/Steam/steamapps/common/Carrier Command 2"),
-    Path.home() / "Library/Application Support/Steam/steamapps/common/Carrier Command 2",
-]
+GAME_FOLDER = "Carrier Command 2"
+
+
+def steam_root_windows() -> Path | None:
+    """Steam install folder from the registry; None if not found. Never guessed."""
+    if sys.platform != "win32":
+        return None
+    import winreg  # Windows-only stdlib module; the check above keeps other OSes out.
+    for hive, key in (
+        (winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam"),
+        (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam"),
+    ):
+        try:
+            with winreg.OpenKey(hive, key) as handle:
+                value, _ = winreg.QueryValueEx(handle, "SteamPath")
+                return Path(value)
+        except OSError:
+            continue
+    return None
+
+
+def steam_game_candidates() -> list[Path]:
+    roots: list[Path] = []
+    if sys.platform == "win32":
+        root = steam_root_windows()
+        if root is not None:
+            roots.append(root / "steamapps" / "common" / GAME_FOLDER)
+            # Extra Steam libraries are listed in libraryfolders.vdf; not parsed here.
+    else:
+        roots.append(Path.home() / "Library/Application Support/Steam/steamapps/common" / GAME_FOLDER)
+    return roots
 STOCK_SUBDIRS = [Path("."), Path("carriercommand.app/Contents/Resources/rom_0")]
 
 
 def find_game_scripts() -> Path | None:
     """Return the stock scripts folder if the game is installed in a known Steam location."""
-    for game in STEAM_GAME_CANDIDATES:
+    for game in steam_game_candidates():
         for sub in STOCK_SUBDIRS:
             scripts = game / sub / "scripts"
             if scripts.is_dir():

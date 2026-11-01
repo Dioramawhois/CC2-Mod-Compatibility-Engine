@@ -21,17 +21,24 @@ backups = game_user_dir() / "cc2-mce/executable-backups"
 backups.mkdir(parents=True, exist_ok=True)
 input_root(backups)
 legacy = directory / "CC2ModLoader-0.1.0.exe"
-previous = (root / "dist/CC2ModLoader-0.1.0.exe").read_bytes()
-owned_hashes = {digest(previous), digest(payload)}
+previous_path = root / "dist/CC2ModLoader-0.1.0.exe"
+previous = previous_path.read_bytes() if previous_path.is_file() else None
+base_hash = digest(previous) if previous is not None else None
+owned_hashes = {digest(payload)}
+if base_hash is not None:
+    owned_hashes.add(base_hash)
 ledger = backups.parent / "binary-deployment.json"
 if ledger.exists():
     prior = json.loads(ledger.read_text(encoding="utf-8"))
     if prior.get("owner") == "cc2-mce":
         owned_hashes.add(prior["source_sha256"])
+        if isinstance(prior.get("base_sha256"), str):
+            owned_hashes.add(prior["base_sha256"])
+            base_hash = base_hash or prior["base_sha256"]
 if legacy.exists() and digest(legacy.read_bytes()) not in owned_hashes:
     raise RuntimeError("The legacy executable is not the previous owned build; preserve it")
 installed = []
-for target in [directory / "CC2Engine.exe", legacy]:
+for target in [directory / "CC2Engine.exe", *([legacy] if legacy.exists() else [])]:
     if target.exists():
         old = target.read_bytes()
         if target.name == "CC2Engine.exe" and digest(old) not in owned_hashes:
@@ -51,6 +58,6 @@ for target in [directory / "CC2Engine.exe", legacy]:
         temporary.unlink(missing_ok=True)
 (backups.parent / "binary-deployment.json").write_text(json.dumps({
     "owner": "cc2-mce", "source_sha256": digest(payload), "engine_sha256": engine_hash(),
-    "base_sha256": digest(previous), "mod_order": [], "installed": installed,
+    "base_sha256": base_hash, "mod_order": [], "installed": installed,
 }, indent=2) + "\n", encoding="utf-8")
 print(json.dumps({"installed": installed, "sha256": digest(payload)}))

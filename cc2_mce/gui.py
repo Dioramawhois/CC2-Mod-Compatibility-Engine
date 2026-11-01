@@ -17,6 +17,7 @@ from cc2_mce.baseline import Baseline
 from cc2_mce.discovery import ModRef, Scan, discover
 from cc2_mce.errors import InputError, MCEError
 from cc2_mce.filesystem import Budget, Limits, input_root, read_regular
+from cc2_mce.i18n import Translator
 from cc2_mce.installation import (
     GAME_ID,
     Installation,
@@ -25,6 +26,7 @@ from cc2_mce.installation import (
     inspect_game,
     prepare_collections,
 )
+from cc2_mce.preferences import Preferences
 from cc2_mce.reports import write_report
 from cc2_mce.toolchain import bundled_tools
 from cc2_mce.ui_feedback import Rejection, explain_rejection
@@ -41,7 +43,15 @@ from cc2_mce.workflow import (
 
 
 class App(tk.Tk):
-    def __init__(self, *, discover_on_start: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        discover_on_start: bool = True,
+        patch_priority: bool | None = None,
+        preferences_dir: Path | None = None,
+        language: str | None = None,
+        resume_request: tuple[Path, set[str], list[str]] | None = None,
+    ) -> None:
         super().__init__()
         self.title("CC2 Engine")
         self.geometry("860x700")
@@ -65,6 +75,24 @@ class App(tk.Tk):
         self._auto_timer: str | None = None
         self._desired_ids: set[str] = set()
         self._applied_ids: set[str] = set()
+        self.mod_order: list[str] = []
+        self._applied_order: list[str] = []
+        self._order_drag: str | None = None
+        self.restart_requested = False
+        self._resume_request = resume_request
+        self.restart_selection: tuple[Path, set[str], list[str]] | None = None
+        self._language_restart_pending = False
+        try:
+            self.preferences = Preferences.load(preferences_dir or game_user_dir() / "cc2-mce")
+        except (OSError, MCEError):
+            self.preferences = Preferences(preferences_dir or game_user_dir() / "cc2-mce")
+        self.patch_priority = (
+            self.preferences.patch_priority if patch_priority is None else patch_priority
+        )
+        self._applied_patch_priority = self.patch_priority
+        self.language_choice = language or self.preferences.language
+        self.translator = Translator(self.language_choice)
+        self.extra_roots = [Path(value) for value in self.preferences.extra_roots]
         self._activation_known = False
         self.checks: dict[str, ttk.Checkbutton] = {}
         self.row_status: dict[str, tk.StringVar] = {}
@@ -79,7 +107,6 @@ class App(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.request_close)
         self._generation = 0
         self.discover_on_start = discover_on_start
-
         style = ttk.Style(self)
         style.theme_use("clam")
         style.configure("TFrame", background="#f3f5f8")
@@ -122,6 +149,8 @@ class App(tk.Tk):
             "TNotebook.Tab",
             background=[("selected", "white")],
             foreground=[("selected", "#245bbc")],
+            padding=[("selected", (20, 12)), ("!selected", (18, 8))],
+            font=[("selected", ("Segoe UI", 10, "bold")), ("!selected", ("Segoe UI", 10))],
         )
         style.configure(
             "TMenubutton",
@@ -146,34 +175,54 @@ class App(tk.Tk):
             borderwidth=0,
         )
         self.configure(background="#f3f5f8")
-
         frame = ttk.Frame(self, padding=22)
         frame.pack(fill="both", expand=True)
         heading = ttk.Frame(frame)
         heading.pack(fill="x")
         ttk.Label(heading, text="Carrier Command 2", style="Title.TLabel").pack(side="left")
-        self.menu_button = ttk.Menubutton(heading, text="Меню", takefocus=True)
+        self.menu_button = ttk.Menubutton(heading, text=self.tr("Меню"), takefocus=True)
         self.menu_button.pack(side="right")
         self.actions_menu = tk.Menu(self.menu_button, tearoff=False)
         self.menu_button.configure(menu=self.actions_menu)
         for title, action in [
-            ("Обновить список", self.search),
-            ("Выбрать папку игры…", self.pick_game),
-            ("Добавить папку модов…", self.pick_mods),
-            ("Расположение файлов…", self.show_locations),
+            (self.tr("Обновить список"), self.search),
+            (self.tr("Выбрать папку игры…"), self.pick_game),
+            (self.tr("Добавить папку модов…"), self.pick_mods),
+            (self.tr("Расположение файлов…"), self.show_locations),
         ]:
             self.actions_menu.add_command(label=title, command=action)
         self.actions_menu.add_separator()
-        self.actions_menu.add_command(label="Вернуть предыдущий набор…", command=self.restore)
-        self.actions_menu.add_command(label="Подробности проблемы…", command=self.show_problem)
-        self.actions_menu.add_command(label="Сохранить отчёт…", command=self.export_report)
-        self.game_path = tk.StringVar(value="Ищем установленную игру…")
-        self.game_summary = tk.StringVar(value="Ищем игру…")
+        self.actions_menu.add_command(
+            label=self.tr("Вернуть предыдущий набор…"), command=self.restore
+        )
+        self.actions_menu.add_command(
+            label=self.tr("Подробности проблемы…"), command=self.show_problem
+        )
+        self.actions_menu.add_command(label=self.tr("Сохранить отчёт…"), command=self.export_report)
+        self.priority_var = tk.BooleanVar(value=self.patch_priority)
+        self.actions_menu.add_checkbutton(
+            label=self.tr("Приоритет поздних патчей"),
+            variable=self.priority_var,
+            command=self.change_patch_priority,
+        )
+        language_menu = tk.Menu(self.actions_menu, tearoff=False)
+        self.language_var = tk.StringVar(value=self.language_choice)
+        for choice, label in [
+            ("system", self.tr("Как в системе")),
+            ("ru", self.tr("Русский")),
+            ("en", "English"),
+        ]:
+            language_menu.add_radiobutton(
+                label=label, value=choice, variable=self.language_var, command=self.change_language
+            )
+        self.actions_menu.add_cascade(label=self.tr("Язык"), menu=language_menu)
+        self.game_path = tk.StringVar(value=self.tr("Ищем установленную игру…"))
+        self.game_summary = tk.StringVar(value=self.tr("Ищем игру…"))
         ttk.Label(frame, textvariable=self.game_summary, style="Muted.TLabel").pack(
             anchor="w", pady=(6, 2)
         )
         self.activation_status = tk.StringVar(
-            value="Отметьте моды — проверим и подключим автоматически."
+            value=self.tr("Отметьте моды — проверим и подключим автоматически.")
         )
         ttk.Label(frame, textvariable=self.activation_status, wraplength=780).pack(
             anchor="w", pady=(0, 8)
@@ -183,9 +232,12 @@ class App(tk.Tk):
         self.game_choice = ttk.Combobox(row, state="readonly")
         self.game_choice.pack(side="left", fill="x", expand=True)
         self.game_choice.bind("<<ComboboxSelected>>", lambda _: self.select_game())
-
-        self.mods_path = tk.StringVar(value="Моды: поиск Workshop и папки mods рядом с игрой")
-        self.libraries_path = tk.StringVar(value="Библиотеки: папка libraries рядом с игрой")
+        self.mods_path = tk.StringVar(
+            value=self.tr("Моды: поиск Workshop и папки mods рядом с игрой")
+        )
+        self.libraries_path = tk.StringVar(
+            value=self.tr("Библиотеки: папка libraries рядом с игрой")
+        )
         self.notice_title = tk.StringVar()
         self.notice_text = tk.StringVar()
         self.notice_frame = ttk.Frame(frame, style="Notice.TFrame", padding=12)
@@ -198,23 +250,46 @@ class App(tk.Tk):
         ttk.Label(
             self.notice_frame, textvariable=self.notice_text, style="Notice.TLabel", wraplength=740
         ).pack(anchor="w", pady=(4, 0))
-
         self.tabs = ttk.Notebook(frame)
         self.tabs.pack(fill="both", expand=True, pady=(8, 12))
         mod_tab = ttk.Frame(self.tabs, padding=8, style="List.TFrame")
         library_tab = ttk.Frame(self.tabs, padding=8, style="List.TFrame")
-        self.tabs.add(mod_tab, text="Моды")
-        self.tabs.add(library_tab, text="Библиотеки")
+        self.tabs.add(mod_tab, text=self.tr("Моды"))
+        self.tabs.add(library_tab, text=self.tr("Библиотеки"))
+        order_tab = ttk.Frame(self.tabs, padding=8, style="List.TFrame")
+        self.tabs.add(order_tab, text=self.tr("Порядок загрузки"))
+        ttk.Label(
+            order_tab,
+            text=self.tr(
+                "Перетащите моды мышью или используйте Alt+↑ / Alt+↓.\n"
+                "Поздние патчи ниже. Изменение порядка сразу пересобирает файлы."
+            ),
+            style="Row.TLabel",
+            wraplength=720,
+        ).pack(anchor="w", pady=(0, 8))
+        self.order_tree = ttk.Treeview(
+            order_tab, columns=("position", "name"), show="headings", selectmode="browse", height=12
+        )
+        self.order_tree.heading("position", text="№")
+        self.order_tree.heading("name", text=self.tr("Мод / библиотека"))
+        self.order_tree.column("position", width=48, stretch=False)
+        self.order_tree.column("name", width=620)
+        self.order_tree.pack(fill="both", expand=True)
+        self.order_tree.bind("<ButtonPress-1>", self._order_press)
+        self.order_tree.bind("<ButtonRelease-1>", self._order_release)
+        self.order_tree.bind("<Alt-Up>", lambda _: self._move_focused_order(-1))
+        self.order_tree.bind("<Alt-Down>", lambda _: self._move_focused_order(1))
         self.list_frame = self._scrolling_list(mod_tab)
         self.library_frame = self._scrolling_list(library_tab)
         ttk.Label(
             library_tab,
-            text="Необходимые выбранным модам библиотеки подключаются автоматически.",
+            text=self.tr("Необходимые выбранным модам библиотеки подключаются автоматически."),
             style="Row.TLabel",
             wraplength=730,
         ).pack(anchor="w", pady=6)
-
-        self.status = tk.StringVar(value="Ищем игру и подписки Steam. Файлы игры не меняются.")
+        self.status = tk.StringVar(
+            value=self.tr("Ищем игру и подписки Steam. Файлы игры не меняются.")
+        )
         self.progress = ttk.Progressbar(
             frame, mode="indeterminate", maximum=100, style="Activity.Horizontal.TProgressbar"
         )
@@ -226,7 +301,7 @@ class App(tk.Tk):
         )
         self.launch_button = ttk.Button(
             bottom,
-            text="Запустить игру",
+            text=self.tr("Запустить игру"),
             command=self.launch,
             style="Launch.TButton",
             state="disabled",
@@ -253,7 +328,7 @@ class App(tk.Tk):
 
     def show_locations(self) -> None:
         messagebox.showinfo(
-            "Расположение файлов",
+            self.tr("Расположение файлов"),
             self.game_path.get()
             + "\n\n"
             + self.mods_path.get()
@@ -261,9 +336,88 @@ class App(tk.Tk):
             + self.libraries_path.get(),
         )
 
+    def tr(self, message: str, **values: object) -> str:
+        return self.translator(message, **values)
+
+    def change_language(self) -> None:
+        choice = self.language_var.get()
+        if choice == self.language_choice:
+            return
+        try:
+            self.preferences.language = choice
+            self.preferences.extra_roots = [str(path) for path in self.extra_roots]
+            self.preferences.save()
+        except (OSError, MCEError) as exc:
+            self.status.set(self.tr(str(exc)))
+            return
+        self._language_restart_pending = True
+        self._finish_language_restart()
+
+    def _finish_language_restart(self) -> None:
+        if self.busy or self.applying:
+            self.after(120, self._finish_language_restart)
+            return
+        if self.selection_dirty and self.game is not None:
+            self.restart_selection = (self.game.root, set(self._desired_ids), list(self.mod_order))
+        self.restart_geometry = self.geometry()
+        self.restart_requested = True
+        self.request_close()
+
+    def _ordered_selection(self) -> list[str]:
+        return [key for key in self.mod_order if key in self._desired_ids] + sorted(
+            self._desired_ids - set(self.mod_order)
+        )
+
+    def _render_order(self) -> None:
+        selected = self.order_tree.selection()
+        self.order_tree.delete(*self.order_tree.get_children())
+        names = {mod.id: mod.name for mod in self.scan.mods} if self.scan else {}
+        for index, key in enumerate(self._ordered_selection(), 1):
+            self.order_tree.insert(
+                "", "end", iid=key, values=(index, names.get(key, self.tr("Мод не найден")))
+            )
+        if selected and selected[0] in self.order_tree.get_children():
+            self.order_tree.selection_set(selected[0])
+
+    def _order_press(self, event: tk.Event) -> None:
+        self._order_drag = self.order_tree.identify_row(event.y)
+
+    def _order_release(self, event: tk.Event) -> None:
+        target = self.order_tree.identify_row(event.y)
+        order = self._ordered_selection()
+        if self._order_drag in order and target in order:
+            self.move_mod(self._order_drag, order.index(target))
+        self._order_drag = None
+
+    def _move_focused_order(self, direction: int) -> str:
+        selected = self.order_tree.selection()
+        if selected:
+            order = self._ordered_selection()
+            self.move_mod(selected[0], order.index(selected[0]) + direction)
+        return "break"
+
+    def move_mod(self, mod_id: str, index: int) -> None:
+        if self.applying:
+            return
+        order = self._ordered_selection()
+        if mod_id not in order or not 0 <= index < len(order):
+            return
+        if order.index(mod_id) == index:
+            return
+        order.remove(mod_id)
+        order.insert(index, mod_id)
+        self.mod_order = order + [key for key in self.mod_order if key not in order]
+        self.selection_changed()
+
+    def change_patch_priority(self) -> None:
+        if self.applying:
+            return
+        self.patch_priority = self.priority_var.get()
+        self.selection_changed()
+
     def show_problem(self) -> None:
         dialog = tk.Toplevel(self)
-        dialog.title("Подробности проблемы")
+        dialog.title(self.tr("Подробности проблемы"))
         dialog.geometry("720x440")
         dialog.minsize(440, 280)
         text = tk.Text(dialog, wrap="word", font=("Segoe UI", 10), padx=16, pady=16)
@@ -271,7 +425,7 @@ class App(tk.Tk):
         text.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side="right", fill="y")
         text.pack(fill="both", expand=True)
-        text.insert("1.0", self.problem_details or "Проблем не обнаружено.")
+        text.insert("1.0", self.problem_details or self.tr("Проблем не обнаружено."))
         text.configure(state="disabled")
         text.focus_set()
 
@@ -279,12 +433,12 @@ class App(tk.Tk):
         pending = (game_user_dir() / "cc2-mce/pending.json").exists()
         ready = (
             self.game is not None
-            and not self.needs_placement
-            and self.scan is not None
+            and (not self.needs_placement)
+            and (self.scan is not None)
             and self._activation_known
-            and not self.selection_dirty
-            and not self.applying
-            and not pending
+            and (not self.selection_dirty)
+            and (not self.applying)
+            and (not pending)
         )
         self.launch_button.state(["!disabled"] if ready else ["disabled"])
         self.menu_button.state(["disabled"] if self.applying else ["!disabled"])
@@ -296,18 +450,22 @@ class App(tk.Tk):
             self.progress.stop()
             self.progress.pack_forget()
 
-    def _update_rows(self, pending_text: str = "Проверяем…") -> None:
+    def _update_rows(self, pending_text: str | None = None) -> None:
+        pending_text = pending_text or self.tr("Проверяем…")
         for key, value in self.row_status.items():
-            if self.selection_dirty and (key in self._desired_ids) != (key in self._applied_ids):
+            if self.selection_dirty and (
+                (key in self._desired_ids) != (key in self._applied_ids)
+                or (key in self._desired_ids and self._ordered_selection() != self._applied_order)
+            ):
                 text = pending_text
             elif key in self._row_errors:
                 text = self._row_errors[key]
             else:
-                text = "Включён" if key in self._applied_ids else "Выключен"
+                text = self.tr("Включён") if key in self._applied_ids else self.tr("Выключен")
             if (
                 key in self._applied_ids
                 and key not in self._row_errors
-                and key in self._required_notes
+                and (key in self._required_notes)
             ):
                 text += " · " + self._required_notes[key]
             value.set(self.row_origins.get(key, "") + " · " + text)
@@ -332,20 +490,26 @@ class App(tk.Tk):
             self.after_cancel(self._auto_timer)
             self._auto_timer = None
         self._desired_ids = set(self._applied_ids)
+        self.patch_priority = self._applied_patch_priority
+        self.priority_var.set(self.patch_priority)
+        self.mod_order = self._applied_order + [
+            key for key in self.mod_order if key not in self._applied_ids
+        ]
         self.selection_dirty = False
         for key, variable in {**self.vars, **self.library_vars}.items():
             variable.set(key in self._applied_ids)
         self._row_errors = rejection.rows
-        self.problem_details = rejection.details
-        self.notice_title.set(rejection.title)
-        self.notice_text.set(rejection.message)
+        self.problem_details = self.tr(rejection.details)
+        self.notice_title.set(self.tr(rejection.title))
+        self.notice_text.set(self.tr(rejection.message))
         self.notice_frame.pack(fill="x", before=self.tabs, pady=(4, 4))
         self._update_rows()
+        self._render_order()
         self._refresh_controls()
         self.status.set(
-            "Предыдущий набор сохранён. Можно играть."
+            self.tr("Предыдущий набор сохранён. Можно играть.")
             if self.launch_button.instate(["!disabled"])
-            else "Изменение не применено. Проверьте подробности в меню."
+            else self.tr("Изменение не применено. Проверьте подробности в меню.")
         )
 
     @property
@@ -375,10 +539,17 @@ class App(tk.Tk):
             except MCEError as exc:
                 results.put((None, str(exc)))
             except (OSError, ValueError):
-                results.put((None, "Не удалось безопасно прочитать или записать выбранные папки."))
+                results.put(
+                    (None, self.tr("Не удалось безопасно прочитать или записать выбранные папки."))
+                )
             except Exception:
                 results.put(
-                    (None, "Операция прервалась. Повторите проверку или верните прежний набор.")
+                    (
+                        None,
+                        self.tr(
+                            "Операция прервалась. Повторите проверку или верните прежний набор."
+                        ),
+                    )
                 )
 
         def poll() -> None:
@@ -393,18 +564,20 @@ class App(tk.Tk):
                 self.busy = False
                 self._set_applying(False)
                 self.package_plan = None
-                self.status.set(error)
+                self.status.set(self.tr(error))
                 if self.selection_dirty and ("Игра запущена" in error or "Закройте игру" in error):
-                    self.status.set("Закройте игру — выбранные моды применятся автоматически.")
+                    self.status.set(
+                        self.tr("Закройте игру — выбранные моды применятся автоматически.")
+                    )
                     self._queue_rebuild(1000)
                 elif reject_selection:
                     added = self._desired_ids - self._applied_ids
                     self._reject_change(
                         Rejection(
-                            "Изменение отменено",
+                            self.tr("Изменение отменено"),
                             error,
                             error,
-                            {key: "Не включён: " + error for key in added},
+                            {key: self.tr("Не включён: ") + self.tr(error) for key in added},
                         )
                     )
                 self._refresh_controls()
@@ -419,8 +592,8 @@ class App(tk.Tk):
     def search(self) -> None:
         if self.applying:
             return
-        self.status.set("Ищем игру и Workshop во всех библиотеках Steam…")
-        self.game_path.set("Ищем установленную игру…")
+        self.status.set(self.tr("Ищем игру и Workshop во всех библиотеках Steam…"))
+        self.game_path.set(self.tr("Ищем установленную игру…"))
         self._clear_sources()
         self.game = None
         self._background(lambda: find_installations(app_dir=self.app_dir), self.apply_installations)
@@ -437,6 +610,8 @@ class App(tk.Tk):
         self.package_plan = None
         self._desired_ids.clear()
         self._applied_ids.clear()
+        self.mod_order.clear()
+        self._applied_order.clear()
         self._activation_known = False
         self.active_package = None
         self.selection_dirty = False
@@ -451,6 +626,7 @@ class App(tk.Tk):
         self.row_origins.clear()
         self._required_notes.clear()
         self._clear_notice()
+        self._render_order()
         self._refresh_controls()
 
     def apply_installations(self, result: Installations) -> None:
@@ -476,16 +652,18 @@ class App(tk.Tk):
         else:
             self.game = None
             self.game_choice.set("")
-            self.game_path.set("Игра не выбрана")
+            self.game_path.set(self.tr("Игра не выбрана"))
             self.game_summary.set(
-                "Выберите установку игры в списке"
+                self.tr("Выберите установку игры в списке")
                 if result.games
-                else "Игра не найдена — укажите её папку через меню"
+                else self.tr("Игра не найдена — укажите её папку через меню")
             )
             self.status.set(
-                "Найдено несколько установок. Выберите нужную в списке."
+                self.tr("Найдено несколько установок. Выберите нужную в списке.")
                 if result.games
-                else "Игра не найдена. Укажите папку игры или перенесите приложение рядом с ней."
+                else self.tr(
+                    "Игра не найдена. Укажите папку игры или перенесите приложение рядом с ней."
+                )
             )
             if result.warnings:
                 self.status.set(self.status.get() + " " + " ".join(result.warnings))
@@ -500,23 +678,30 @@ class App(tk.Tk):
             return
         self._clear_sources()
         self.game = self.installations.games[index]
-        self.game_path.set(f"Игра: {self.game.root}")
-        self.game_summary.set("Игра найдена · моды применяются автоматически")
-        self.libraries_path.set(f"Библиотеки: {self.game.libraries_dir}")
+        self.game_path.set(self.tr("Игра: {p0}", p0=self.game.root))
+        self.game_summary.set(self.tr("Игра найдена · моды применяются автоматически"))
+        self.libraries_path.set(self.tr("Библиотеки: {p0}", p0=self.game.libraries_dir))
         self.mod_roots = list(self.installations.workshop_roots)
         self.mod_roots += self.extra_roots
         self.mod_roots.append(self.game.local_mods_dir)
         self.mod_roots = list(dict.fromkeys(self.mod_roots))
-        sources = " | ".join(str(root) for root in self.mod_roots) or "Workshop пока не найден"
-        self.mods_path.set(f"Моды: {sources}\nЛокальные: {self.game.local_mods_dir}")
+        sources = " | ".join(str(root) for root in self.mod_roots) or self.tr(
+            "Workshop пока не найден"
+        )
+        self.mods_path.set(
+            self.tr("Моды: {p0}\nЛокальные: {p1}", p0=sources, p1=self.game.local_mods_dir)
+        )
         if self.needs_placement:
-            self.game_summary.set("Перенесите приложение в папку игры")
+            self.game_summary.set(self.tr("Перенесите приложение в папку игры"))
             self.status.set(
-                f"Перенесите {Path(sys.executable).name} в {self.game.root}, "
-                "рядом с carrier_command.exe, и запустите снова."
+                self.tr(
+                    "Перенесите {p0} в {p1}, рядом с carrier_command.exe, и запустите снова.",
+                    p0=Path(sys.executable).name,
+                    p1=self.game.root,
+                )
             )
             return
-        self.status.set("Игра найдена. Читаем Workshop, локальные моды и библиотеки…")
+        self.status.set(self.tr("Игра найдена. Читаем Workshop, локальные моды и библиотеки…"))
         if self.discover_on_start:
             self.scan_sources()
 
@@ -532,6 +717,7 @@ class App(tk.Tk):
         desired = set(self._desired_ids) if preserve_selection else set()
 
         def receive(combined: Scan) -> None:
+            nonlocal desired
             if (
                 preserve_selection
                 and previous_scan is not None
@@ -546,6 +732,7 @@ class App(tk.Tk):
             try:
                 paths = active_paths(game_user_dir())
                 applied: set[str] = set()
+                applied_order: list[str] = []
                 names: list[str] = []
                 for path in paths:
                     if (path.name == "CC2-MCE" or path.name.startswith("CC2-MCE-")) and (
@@ -560,39 +747,61 @@ class App(tk.Tk):
                             read_regular(path / "mce-manifest.json", package_root, Budget(Limits()))
                         )
                         if not isinstance(saved, dict) or saved.get("owner") != "cc2-mce":
-                            raise InputError("Неизвестный журнал активного пакета")
+                            raise InputError(self.tr("Неизвестный журнал активного пакета"))
                         current_names = {mod.id: mod.name for mod in combined.mods}
                         names.extend(
                             current_names.get(mod_id, mod_id)
                             for mod_id in saved.get("mod_order", [])
                         )
                         applied.update(saved.get("mod_order", []))
+                        applied_order.extend(saved.get("mod_order", []))
+                        self._applied_patch_priority = (
+                            saved.get("merge_policy") == "ordered-patches"
+                        )
                         if not preserve_selection:
                             desired.update(saved.get("mod_order", []))
                     else:
                         names += [mod.name for mod in combined.mods if mod.root == path]
                         applied.update(mod.id for mod in combined.mods if mod.root == path)
+                        applied_order.extend(mod.id for mod in combined.mods if mod.root == path)
                         if not preserve_selection:
                             desired.update(mod.id for mod in combined.mods if mod.root == path)
                 self.activation_status.set(
-                    "В игре включены: "
+                    self.tr("В игре включены: ")
                     + (
-                        (
-                            ", ".join(names[:3])
-                            + (f" и ещё {len(names) - 3}" if len(names) > 3 else "")
-                        )
+                        ", ".join(names[:3])
+                        + (self.tr(" и ещё {p0}", p0=len(names) - 3) if len(names) > 3 else "")
                         if names
-                        else "нет модов"
+                        else self.tr("нет модов")
                     )
                 )
                 self._applied_ids = applied
+                self._applied_order = list(dict.fromkeys(applied_order))
                 self._activation_known = True
             except (MCEError, OSError, ValueError):
                 self._activation_known = False
-                self.activation_status.set("Не удалось прочитать текущую активацию игры.")
+                self.activation_status.set(self.tr("Не удалось прочитать текущую активацию игры."))
             self._display_items(self.list_frame, self.vars, mods)
             self._display_items(self.library_frame, self.library_vars, libraries, library=True)
+            resumed_order = None
+            if not preserve_selection and self._resume_request is not None:
+                resume_game, resume_ids, resume_order = self._resume_request
+                if resume_game == selected_game.root:
+                    desired = set(resume_ids)
+                    resumed_order = list(resume_order)
+                    self.auto_enabled = True
+                    self._resume_request = None
             self._desired_ids = desired
+            saved_order = (
+                resumed_order
+                if resumed_order is not None
+                else (
+                    self.mod_order
+                    if preserve_selection
+                    else self._applied_order or self.preferences.order(selected_game.root)
+                )
+            )
+            self.mod_order = list(dict.fromkeys([*saved_order, *(mod.id for mod in combined.mods)]))
             old_sources = (
                 {mod.id: mod.sha256 for mod in previous_scan.mods} if previous_scan else {}
             )
@@ -609,10 +818,8 @@ class App(tk.Tk):
                 self.vars[missing] = variable
                 check = ttk.Checkbutton(
                     self.list_frame,
-                    text=(
-                        previous_names.get(missing, "Выбранный мод")
-                        + " — не найден, снимите галочку"
-                    ),
+                    text=previous_names.get(missing, self.tr("Выбранный мод"))
+                    + self.tr(" — не найден, снимите галочку"),
                     variable=variable,
                     command=self.selection_changed,
                     style="List.TCheckbutton",
@@ -623,17 +830,21 @@ class App(tk.Tk):
                 variable.set(mod_id in desired)
             if not preserve_selection:
                 self.status.set(
-                    f"Найдено модов: {len(mods)}, библиотек: {len(libraries)}. "
-                    "Отметьте нужные."
+                    self.tr(
+                        "Найдено модов: {p0}, библиотек: {p1}. Отметьте нужные.",
+                        p0=len(mods),
+                        p1=len(libraries),
+                    )
                     + (
                         " " + " ".join(self.installations.warnings)
                         if self.installations.warnings
                         else ""
                     )
                 )
-            self.tabs.tab(0, text=f"Моды · {len(mods)}")  # type: ignore[no-untyped-call]
-            self.tabs.tab(1, text=f"Библиотеки · {len(libraries)}")  # type: ignore[no-untyped-call]
+            self.tabs.tab(0, text=self.tr("Моды · {p0}", p0=len(mods)))  # type: ignore[no-untyped-call]
+            self.tabs.tab(1, text=self.tr("Библиотеки · {p0}", p0=len(libraries)))  # type: ignore[no-untyped-call]
             self._update_rows()
+            self._render_order()
             if (
                 self.auto_enabled
                 and self._activation_known
@@ -649,7 +860,9 @@ class App(tk.Tk):
                 prepare_collections(selected_game)
             except (OSError, MCEError) as exc:
                 raise InputError(
-                    "Не удалось подготовить mods и libraries. Проверьте доступ к папке игры."
+                    self.tr(
+                        "Не удалось подготовить mods и libraries. Проверьте доступ к папке игры."
+                    )
                 ) from exc
             recover_interrupted(game_user_dir())
             return discover([*roots, *library_roots])
@@ -682,15 +895,15 @@ class App(tk.Tk):
                 if any(item.logical_path.casefold().endswith(".lua") for item in mod.files):
                     kinds.append("Lua")
                 if any(item.kind == "native" for item in mod.files):
-                    kinds.append("DLL-плагин")
-                origin = ", ".join(kinds) or "ресурсы"
+                    kinds.append(self.tr("DLL-плагин"))
+                origin = ", ".join(kinds) or self.tr("ресурсы")
             else:
                 origin = (
                     "Workshop"
                     if any(
                         mod.root.is_relative_to(root) for root in self.installations.workshop_roots
                     )
-                    else "локальный"
+                    else self.tr("локальный")
                 )
             row = ttk.Frame(frame, style="List.TFrame", padding=(6, 6))
             row.pack(fill="x")
@@ -704,7 +917,7 @@ class App(tk.Tk):
             check.pack(anchor="w", fill="x")
             self.checks[mod.id] = check
             self.row_origins[mod.id] = origin
-            self.row_status[mod.id] = tk.StringVar(value=origin + " · Выключен")
+            self.row_status[mod.id] = tk.StringVar(value=origin + self.tr(" · Выключен"))
             label = ttk.Label(
                 row, textvariable=self.row_status[mod.id], style="Row.TLabel", wraplength=710
             )
@@ -716,7 +929,9 @@ class App(tk.Tk):
                 steps = (
                     (-1 if event.num == 4 else 1)
                     if event.num in (4, 5)
-                    else (-int(event.delta / 120) if abs(event.delta) >= 120 else -event.delta)
+                    else -int(event.delta / 120)
+                    if abs(event.delta) >= 120
+                    else -event.delta
                 )
                 target.yview_scroll(steps, "units")
                 return "break"
@@ -727,15 +942,18 @@ class App(tk.Tk):
         if not mods:
             ttk.Label(
                 frame,
-                text="Библиотек пока нет."
+                text=self.tr("Библиотек пока нет.")
                 if library
-                else "Моды пока не найдены. Подпишитесь в Workshop или добавьте папку через меню.",
+                else self.tr(
+                    "Моды пока не найдены. Подпишитесь в Workshop или добавьте папку через меню."
+                ),
                 style="Row.TLabel",
                 wraplength=700,
             ).pack(anchor="w", pady=6)
 
     def display_scan(self, scan: Scan) -> None:
         self.scan = scan
+        self.mod_order = [mod.id for mod in scan.mods]
         self._display_items(self.list_frame, self.vars, scan.mods)
 
     def selection_changed(self) -> None:
@@ -747,11 +965,12 @@ class App(tk.Tk):
         self._desired_ids = {
             key for key, value in {**self.vars, **self.library_vars}.items() if value.get()
         }
-        self.status.set("Обновляем сборку…")
+        self.status.set(self.tr("Обновляем сборку…"))
         self.package_plan = None
         self.selection_dirty = True
         self._queue_rebuild()
         self._update_rows()
+        self._render_order()
         self._refresh_controls()
 
     def _queue_rebuild(self, delay: int = 250) -> None:
@@ -761,35 +980,35 @@ class App(tk.Tk):
 
     def _auto_rebuild(self) -> None:
         self._auto_timer = None
-        if self.applying or self.game is None or self.needs_placement or not self.selection_dirty:
+        if self.applying or self.game is None or self.needs_placement or (not self.selection_dirty):
             return
         try:
             running = _running()
         except MCEError as exc:
-            self._reject_change(Rejection("Изменение отменено", str(exc), str(exc), {}))
+            self._reject_change(Rejection(self.tr("Изменение отменено"), str(exc), str(exc), {}))
             return
         if running:
-            self.status.set("Закройте игру — выбранные моды применятся автоматически.")
-            self._update_rows("После закрытия игры")
+            self.status.set(self.tr("Закройте игру — выбранные моды применятся автоматически."))
+            self._update_rows(self.tr("После закрытия игры"))
             self._queue_rebuild(1000)
             return
         self.check_selected()
 
     def _watch_sources(self) -> None:
-        if not self.busy and not self.applying and self._auto_timer is None and self.game:
+        if not self.busy and (not self.applying) and (self._auto_timer is None) and self.game:
             self.scan_sources(preserve_selection=True)
         self.after(3000, self._watch_sources)
 
     def pick_game(self) -> None:
         if self.applying:
             return
-        folder = filedialog.askdirectory(title="Папка Carrier Command 2")
+        folder = filedialog.askdirectory(title=self.tr("Папка Carrier Command 2"))
         if not folder:
             return
         installed = inspect_game(Path(folder))
         if installed is None:
             messagebox.showwarning(
-                "Игра не найдена", "В выбранной папке нет исполняемого файла CC2."
+                self.tr("Игра не найдена"), self.tr("В выбранной папке нет исполняемого файла CC2.")
             )
             return
         self.apply_installations(
@@ -801,7 +1020,7 @@ class App(tk.Tk):
     def pick_mods(self) -> None:
         if self.applying:
             return
-        folder = filedialog.askdirectory(title="Дополнительная папка модов")
+        folder = filedialog.askdirectory(title=self.tr("Дополнительная папка модов"))
         if folder:
             self.extra_roots.append(Path(folder))
             self.select_game()
@@ -811,19 +1030,27 @@ class App(tk.Tk):
             return
         if self.game is None or self.needs_placement:
             return
-        selected = sorted(self._desired_ids)
+        selected = self._ordered_selection()
         roots = list(self.mod_roots)
         if self.game.libraries_dir.exists():
             roots.append(self.game.libraries_dir)
-        self.status.set("Проверяем выбранные моды и библиотеки…")
+        self.status.set(self.tr("Проверяем выбранные моды и библиотеки…"))
         selected_game = self.game
 
         def check() -> PackagePlan:
             scan = discover(roots)
             chosen = [mod for mod in scan.mods if mod.id in selected]
             if {mod.id for mod in chosen} != set(selected):
-                raise InputError("Выбранный мод исчез из папки. Верните его или снимите галочку.")
-            return analyze(selected_game, scan, [mod.id for mod in chosen], tools=bundled_tools())
+                raise InputError(
+                    self.tr("Выбранный мод исчез из папки. Верните его или снимите галочку.")
+                )
+            return analyze(
+                selected_game,
+                scan,
+                selected,
+                tools=bundled_tools(),
+                patch_priority=self.patch_priority,
+            )
 
         def receive(result: PackagePlan) -> None:
             self.package_plan = result
@@ -837,6 +1064,7 @@ class App(tk.Tk):
                         self._applied_ids,
                         self._desired_ids,
                         {mod.id: mod.name for mod in result.scan.mods},
+                        translate=self.tr,
                     )
                 )
 
@@ -847,9 +1075,9 @@ class App(tk.Tk):
             return
         current = self.package_plan
         if current is None or current.blockers or self.needs_placement:
-            self.status.set("Сначала проверьте выбранный набор.")
+            self.status.set(self.tr("Сначала проверьте выбранный набор."))
             return
-        self.status.set("Обновляем общую папку модов…")
+        self.status.set(self.tr("Обновляем общую папку модов…"))
         requested = set(self._desired_ids)
         previously_applied = set(self._applied_ids)
         self._set_applying(True)
@@ -859,6 +1087,11 @@ class App(tk.Tk):
             self._activation_known = True
             self.selection_dirty = False
             self._applied_ids = {mod.id for mod in current.selected}
+            self._applied_patch_priority = current.report.get("merge_policy") == "ordered-patches"
+            self._applied_order = [mod.id for mod in current.selected]
+            self.mod_order = self._applied_order + [
+                key for key in self.mod_order if key not in self._applied_ids
+            ]
             by_id = {key: mod for mod in current.selected for key in {mod.id, mod.package_id}}
             required: dict[str, list[str]] = {}
             for mod in current.selected:
@@ -866,20 +1099,26 @@ class App(tk.Tk):
                     target = by_id[dependency]
                     required.setdefault(target.id, []).append(mod.name)
             self._required_notes = {
-                key: "Требуется для " + ", ".join(f"«{name}»" for name in names[:2])
+                key: self.tr("Требуется для ") + ", ".join(f"«{name}»" for name in names[:2])
                 for key, names in required.items()
             }
             self.activation_status.set(
-                "В игре включены: "
+                self.tr("В игре включены: ")
                 + (
                     ", ".join(mod.name for mod in current.selected[:3])
-                    + (f" и ещё {len(current.selected) - 3}" if len(current.selected) > 3 else "")
+                    + (
+                        self.tr(" и ещё {p0}", p0=len(current.selected) - 3)
+                        if len(current.selected) > 3
+                        else ""
+                    )
                     if current.selected
-                    else "нет модов"
+                    else self.tr("нет модов")
                 )
             )
             self.status.set(
-                "Готово. Можно запускать игру." if current.selected else "Все моды отключены."
+                self.tr("Готово. Можно запускать игру.")
+                if current.selected
+                else self.tr("Все моды отключены.")
             )
             for mod in current.selected:
                 variable = self.vars.get(mod.id) or self.library_vars.get(mod.id)
@@ -887,12 +1126,25 @@ class App(tk.Tk):
                     variable.set(True)
             self._desired_ids = {mod.id for mod in current.selected}
             if self._desired_ids - requested:
-                self.status.set("Готово. Необходимые библиотеки подключены автоматически.")
-                readded = (self._desired_ids - requested) & previously_applied
+                self.status.set(self.tr("Готово. Необходимые библиотеки подключены автоматически."))
+                readded = self._desired_ids - requested & previously_applied
                 if readded:
-                    self.status.set("Зависимость остаётся включённой: она нужна выбранным модам.")
+                    self.status.set(
+                        self.tr("Зависимость остаётся включённой: она нужна выбранным модам.")
+                    )
             self._clear_notice()
+            overridden = sum(item["status"] == "overridden" for item in current.report["files"])
+            if overridden:
+                self.status.set(self.tr("Готово. Замен по порядку: {p0}.", p0=overridden))
+            try:
+                self.preferences.set_order(current.game.root, self.mod_order)
+                self.preferences.patch_priority = self.patch_priority
+                self.preferences.extra_roots = [str(root) for root in self.extra_roots]
+                self.preferences.save()
+            except (OSError, MCEError):
+                self.status.set(self.tr("Моды включены, но настройки не удалось сохранить."))
             self._update_rows()
+            self._render_order()
             self._refresh_controls()
 
         self._background(
@@ -903,7 +1155,7 @@ class App(tk.Tk):
         if self.applying:
             return
         if not messagebox.askyesno(
-            "Вернуть прежние моды", "Восстановить набор до последнего применения?"
+            self.tr("Вернуть прежние моды"), self.tr("Восстановить набор до последнего применения?")
         ):
             return
 
@@ -915,8 +1167,8 @@ class App(tk.Tk):
             self.active_package = None
             self.selection_dirty = False
             self.package_plan = None
-            self.activation_status.set("Прежний набор модов восстановлен.")
-            self.status.set("Прежний набор восстановлен.")
+            self.activation_status.set(self.tr("Прежний набор модов восстановлен."))
+            self.status.set(self.tr("Прежний набор восстановлен."))
             self.scan_sources(rebuild_after_scan=False)
 
         self._set_applying(True)
@@ -927,13 +1179,13 @@ class App(tk.Tk):
         self.game_choice.configure(state="disabled" if value else "readonly")
         for check in self.checks.values():
             check.state(["disabled"] if value else ["!disabled"])
-        self._update_rows("Сохраняем…" if value else "Проверяем…")
+        self._update_rows(self.tr("Сохраняем…") if value else self.tr("Проверяем…"))
         self._refresh_controls()
 
     def request_close(self) -> None:
         if self.applying:
             self.status.set(
-                "Завершаем запись и резервную копию. Окно можно закрыть после завершения."
+                self.tr("Завершаем запись и резервную копию. Окно можно закрыть после завершения.")
             )
             return
         self.destroy()
@@ -943,26 +1195,28 @@ class App(tk.Tk):
         if plan is None:
             self.show_problem()
             return
-        name = filedialog.asksaveasfilename(title="Сохранить отчёт", defaultextension=".json")
+        name = filedialog.asksaveasfilename(
+            title=self.tr("Сохранить отчёт"), defaultextension=".json"
+        )
         if name:
             try:
                 write_report(plan.report, Path(name), list(plan.scan.roots))
             except (MCEError, OSError):
-                self.status.set("Отчёт не сохранён: выберите новый файл вне исходников.")
+                self.status.set(self.tr("Отчёт не сохранён: выберите новый файл вне исходников."))
 
     def launch(self) -> None:
         if self.applying:
-            self.status.set("Дождитесь завершения применения модов.")
+            self.status.set(self.tr("Дождитесь завершения применения модов."))
             return
         if self.game is None or self.needs_placement:
-            self.status.set("Сначала выберите игру и разместите приложение рядом с ней.")
+            self.status.set(self.tr("Сначала выберите игру и разместите приложение рядом с ней."))
             return
         if (game_user_dir() / "cc2-mce/pending.json").exists():
-            self.status.set("Сначала дождитесь восстановления незавершённой сборки.")
+            self.status.set(self.tr("Сначала дождитесь восстановления незавершённой сборки."))
             return
         if self.selection_dirty:
             self.status.set(
-                "Выбранный набор ещё не готов. Дождитесь сборки или устраните конфликт."
+                self.tr("Выбранный набор ещё не готов. Дождитесь сборки или устраните конфликт.")
             )
             return
         try:
@@ -973,7 +1227,7 @@ class App(tk.Tk):
             else:
                 webbrowser.open(url)
         except (OSError, MCEError):
-            self.status.set("Не удалось открыть игру через Steam.")
+            self.status.set(self.tr("Не удалось открыть игру через Steam."))
 
 
 def main() -> None:
@@ -987,7 +1241,17 @@ def main() -> None:
         with destination.open("x", encoding="utf-8") as stream:
             json.dump(verify_bundle(), stream)
         return
-    App().mainloop()
+    geometry = None
+    resume_request = None
+    while True:
+        app = App(resume_request=resume_request)
+        if geometry:
+            app.geometry(geometry)
+        app.mainloop()
+        if not app.restart_requested:
+            break
+        geometry = app.restart_geometry
+        resume_request = app.restart_selection
 
 
 if __name__ == "__main__":

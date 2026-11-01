@@ -31,7 +31,7 @@ def window(monkeypatch, tmp_path: Path):
     (isolated_user / "mods.xml").write_text("<data><active_mod_folders/></data>")
     monkeypatch.setattr("cc2_mce.gui.game_user_dir", lambda: isolated_user)
     try:
-        app = App(discover_on_start=False)
+        app = App(discover_on_start=False, patch_priority=False, language="ru")
     except tk.TclError:
         pytest.skip("GUI display unavailable; not a GUI acceptance pass")
     app.withdraw()
@@ -406,6 +406,53 @@ def test_first_run_refuses_file_in_place_of_collection(window, tmp_path):
     assert not (root / "mods").exists()
     assert window.scan is None
     assert window.launch_button.instate(["disabled"])
+
+
+def test_order_change_rebuilds_automatically_and_is_persisted(auto_pair, tmp_path, monkeypatch):
+    from cc2_mce.workflow import analyze
+
+    window, user = auto_pair
+    (tmp_path / "workshop/b/content/a.txt").write_bytes(b"a=3\n\n\nb=2\n")
+    installation = window.game
+    assert installation is not None
+    from cc2_mce.filesystem import digest
+
+    profile = {
+        "game_sha256": digest(installation.executable.read_bytes()),
+        "native_plugins": {},
+        "runtime_sha256": None,
+        "baselines": {},
+    }
+    monkeypatch.setattr(
+        "cc2_mce.gui.analyze",
+        lambda game, scan, selected, **kwargs: analyze(
+            game, scan, selected, profile=profile, patch_priority=True
+        ),
+    )
+    window.checks["a"].invoke()
+    window.checks["b"].invoke()
+    pump_until(window, lambda: not window.selection_dirty)
+    package = user / "mods/CC2-MCE"
+    assert (package / "content/a.txt").read_bytes() == b"a=3\n\n\nb=2\n"
+    window.move_mod("b", 0)
+    pump_until(window, lambda: not window.selection_dirty)
+    assert window._applied_order == ["b", "a"]
+    assert list(window.order_tree.get_children()) == ["b", "a"]
+    assert (package / "content/a.txt").read_bytes() == b"a=2\n\n\nb=2\n"
+    from cc2_mce.preferences import Preferences
+
+    assert Preferences.load(window.preferences.root).order(installation.root)[:2] == ["b", "a"]
+
+
+def test_selected_tab_has_larger_padding(window):
+    style = ttk.Style(window)
+    selected = tuple(
+        map(int, window.tk.splitlist(style.lookup("TNotebook.Tab", "padding", ("selected",))))
+    )
+    idle = tuple(
+        map(int, window.tk.splitlist(style.lookup("TNotebook.Tab", "padding", ("!selected",))))
+    )
+    assert selected[1] > idle[1]
 
 
 def test_running_game_defers_checkbox_until_game_closes(auto_pair, monkeypatch):

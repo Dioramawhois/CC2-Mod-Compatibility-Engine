@@ -27,7 +27,8 @@ if sys.argv[1:] == ["before"]:
     shutil.copy2(game.root / "cc2x.log", evidence / "cc2x.log.before")
     (evidence / "before.json").write_text(json.dumps({
         "package": str(paths[0]), "report": report,
-        "binary_sha256": digest((game.root / "CC2Engine.exe").read_bytes()),
+        "binary_sha256": digest((game.root / "CC2Engine.exe").read_bytes())
+                         if (game.root / "CC2Engine.exe").is_file() else None,
     }, indent=2) + "\n", encoding="utf-8")
     (root / "build/auto-evidence-path.txt").write_text(str(evidence), encoding="utf-8")
     print(json.dumps({"evidence": str(evidence), "selected": report["mod_order"]}))

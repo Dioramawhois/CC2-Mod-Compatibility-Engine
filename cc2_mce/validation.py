@@ -62,7 +62,11 @@ def validate_content(logical_path: str, data: bytes, *, luac: str | None = None)
             return "needs_review", "Lua 5.3 syntax validator is unavailable"
         try:
             result = subprocess.run(
-                [executable, "-v"], capture_output=True, shell=False, timeout=5, check=False,
+                [executable, "-v"],
+                capture_output=True,
+                shell=False,
+                timeout=5,
+                check=False,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
             version = (result.stdout + result.stderr).decode("utf-8", errors="replace")

@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import sys
+import unicodedata
 import uuid
 from collections import defaultdict
 from collections.abc import Callable
@@ -70,7 +71,15 @@ def review_profile(game: Installation) -> dict[str, Any]:
         value = json.loads(path.read_text(encoding="utf-8"))
         if value.get("game_sha256") == executable_hash:
             return value  # type: ignore[no-any-return]
-    raise InputError("Эта сборка игры ещё не проверена. Автоматическая установка заблокирована.")
+    # Unprofiled game builds can merge data using their installed originals. Native approval
+    # remains absent: no executable code is trusted just because data merging is allowed.
+    return {
+        "game_sha256": executable_hash,
+        "baselines": {},
+        "native_plugins": {},
+        "runtime_sha256": None,
+        "runtime_api": 0,
+    }
 
 
 def resolve_selection(scan: Scan, selected: list[str]) -> tuple[ModRef, ...]:
@@ -125,12 +134,37 @@ def _runtime(game: Installation, expected: str) -> Path | None:
 def _package_metadata(selected: tuple[ModRef, ...]) -> bytes:
     root = ET.Element(
         "data",
-        name="CC2 Engine — мои моды",
+        name="CC2 Engine",
         author="CC2 Mod Compatibility Engine",
-        description=(" + ".join(mod.name for mod in selected) or "Моды отключены")[:512],
+        description=(" + ".join(mod.name for mod in selected) or "No mods enabled")[:512],
     )
     ET.SubElement(root, "cc2mce", schema="1", type="mod")
     return bytes(ET.tostring(root, encoding="utf-8", xml_declaration=True))
+
+
+def _original_path(root: Path, folder: str, logical: str, budget: Budget) -> Path | None:
+    directory = root / folder
+    if not directory.exists() and not directory.is_symlink():
+        return None
+    input_root(directory)
+    direct = directory / logical
+    if direct.exists() or direct.is_symlink():
+        return direct
+    # CC2 logical paths use the same case/Unicode identity on all host filesystems.
+    cursor = directory
+    for component in logical.split("/"):
+        key = unicodedata.normalize("NFC", component).casefold()
+        matches = [
+            path
+            for path in bounded_children(input_root(cursor), budget)
+            if unicodedata.normalize("NFC", path.name).casefold() == key
+        ]
+        if not matches:
+            return None
+        if len(matches) != 1:
+            raise InputError("Original path case/Unicode collision")
+        cursor = matches[0]
+    return cursor
 
 
 def analyze(
@@ -140,6 +174,7 @@ def analyze(
     *,
     profile: dict[str, Any] | None = None,
     tools: Toolchain | None = None,
+    patch_priority: bool = False,
 ) -> PackagePlan:
     profile = profile if profile is not None else review_profile(game)
     actual_game_hash = digest(_read(game.executable, input_root(game.executable.parent)))
@@ -157,6 +192,7 @@ def analyze(
         for item in mod.files:
             groups[item.key].append((mod, item))
     native_names: dict[str, str] = {}
+    baseline_budget = Budget(Limits())
     for key, variants in sorted(groups.items()):
         logical = variants[0][1].logical_path
         source_hashes = {mod.id: item.sha256 for mod, item in variants}
@@ -172,14 +208,13 @@ def analyze(
                 )
             continue
         base: bytes | None = None
-        if logical in profile.get("baselines", {}):
-            try:
-                base = _read(game.root / "rom_0" / logical, game.root)
-                sdk = _read(game.root / "mod_dev_kit/source" / logical, game.root)
-                if digest(base) != profile["baselines"][logical] or base != sdk:
-                    raise InputError("Original/SDK mismatch")
-            except (OSError, InputError):
-                base = None
+        baseline_source = None
+        for folder in ("rom_0", "mod_dev_kit/source"):
+            candidate = _original_path(game.root, folder, logical, baseline_budget)
+            if candidate is not None:
+                base = read_regular(candidate, game.root, baseline_budget)
+                baseline_source = folder + "/" + logical
+                break
         if variants[0][1].kind == "native":
             needs_runtime = True
             hashes = set(source_hashes.values())
@@ -205,6 +240,7 @@ def analyze(
                 git=GitMergeAdapter(str(tools.git)) if tools else GitMergeAdapter(),
                 luac=str(tools.luac) if tools else None,
                 canonical_eol=True,
+                favor_later=patch_priority,
             )
             status, strategy, content = outcome.status, outcome.strategy, outcome.content
             diagnostics = list(outcome.diagnostics)
@@ -214,12 +250,13 @@ def analyze(
                 "status": status,
                 "strategy": strategy,
                 "source_sha256": source_hashes,
-                "baseline_sha256": digest(base) if base else None,
+                "baseline_sha256": digest(base) if base is not None else None,
+                "baseline_source": baseline_source,
                 "output_sha256": digest(content) if content is not None else None,
                 "diagnostics": diagnostics,
             }
         )
-        if content is not None and status in {"clean", "copied", "identical"}:
+        if content is not None and status in {"clean", "copied", "identical", "overridden"}:
             payload[logical] = content
         else:
             blockers.append(
@@ -248,6 +285,7 @@ def analyze(
         "schema_version": 2,
         "owner": "cc2-mce",
         "output_folder": OUTPUT_FOLDER,
+        "merge_policy": "ordered-patches" if patch_priority else "strict",
         "engine_sha256": engine_hash(),
         "game_sha256": actual_game_hash,
         "mod_order": [mod.id for mod in chosen],
@@ -477,6 +515,7 @@ def _apply_plan_locked(
         [mod.id for mod in plan.selected],
         profile=plan.profile,
         tools=plan.tools,
+        patch_priority=plan.report.get("merge_policy") == "ordered-patches",
     )
     if fresh.blockers or fresh.report != plan.report or fresh.payload != plan.payload:
         raise InputError("База, инструменты или игра изменились")

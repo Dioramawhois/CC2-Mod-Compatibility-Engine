@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix="cc2-ux-preview-") as temporary:
                       analyze(game, scan, chosen, profile=profile)), \
          patch.object(gui, "apply_plan", lambda plan, user:
                       apply_plan(plan, user, game_running=lambda: False)):
-        app = gui.App(discover_on_start=False)
+        app = gui.App(discover_on_start=False, patch_priority=False, language="ru")
         app.title("CC2 Engine — UX audit (synthetic)")
         app.apply_installations(Installations((game,), (), ()))
         app.mod_roots = [directory / "workshop"]

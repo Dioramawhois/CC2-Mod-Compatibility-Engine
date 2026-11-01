@@ -1,5 +1,7 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+**0.3.0:** data baselines берутся из rom_0, иначе mod_dev_kit/source, без заранее записанного списка одобренных файлов. Неизвестная game build допускает data merge, но не получает разрешения native/runtime. Порядок во вкладке — порядок слияния файлов внутри единого output, не обещание нового CC2X DLL resource/loading hook. No-base data replacement явно включена владельцем. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
+
 **0.2.2:** владелец разрешил автоматическую подготовку mods/libraries при первом запуске; только внутри выбранной проверенной игры после portable placement. Existing file/junction/permission error не обходится, SDK/vanilla/Workshop остаются read-only. После неудачного изменения UI возвращает реальную активацию и разрешает запуск прежнего набора, если нет незавершённой транзакции. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
 
 **0.2.1:** пользователь разрешил автоматическое применение по галочке без дополнительных подтверждений. Единый локальный output — пользовательский `mods/CC2-MCE`, имя в игре «CC2 Engine — мои моды». Исторические активные собственные hash-папки архивируются обратимо в служебный cache. Перед записью игра закрыта; при открытой игре UI ожидает и повторяет автоматически. Снятие всех галочек очищает active_mod_folders. Workshop/vanilla/SDK/executable не изменяются. [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md) заменяет прежние шаги кнопок/имя output.

@@ -1,4 +1,8 @@
-# CC2 Engine 0.2.2 — проверка применения и отказа по галочке
+# CC2 Engine 0.3.0 — порядок патчей, языки и применение по галочке
+
+Текущая сборка: 181 tests passed, 3 Windows symlink skips; Ruff/format, mypy Windows/darwin static analysis, frozen Git/Lua и GUI smoke. Во вкладке порядка drag/drop или Alt+↑/↓ автоматически пересобирают выбранные пакеты; повторный запуск восстанавливает порядок. Включённый по умолчанию приоритет сохраняет независимые hunks и выбирает поздние спорные; без оригинала data заменяется целиком с `overridden`/strategy в отчёте. Проверяйте отказ конфликтующего набора ниже в strict режиме (отключить «Приоритет поздних патчей»), а syntax/native/path ошибки остаются отказом в обоих режимах.
+
+Язык по умолчанию — системный, выбор System/Русский/English доступен через меню и сохраняется. Проверьте меню, состояния строк, ошибки и вкладку порядка на обоих языках; имена модов/пути не переводятся. Активная вкладка крупнее неактивных. Новая версия установлена локально, сохранила фактический набор Autosave + Island Airfields + AI Bridge + SDK и записала `ordered-patches`. Реальный read-only Revolution 1.6-19 plan: 41 файл, 4 replacements, 0 blockers; без запуска игры. Evidence `build/evidence/20261101T231308Z`, JUnit `build/test-results.xml`, build sidecar `dist/CC2Engine.build.json`. Это не новое gameplay/macOS/clean-machine acceptance.
 
 Python, Git, Lua и терминал игроку не нужны. Проверяйте установленный `CC2Engine.exe` рядом с игрой.
 

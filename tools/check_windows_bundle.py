@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from xml.etree import ElementTree as ET
 from ctypes import wintypes
 from pathlib import Path
 
@@ -200,6 +201,15 @@ report = {
     "git_and_lua_bundled": True,
     "installable_mod_verified": False,
 }
+test_report = root / "build/test-results.xml"
+if test_report.exists():
+    suites = ET.parse(test_report).getroot().iter("testsuite")
+    counts = {key: 0 for key in ("tests", "failures", "errors", "skipped")}
+    for suite in suites:
+        for key in counts:
+            counts[key] += int(suite.get(key, "0"))
+    report["regressions"] = {**counts, "passed": counts["tests"] - counts["failures"]
+                             - counts["errors"] - counts["skipped"]}
 destination = exe.with_suffix(".build.json")
 destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(

@@ -29,6 +29,9 @@
     "output_folder": {
       "const": "CC2-MCE"
     },
+    "merge_policy": {
+      "enum": ["strict", "ordered-patches"]
+    },
     "engine_sha256": {
       "$ref": "#/$defs/hash"
     },
@@ -103,6 +106,9 @@
                 "type": "null"
               }
             ]
+          },
+          "baseline_source": {
+            "type": ["string", "null"]
           },
           "output_sha256": {
             "anyOf": [

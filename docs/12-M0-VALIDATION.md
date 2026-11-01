@@ -1,5 +1,9 @@
 # 12. M0: локальная проверка и неподтверждённые gates
 
+## 0.3.0 — порядок, приоритет и локаль (2026-11-02)
+
+181 Windows tests passed, 3 symlink skips; Ruff/format и mypy Windows/darwin static analysis, frozen Git/Lua и GUI smoke. Установленный exe автоматически восстановил текущий порядок Autosave + Island Airfields + AI Bridge + SDK; report policy ordered-patches, системная UI locale ru, language choice system. Output остаётся одной папкой CC2-MCE. Read-only plan с Revolution 1.6-19 обработал 41 ресурс, 4 override, 0 blockers. Installed originals используются с фактическими hashes/source, без allowlist; отсутствующая база отмечается как replacement, не fake merge. Evidence `build/evidence/20261101T231308Z`, JUnit и dist sidecar. Игра в этой UX/data проверке не запускалась; runtime/gameplay/macOS execution gates отдельно. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
+
 ## 0.2.1 — постоянный output и автоматический GUI (2026-11-02)
 
 157 тестов прошли, 3 symlink fixtures пропущены из-за Windows privileges; Ruff и mypy Windows/darwin прошли (darwin static analysis не означает macOS execution). Установленная frozen сборка автоматически сохранила текущий состав Island Airfields + AI Bridge + SDK, заменила hash-output на `mods/CC2-MCE`, убрала прежние собственные активные/неактивные hash-пакеты в служебный cache. Payload hashes всех трёх файлов совпали с прежним активным пакетом. В GUI нет кнопок проверки/применения; фактическое состояние показано именами модов.

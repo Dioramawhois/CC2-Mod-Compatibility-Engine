@@ -3,6 +3,7 @@
 Both sides are compared to the base line by line. Non-overlapping edits combine;
 an overlapping edit that both sides made differently is a conflict. Never picks a winner.
 """
+
 from __future__ import annotations
 
 import difflib
@@ -19,9 +20,7 @@ def _changes(base: list[bytes], side: list[bytes]) -> list[tuple[int, int, list[
     """Hunks as (base_start, base_end, replacement) against the base."""
     matcher = difflib.SequenceMatcher(a=base, b=side, autojunk=False)
     return [
-        (i1, i2, side[j1:j2])
-        for tag, i1, i2, j1, j2 in matcher.get_opcodes()
-        if tag != "equal"
+        (i1, i2, side[j1:j2]) for tag, i1, i2, j1, j2 in matcher.get_opcodes() if tag != "equal"
     ]
 
 

@@ -336,3 +336,67 @@ def test_legacy_hash_output_is_archived_and_undo_returns_it(tmp_path: Path) -> N
     assert inactive.is_dir()
     assert (legacy / "content/a.txt").read_bytes() == first.payload["a.txt"]
     assert (user / "mods.xml").read_bytes() == previous
+
+
+def test_installed_original_is_used_without_preapproved_file_hash(tmp_path: Path) -> None:
+    installation, profile, _ = fixture(tmp_path)
+    profile["baselines"] = {}
+    plan = analyze(installation, discover([tmp_path / "workshop"]), ["a", "b"], profile=profile)
+    assert not plan.blockers
+    assert plan.payload["a.txt"] == b"a=2\n\n\nb=2\n"
+    assert plan.report["files"][0]["baseline_sha256"] == digest(b"a=1\r\n\r\n\r\nb=1\r\n")
+
+
+def test_later_patch_resolves_hunks_and_preserves_unrelated_changes(tmp_path: Path) -> None:
+    installation, profile, user = fixture(tmp_path)
+    (tmp_path / "workshop/b/content/a.txt").write_bytes(b"a=3\n\n\nb=2\n")
+    scan = discover([tmp_path / "workshop"])
+    forward = analyze(installation, scan, ["a", "b"], profile=profile, patch_priority=True)
+    reverse = analyze(installation, scan, ["b", "a"], profile=profile, patch_priority=True)
+    assert forward.payload["a.txt"] == b"a=3\n\n\nb=2\n"
+    assert reverse.payload["a.txt"] == b"a=2\n\n\nb=2\n"
+    assert forward.report["files"][0]["status"] == "overridden"
+    assert forward.report["mod_order"] == ["a", "b"]
+    assert reverse.report["mod_order"] == ["b", "a"]
+    package = apply_plan(forward, user, game_running=lambda: False)
+    apply_plan(reverse, user, game_running=lambda: False)
+    assert (package / "content/a.txt").read_bytes() == reverse.payload["a.txt"]
+
+
+def test_no_original_uses_explicit_ordered_replacement(tmp_path: Path) -> None:
+    installation, profile, _ = fixture(tmp_path)
+    for path in (installation.root / "rom_0/a.txt", installation.root / "mod_dev_kit/source/a.txt"):
+        path.unlink()
+    scan = discover([tmp_path / "workshop"])
+    plan = analyze(installation, scan, ["a", "b"], profile=profile, patch_priority=True)
+    assert not plan.blockers
+    assert plan.payload["a.txt"] == b"a=1\n\n\nb=2\n"
+    result = plan.report["files"][0]
+    assert result["baseline_sha256"] is None
+    assert result["strategy"] == "ordered-replacement-no-base"
+    strict = analyze(installation, scan, ["a", "b"], profile=profile)
+    assert strict.blockers
+
+
+def test_repeated_earlier_content_can_be_the_last_patch(tmp_path: Path) -> None:
+    installation, profile, _ = fixture(tmp_path)
+    (tmp_path / "workshop/b/content/a.txt").write_bytes(b"a=3\n\n\nb=2\n")
+    make_mod(tmp_path / "workshop", "c", {"a.txt": b"a=2\n\n\nb=1\n"})
+    plan = analyze(
+        installation,
+        discover([tmp_path / "workshop"]),
+        ["a", "b", "c"],
+        profile=profile,
+        patch_priority=True,
+    )
+    assert not plan.blockers
+    assert plan.payload["a.txt"] == b"a=2\n\n\nb=2\n"
+
+
+def test_local_original_path_case_is_host_independent(tmp_path: Path) -> None:
+    installation, profile, _ = fixture(tmp_path)
+    original = installation.root / "rom_0/a.txt"
+    original.rename(original.with_name("A.TXT"))
+    plan = analyze(installation, discover([tmp_path / "workshop"]), ["a", "b"], profile=profile)
+    assert not plan.blockers
+    assert plan.payload["a.txt"] == b"a=2\n\n\nb=2\n"

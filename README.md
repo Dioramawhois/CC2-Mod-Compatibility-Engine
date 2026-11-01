@@ -4,17 +4,21 @@
 
 ## Русский
 
-**0.2.2 — галочки автоматически обновляют одну общую сборку; отказ снимает отклонённый выбор.** Проверенный сценарий: AI Bridge + Island Airfields на CC2 1.5.18 Windows r2. Игра запущена с объединённым пакетом, свежий лог подтвердил загрузку плагина аэродромов. Полная игровая совместимость произвольных модов не гарантируется.
+**0.3.0 — автоматическая сборка, порядок патчей и RU/EN с языком системы по умолчанию.** Пересекающиеся изменения получают приоритет по выбранному порядку, независимые правки сохраняются через настоящий Git. Пакеты собираются в одну постоянную папку. Полная игровая совместимость произвольных модов не гарантируется.
 
 ### Как пользоваться
 
 1. Откройте `CC2Engine.exe`. Программа найдёт игру через Steam; Windows portable попросит поместить exe рядом с `carrier_command.exe`, если он запущен из другой папки.
 2. Отметьте нужные моды. Workshop читается на месте, локальные пакеты — из `mods` и `libraries` рядом с игрой. Эти папки создаются автоматически при первом запуске. Дополнительные папки, выбор игры и расположение файлов доступны через **«Меню»**.
 3. Проверка, разрешение зависимостей, слияние и включение происходят **сразу по галочке**, без дополнительных кнопок и подтверждений. Дождитесь строки **«Готово. Можно запускать игру»**. Верхняя строка показывает фактически включённые моды.
-4. Если игра открыта, строки покажут ожидание, а выбор применится после её закрытия. При конфликте новая галочка снимется, прежний набор останется включённым и доступным для запуска. Причина с названиями модов появится рядом с отказанным модом; файл — в **«Меню → Подробности проблемы»**. Необходимая зависимость остаётся включённой с пояснением, какому моду нужна. Снятие всех галочек отключает моды. Обновления выбранных sources пересобираются автоматически; новые найденные моды включаются только вашей галочкой.
+4. Во вкладке **«Порядок загрузки»** перетащите моды или используйте **Alt+↑ / Alt+↓**. Поздние патчи размещаются ниже. Любое изменение порядка автоматически пересобирает файлы и сохраняется. При известном оригинале Git сохраняет независимые правки и отдаёт спорные участки позднему патчу. Без оригинала или для разных binary ресурсов поздний файл заменяет ранний целиком; число замен показано в статусе. Список заранее разрешённых оригиналов больше не требуется. Строгую проверку можно вернуть, отключив **«Приоритет поздних патчей»** в меню.
 5. Нажмите **«Запустить игру»**. Для возврата предыдущего набора используйте **«Меню → Вернуть предыдущий набор»** при закрытой игре; восстанавливаются и содержимое сборки, и активация. Диагностика и экспорт отчёта также доступны в меню.
 
 Python, Git, Lua, терминал и ручные manifests игроку не нужны. Проверенные Git и Lua 5.3 входят в exe. Reports экспортируются только по вашему действию.
+
+Если игра открыта, изменения применятся после её закрытия. При ошибке синтаксиса/неподдержанном DLL/другом окончательном отказе галочки и порядок возвращаются к рабочему набору, который можно запустить. Обязательные зависимости объясняют повторное включение. Путь проблемного файла доступен через меню подробностей.
+
+**Язык:** по умолчанию язык системы; поддержаны русский и английский, остальные локали используют English. Изменить выбор можно через **«Меню → Язык»**. Настройка сохраняется; смена языка пересоздаёт окно после безопасного завершения операции и переносит ожидающий выбор/порядок. Выбранная вкладка крупнее соседних и выделена жирным.
 
 ### Каталоги и загрузчик
 
@@ -57,7 +61,9 @@ Carrier Command 2/
 
 ## English
 
-**0.2.2 applies checkbox changes automatically and reverts rejected selections.** Place `CC2Engine.exe` next to the game; input folders are prepared automatically. Checking, merging and activation update the single `mods/CC2-MCE` output. A running game defers changes. Conflicts uncheck the rejected addition, name participants and keep the working set available to launch. Required dependencies explain why they stay enabled. The main screen contains the list and Launch; paths, discovery, diagnostics, undo and export live in one menu. Git and Lua 5.3 are bundled; players need no terminal or manual tool installation.
+**0.3.0 adds persistent patch order and system-default RU/EN.** Drag selected packages in **Load order**, or use Alt+Up/Down; every change rebuilds automatically. Later patches win overlapping Git hunks while unrelated edits survive. Installed originals are used without a file-hash allowlist; missing-base data and binary collisions use an explicit, reported later-file replacement. **Menu → Later patches take priority** can restore strict mode. Unsupported native code, unsafe paths and invalid syntax remain blocked.
+
+The UI follows the system language; Russian and English can be selected in **Menu → Language**. Preferences persist. Checkbox changes update one `mods/CC2-MCE` folder, wait for a running game to close, and revert to the working selection/order on failure. Input folders are prepared automatically. Git and Lua 5.3 are bundled; players need no terminal or manual tool installation.
 
 Workshop stays in place. Local inputs use `mods/<id>/content` and `libraries/<id>/content`. A valid `cc2mce` section in mod.xml declares a library and dependencies; unmarked packages remain ordinary mods. Native DLLs remain separate reviewed plugins of one loader. A hash-matched user-provided dinput8.dll can be installed from libraries; existing unknown loaders and unsupported game/plugin versions block application.
 

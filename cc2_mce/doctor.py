@@ -18,7 +18,11 @@ def tool_version(executable: str | None, flag: str) -> tuple[str | None, bool]:
         return None, False
     try:
         result = subprocess.run(
-            [executable, flag], capture_output=True, shell=False, timeout=5, check=False,
+            [executable, flag],
+            capture_output=True,
+            shell=False,
+            timeout=5,
+            check=False,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         text = (result.stdout + result.stderr).decode("utf-8", errors="replace").strip()

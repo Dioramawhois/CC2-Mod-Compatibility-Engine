@@ -34,7 +34,6 @@ report.update({
     "auto_apply_evidence": str((evidence / "auto-apply.json").relative_to(root)),
     "verified_scope": "installed GUI's current applied selection; checkbox rejection UI regression tests"
                       if ui_only else "automatic GUI rebuild and fresh native plugin load; not gameplay",
-    "regressions": {"passed": 168, "skipped": 3, "skip_reason": "Windows symlink privilege"},
 })
 if not ui_only:
     report["runtime_evidence"] = str((evidence / "runtime-evidence.json").relative_to(root))

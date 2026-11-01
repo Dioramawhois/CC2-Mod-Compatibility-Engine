@@ -1,5 +1,7 @@
 # 03. Спецификация движка слияния
 
+**Актуальный GUI 0.3.0:** пользователь явно запросил порядок патчей и отмену no-base allowlist gate. `ordered-patches` сохраняет независимые изменения через Git и разрешает пересечения в пользу позднего патча (`git-three-way-later-hunks`). Если оригинала нет, последний data файл заменяет прежние целиком (`ordered-replacement-no-base`); известные binary collisions аналогично отмечаются как replacement. Status — `overridden`, не `clean`. Реальные installed originals, их SHA и источник фиксируются, пустая/выдуманная база не создаётся. CLI/core default strict и прежняя строгая таблица ниже сохраняются при отключённом приоритете. Native, syntax, encoding/path gates остаются обязательными. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
+
 **0.2.2:** новые UX-правила не ослабляют blockers и не выбирают победителя. При отказе откатывается только запрошенный UI выбор к реально применённому составу; старый payload сохраняется. Участники и ресурс берутся из report.files/source_sha256, не угадываются из текста Git. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
 
 **0.2.1:** алгоритм Git/Lua и все блокирующие статусы сохранены. Меняется orchestration: выбор галочкой автоматически создаёт свежий plan, а только чистый результат заменяет постоянный output. Конфликт не удаляет прежний payload. Пустой набор разрешён и отключает моды без merge. [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md).

@@ -128,6 +128,8 @@ Mapping пока неполный (`complete: false`): отсутствие за
 
 ## GUI package v2: постоянная папка и пустой набор (0.2.1)
 
+**0.3.1:** Preferences language enum расширен supported codes из i18n.LANGUAGES (14 языков) + system, schema 1 сохранена. Package owner/folder/schema v2 прежние; изменён display name metadata на CC2 ModLoader + имена модов, что отражено в metadata hash/build identity. Locale по-прежнему не влияет на payload. Source/engine hash включает статические language catalogs. [ADR-0013](adr/0013-modloader-brand-and-offline-language-pack.md).
+
 **Расширение 0.3.0:** optional `merge_policy: strict|ordered-patches`; optional `files[].baseline_source` — game-relative path или null. `overridden` и strategy `git-three-way-later-hunks|ordered-replacement-no-base|ordered-binary-replacement` отделены от clean/copied. SHA всех исходников, фактического оригинала и output, а также mod_order позволяют воспроизвести приоритет. Apply повторяет policy из plan, не подменяет её строгим default. Старые v2 manifests читаются; CLI v1 не меняется. Preferences schema 1: owner=cc2-mce, language=system|ru|en, patch_priority boolean, orders по game root, extra_roots; 64 KiB, atomic expected-byte replace. Locale не меняет package identity. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
 
 **UX 0.2.2:** JSON schema v2 не меняется. Report при отказе описывает отклонённый requested набор; не считается текущей активацией. GUI отдельно хранит applied ID, возвращает к ним галочки, сохраняет rejected report для добровольного экспорта и выводит названия/ресурс через чистый presenter. Нельзя выдавать mod_order отклонённого report за включённый состав. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).

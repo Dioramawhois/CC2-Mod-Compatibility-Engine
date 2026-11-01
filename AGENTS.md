@@ -4,6 +4,8 @@
 
 ## Goal
 
+Brand/languages 0.3.1 (ADR-0013): user-facing product is CC2 ModLoader, canonical executable CC2ModLoader.exe. Generated game mod names include the selected mod names. Ship 14 complete offline catalogs (RU/EN/DE/FR/ES/PT-BR/IT/PL/TR/UK/zh-CN/zh-TW/JA/KO); default follows the system, explicit language is persisted. Core owner/folder/schema identities remain stable. Do not send user mod content or paths to translation services.
+
 Owner update 0.3.0 (ADR-0012): GUI has an editable, persistent merge order and ordered patch priority enabled by default. Use installed originals without a preapproved per-file hash list; overlapping hunks favor the later patch explicitly, and missing-base data uses a reported whole-file replacement. This explicit owner request supersedes the older blanket no-base/no-priority constraints for data resources. Never invent a baseline or bypass native/path/syntax safety. Default UI language follows the system with RU/EN choices; selected tabs must be larger than inactive ones.
 
 UX 0.2.2: a rejected checkbox change must restore the actual applied selection and allow launching the intact working set. Explain the rejected mod/participants inline; preserve the notice during passive scans. Prepare only the selected verified game's mods/libraries automatically; no preparation button. Keep the main screen to the list, result and Launch; secondary operations live in one menu. ADR-0011 supersedes the older explicit preparation and retained rejected-selection behavior.

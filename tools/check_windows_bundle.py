@@ -16,14 +16,14 @@ from pathlib import Path
 
 from PyInstaller.archive.readers import CArchiveReader
 
-from cc2_mce import __version__
+from cc2_mce import APP_EXECUTABLE, APP_NAME, __version__
 from cc2_mce.discovery import discover
 from cc2_mce.filesystem import Budget, Limits, input_root, read_regular
 from cc2_mce.installation import find_installations
 from cc2_mce.reports import engine_hash
 
 root = Path(__file__).resolve().parents[1]
-exe = root / "dist/CC2Engine.exe"
+exe = root / "dist" / APP_EXECUTABLE
 archive = CArchiveReader(str(exe))
 names = {name.replace("\\", "/"): name for name in archive.toc}
 sources = [*sorted((root / "cc2_mce").glob("*.py"))]
@@ -124,7 +124,7 @@ with tempfile.TemporaryDirectory(prefix="cc2-exe-smoke-") as cwd:
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
             fresh = [(hwnd, title) for hwnd, title in windows() if hwnd not in before]
-            matches = [hwnd for hwnd, title in fresh if title == "CC2 Engine"]
+            matches = [hwnd for hwnd, title in fresh if title == APP_NAME]
             if matches:
                 opened = True
                 time.sleep(1)

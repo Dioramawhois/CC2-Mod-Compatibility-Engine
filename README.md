@@ -1,14 +1,14 @@
-# CC2 Engine — CC2 Mod Compatibility Engine
+# CC2 ModLoader — CC2 Mod Compatibility Engine
 
 [Русский](#русский) · [English](#english)
 
 ## Русский
 
-**0.3.0 — автоматическая сборка, порядок патчей и RU/EN с языком системы по умолчанию.** Пересекающиеся изменения получают приоритет по выбранному порядку, независимые правки сохраняются через настоящий Git. Пакеты собираются в одну постоянную папку. Полная игровая совместимость произвольных модов не гарантируется.
+**0.3.1 — CC2 ModLoader с порядком патчей и офлайн-паком 14 языков.** По умолчанию используется язык системы. Пересекающиеся изменения получают приоритет по выбранному порядку, независимые правки сохраняются через настоящий Git. Пакеты собираются в одну постоянную папку; имя в игре содержит ModLoader и названия выбранных модов. Полная игровая совместимость произвольных модов не гарантируется.
 
 ### Как пользоваться
 
-1. Откройте `CC2Engine.exe`. Программа найдёт игру через Steam; Windows portable попросит поместить exe рядом с `carrier_command.exe`, если он запущен из другой папки.
+1. Откройте `CC2ModLoader.exe`. Программа найдёт игру через Steam; Windows portable попросит поместить exe рядом с `carrier_command.exe`, если он запущен из другой папки.
 2. Отметьте нужные моды. Workshop читается на месте, локальные пакеты — из `mods` и `libraries` рядом с игрой. Эти папки создаются автоматически при первом запуске. Дополнительные папки, выбор игры и расположение файлов доступны через **«Меню»**.
 3. Проверка, разрешение зависимостей, слияние и включение происходят **сразу по галочке**, без дополнительных кнопок и подтверждений. Дождитесь строки **«Готово. Можно запускать игру»**. Верхняя строка показывает фактически включённые моды.
 4. Во вкладке **«Порядок загрузки»** перетащите моды или используйте **Alt+↑ / Alt+↓**. Поздние патчи размещаются ниже. Любое изменение порядка автоматически пересобирает файлы и сохраняется. При известном оригинале Git сохраняет независимые правки и отдаёт спорные участки позднему патчу. Без оригинала или для разных binary ресурсов поздний файл заменяет ранний целиком; число замен показано в статусе. Список заранее разрешённых оригиналов больше не требуется. Строгую проверку можно вернуть, отключив **«Приоритет поздних патчей»** в меню.
@@ -18,14 +18,14 @@ Python, Git, Lua, терминал и ручные manifests игроку не �
 
 Если игра открыта, изменения применятся после её закрытия. При ошибке синтаксиса/неподдержанном DLL/другом окончательном отказе галочки и порядок возвращаются к рабочему набору, который можно запустить. Обязательные зависимости объясняют повторное включение. Путь проблемного файла доступен через меню подробностей.
 
-**Язык:** по умолчанию язык системы; поддержаны русский и английский, остальные локали используют English. Изменить выбор можно через **«Меню → Язык»**. Настройка сохраняется; смена языка пересоздаёт окно после безопасного завершения операции и переносит ожидающий выбор/порядок. Выбранная вкладка крупнее соседних и выделена жирным.
+**Язык:** по умолчанию язык системы. Включены русский, английский, немецкий, французский, испанский, португальский (Бразилия), итальянский, польский, турецкий, украинский, упрощённый/традиционный китайский, японский и корейский. Неподдержанная локаль использует English. Изменить выбор можно через **«Меню → Язык»**. Переводы входят в exe и работают без интернета; базовые названия элементов выверены, остальные сообщения имеют машинный перевод с проверкой параметров. Настройка сохраняется; смена языка переносит ожидающий выбор/порядок. Выбранная вкладка крупнее соседних и выделена жирным.
 
 ### Каталоги и загрузчик
 
 ```text
 Carrier Command 2/
   carrier_command.exe
-  CC2Engine.exe
+  CC2ModLoader.exe
   dinput8.dll                 # установленный проверенный runtime, если нужен
   mods/<mod-id>/content/...
   libraries/<package>/mod.xml
@@ -34,7 +34,7 @@ Carrier Command 2/
 
 Предоставленный dinput8.dll может находиться, например, в `libraries/SDK/content/dinput8.dll`: поддержанная версия будет установлена рядом с игрой при применении, исходник сохранится. Неизвестный уже установленный dinput8.dll не перезаписывается.
 
-Результат всегда находится в одной папке пользовательского каталога CC2: `mods/CC2-MCE`, с `mod.xml`, `content` и manifest вне `content`. Название в игре — **«CC2 Engine — мои моды»**. Эта папка полностью заменяется после успешной проверки, старые файлы снятых модов не остаются. Хеши хранятся внутри manifest. Резервная сборка и журнал находятся отдельно в служебной папке `cc2-mce`. Исходники Workshop, vanilla/SDK и executable игры остаются неизменны. При восстановлении SDK loader может оставаться установленным; это отдельный компонент. [ADR-0010](docs/adr/0010-checkbox-auto-apply-and-stable-output.md).
+Результат всегда находится в одной папке пользовательского каталога CC2: `mods/CC2-MCE`, с `mod.xml`, `content` и manifest вне `content`. Название в игре — **«CC2 ModLoader: Island Airfields + AI Bridge + …»**, с фактически выбранными именами и ограничением длины. Эта папка полностью заменяется после успешной проверки, старые файлы снятых модов не остаются. Хеши хранятся внутри manifest. Резервная сборка и журнал находятся отдельно в служебной папке `cc2-mce`. Исходники Workshop, vanilla/SDK и executable игры остаются неизменны. При восстановлении SDK loader может оставаться установленным; это отдельный компонент. [ADR-0010](docs/adr/0010-checkbox-auto-apply-and-stable-output.md).
 
 ### Библиотеки через Workshop
 
@@ -61,9 +61,9 @@ Carrier Command 2/
 
 ## English
 
-**0.3.0 adds persistent patch order and system-default RU/EN.** Drag selected packages in **Load order**, or use Alt+Up/Down; every change rebuilds automatically. Later patches win overlapping Git hunks while unrelated edits survive. Installed originals are used without a file-hash allowlist; missing-base data and binary collisions use an explicit, reported later-file replacement. **Menu → Later patches take priority** can restore strict mode. Unsupported native code, unsafe paths and invalid syntax remain blocked.
+**0.3.1 ships CC2ModLoader.exe and an offline 14-language pack.** Drag selected packages in **Load order**, or use Alt+Up/Down; every change rebuilds automatically. Later patches win overlapping Git hunks while unrelated edits survive. Installed originals are used without a file-hash allowlist; missing-base data and binary collisions use an explicit, reported later-file replacement. **Menu → Later patches take priority** can restore strict mode. Unsupported native code, unsafe paths and invalid syntax remain blocked.
 
-The UI follows the system language; Russian and English can be selected in **Menu → Language**. Preferences persist. Checkbox changes update one `mods/CC2-MCE` folder, wait for a running game to close, and revert to the working selection/order on failure. Input folders are prepared automatically. Git and Lua 5.3 are bundled; players need no terminal or manual tool installation.
+The UI follows the system language. **Menu → Language** offers RU, EN, DE, FR, ES, PT-BR, IT, PL, TR, UK, simplified/traditional Chinese, JA and KO. Primary labels are reviewed; remaining translations are machine-assisted with complete key/parameter checks. All catalogs ship offline. Preferences persist. Checkbox changes update one `mods/CC2-MCE` folder, wait for a running game to close, and revert to the working selection/order on failure. The generated game mod name contains CC2 ModLoader and the selected mod names. Git and Lua 5.3 are bundled; players need no terminal or manual tool installation.
 
 Workshop stays in place. Local inputs use `mods/<id>/content` and `libraries/<id>/content`. A valid `cc2mce` section in mod.xml declares a library and dependencies; unmarked packages remain ordinary mods. Native DLLs remain separate reviewed plugins of one loader. A hash-matched user-provided dinput8.dll can be installed from libraries; existing unknown loaders and unsupported game/plugin versions block application.
 

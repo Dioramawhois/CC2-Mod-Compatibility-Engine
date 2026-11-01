@@ -1,4 +1,4 @@
-"""Russian/English UI with system-language detection and named, non-executable messages."""
+"""Offline multilingual UI with system-language detection and named messages."""
 
 from __future__ import annotations
 
@@ -7,11 +7,37 @@ import os
 import re
 import sys
 
+from cc2_mce.language_packs import PACKS
 from cc2_mce.translations import EN
+
+LANGUAGES = {
+    "en": "English",
+    "ru": "Русский",
+    "de": "Deutsch",
+    "fr": "Français",
+    "es": "Español",
+    "pt": "Português (Brasil)",
+    "it": "Italiano",
+    "pl": "Polski",
+    "tr": "Türkçe",
+    "uk": "Українська",
+    "zh": "简体中文",
+    "zh-TW": "繁體中文",
+    "ja": "日本語",
+    "ko": "한국어",
+}
 
 
 def language_for_locale(value: str | None) -> str:
-    return "ru" if (value or "").lower().replace("-", "_").startswith("ru") else "en"
+    normalized = (value or "").lower().replace("-", "_")
+    if normalized.startswith("zh"):
+        return (
+            "zh-TW"
+            if any(part in normalized for part in ("_tw", "_hk", "_mo", "hant", "cht"))
+            else "zh"
+        )
+    language = normalized.split("_")[0].split(".")[0]
+    return language if language in LANGUAGES else "en"
 
 
 def system_language() -> str:
@@ -32,8 +58,9 @@ def system_language() -> str:
 class Translator:
     def __init__(self, choice: str = "system") -> None:
         self.language = system_language() if choice == "system" else choice
+        self.catalog = {**EN, **PACKS.get(self.language, {})}
         self._patterns: list[tuple[re.Pattern[str], str, list[str]]] = []
-        for original, translated in EN.items():
+        for original, translated in self.catalog.items():
             keys = re.findall(r"\{(p[0-9]+)\}", original)
             if keys:
                 pattern = re.escape(original)
@@ -44,7 +71,7 @@ class Translator:
     def __call__(self, message: str, **values: object) -> str:
         if self.language == "ru":
             return message.format(**values) if values else message
-        translated = EN.get(message)
+        translated = self.catalog.get(message)
         if translated is not None:
             return translated.format(**values) if values else translated
         if not values:

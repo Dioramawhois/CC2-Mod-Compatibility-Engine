@@ -13,11 +13,12 @@ from collections.abc import Callable
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
+from cc2_mce import APP_NAME
 from cc2_mce.baseline import Baseline
 from cc2_mce.discovery import ModRef, Scan, discover
 from cc2_mce.errors import InputError, MCEError
 from cc2_mce.filesystem import Budget, Limits, input_root, read_regular
-from cc2_mce.i18n import Translator
+from cc2_mce.i18n import LANGUAGES, Translator
 from cc2_mce.installation import (
     GAME_ID,
     Installation,
@@ -53,7 +54,7 @@ class App(tk.Tk):
         resume_request: tuple[Path, set[str], list[str]] | None = None,
     ) -> None:
         super().__init__()
-        self.title("CC2 Engine")
+        self.title(APP_NAME)
         self.geometry("860x700")
         self.minsize(720, 560)
         self.app_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else None
@@ -179,7 +180,7 @@ class App(tk.Tk):
         frame.pack(fill="both", expand=True)
         heading = ttk.Frame(frame)
         heading.pack(fill="x")
-        ttk.Label(heading, text="Carrier Command 2", style="Title.TLabel").pack(side="left")
+        ttk.Label(heading, text=APP_NAME, style="Title.TLabel").pack(side="left")
         self.menu_button = ttk.Menubutton(heading, text=self.tr("Меню"), takefocus=True)
         self.menu_button.pack(side="right")
         self.actions_menu = tk.Menu(self.menu_button, tearoff=False)
@@ -207,11 +208,7 @@ class App(tk.Tk):
         )
         language_menu = tk.Menu(self.actions_menu, tearoff=False)
         self.language_var = tk.StringVar(value=self.language_choice)
-        for choice, label in [
-            ("system", self.tr("Как в системе")),
-            ("ru", self.tr("Русский")),
-            ("en", "English"),
-        ]:
+        for choice, label in [("system", self.tr("Как в системе")), *LANGUAGES.items()]:
             language_menu.add_radiobutton(
                 label=label, value=choice, variable=self.language_var, command=self.change_language
             )

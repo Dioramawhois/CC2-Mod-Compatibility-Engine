@@ -9,6 +9,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from cc2_mce import APP_EXECUTABLE
+
 from cc2_mce.filesystem import digest
 from cc2_mce.installation import find_installations
 from cc2_mce.reports import engine_hash
@@ -25,10 +27,12 @@ if sys.argv[1:] == ["before"]:
     report = _verified_package(paths[0])
     shutil.copy2(user / "mods.xml", evidence / "mods.xml.before")
     shutil.copy2(game.root / "cc2x.log", evidence / "cc2x.log.before")
+    binary = game.root / APP_EXECUTABLE
+    if not binary.is_file():
+        binary = game.root / "CC2Engine.exe"
     (evidence / "before.json").write_text(json.dumps({
         "package": str(paths[0]), "report": report,
-        "binary_sha256": digest((game.root / "CC2Engine.exe").read_bytes())
-                         if (game.root / "CC2Engine.exe").is_file() else None,
+        "binary_sha256": digest(binary.read_bytes()) if binary.is_file() else None,
     }, indent=2) + "\n", encoding="utf-8")
     (root / "build/auto-evidence-path.txt").write_text(str(evidence), encoding="utf-8")
     print(json.dumps({"evidence": str(evidence), "selected": report["mod_order"]}))

@@ -18,6 +18,7 @@ from xml.etree import ElementTree as ET
 
 from jsonschema import Draft202012Validator
 
+from cc2_mce import APP_NAME
 from cc2_mce.discovery import ModRef, Scan, fingerprint, snapshot_unchanged
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import (
@@ -134,7 +135,11 @@ def _runtime(game: Installation, expected: str) -> Path | None:
 def _package_metadata(selected: tuple[ModRef, ...]) -> bytes:
     root = ET.Element(
         "data",
-        name="CC2 Engine",
+        name=(
+            (APP_NAME + ": " + " + ".join(mod.name for mod in selected))[:240]
+            if selected
+            else APP_NAME
+        ),
         author="CC2 Mod Compatibility Engine",
         description=(" + ".join(mod.name for mod in selected) or "No mods enabled")[:512],
     )

@@ -11,7 +11,12 @@ def test_system_locale_selection_and_fallback():
     assert language_for_locale("ru_RU.UTF-8") == "ru"
     assert language_for_locale("ru-RU") == "ru"
     assert language_for_locale("en_US") == "en"
-    assert language_for_locale("de_DE") == "en"
+    assert language_for_locale("de_DE") == "de"
+    assert language_for_locale("pt_BR") == "pt"
+    assert language_for_locale("zh_CN") == "zh"
+    assert language_for_locale("zh_Hant_TW") == "zh-TW"
+    assert language_for_locale("ja_JP") == "ja"
+    assert language_for_locale("unknown") == "en"
     assert language_for_locale(None) == "en"
 
 
@@ -73,3 +78,18 @@ def test_gui_uses_system_language_and_remembers_explicit_choice(tmp_path, monkey
     assert restored.launch_button.cget("text") == "Запустить игру"
     restored.destroy()
     gc.collect()
+
+
+def test_language_pack_has_complete_keys_and_preserves_placeholders():
+    import re
+
+    from cc2_mce.i18n import LANGUAGES
+    from cc2_mce.language_packs import PACKS
+
+    assert set(PACKS) == set(LANGUAGES) - {"ru", "en"}
+    for language, catalog in PACKS.items():
+        assert set(catalog) == set(EN), language
+        for key, translated in catalog.items():
+            assert translated.strip(), (language, key)
+            assert set(re.findall(r"\{p\d+\}", translated)) == set(re.findall(r"\{p\d+\}", EN[key]))
+        assert Translator(language)("Запустить игру") != EN["Запустить игру"]

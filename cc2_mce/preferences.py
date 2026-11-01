@@ -11,6 +11,7 @@ from typing import Any
 
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import Budget, Limits, input_root, read_regular
+from cc2_mce.i18n import LANGUAGES
 
 
 @dataclass
@@ -34,7 +35,7 @@ class Preferences:
             if (
                 value["owner"] != "cc2-mce"
                 or value["schema_version"] != 1
-                or value["language"] not in {"system", "ru", "en"}
+                or value["language"] not in {"system", *LANGUAGES}
                 or type(value["patch_priority"]) is not bool
                 or not isinstance(value["orders"], dict)
                 or not isinstance(value["extra_roots"], list)

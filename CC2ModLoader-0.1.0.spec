@@ -38,7 +38,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='CC2Engine',
+    name='CC2ModLoader',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

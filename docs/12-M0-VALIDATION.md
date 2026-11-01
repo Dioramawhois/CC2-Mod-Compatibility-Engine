@@ -1,5 +1,9 @@
 # 12. M0: локальная проверка и неподтверждённые gates
 
+## 0.3.1 — ModLoader и языковой пак (2026-11-02)
+
+CC2ModLoader.exe собран/установлен, source/binary hash совпал; frozen title/tools smoke и 183 теста прошли (3 symlink skips). Восстановлен пользовательский порядок Autosave + Island Airfields + SDK + AI Bridge + Quality of Life, generated name содержит ModLoader и имена. Старый собственный Engine сохранён в backup, dist содержит один актуальный exe/sidecar. 14 offline language catalogs, 2088 дополнительных сообщений проверены по IDs/parameters/format; primary labels выверены, остальное machine-assisted. Evidence `build/evidence/20261101T233724Z`. Игра в этой проверке не запускалась; new gameplay/full accessibility/clean-machine gates отдельно. [ADR-0013](adr/0013-modloader-brand-and-offline-language-pack.md).
+
 ## 0.3.0 — порядок, приоритет и локаль (2026-11-02)
 
 181 Windows tests passed, 3 symlink skips; Ruff/format и mypy Windows/darwin static analysis, frozen Git/Lua и GUI smoke. Установленный exe автоматически восстановил текущий порядок Autosave + Island Airfields + AI Bridge + SDK; report policy ordered-patches, системная UI locale ru, language choice system. Output остаётся одной папкой CC2-MCE. Read-only plan с Revolution 1.6-19 обработал 41 ресурс, 4 override, 0 blockers. Installed originals используются с фактическими hashes/source, без allowlist; отсутствующая база отмечается как replacement, не fake merge. Evidence `build/evidence/20261101T231308Z`, JUnit и dist sidecar. Игра в этой UX/data проверке не запускалась; runtime/gameplay/macOS execution gates отдельно. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).

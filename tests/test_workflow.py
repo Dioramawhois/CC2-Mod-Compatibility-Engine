@@ -400,3 +400,15 @@ def test_local_original_path_case_is_host_independent(tmp_path: Path) -> None:
     plan = analyze(installation, discover([tmp_path / "workshop"]), ["a", "b"], profile=profile)
     assert not plan.blockers
     assert plan.payload["a.txt"] == b"a=2\n\n\nb=2\n"
+
+
+def test_generated_name_has_modloader_brand_and_selected_mod_names(tmp_path: Path) -> None:
+    from xml.etree import ElementTree as ET
+
+    from cc2_mce import APP_NAME
+
+    installation, profile, user = fixture(tmp_path)
+    (tmp_path / "workshop/a/mod.xml").write_text('<data name="My Mod"/>')
+    plan = analyze(installation, discover([tmp_path / "workshop"]), ["a"], profile=profile)
+    package = apply_plan(plan, user, game_running=lambda: False)
+    assert ET.fromstring((package / "mod.xml").read_bytes()).get("name") == APP_NAME + ": My Mod"

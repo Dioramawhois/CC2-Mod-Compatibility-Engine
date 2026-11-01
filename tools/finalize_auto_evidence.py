@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+from cc2_mce import APP_EXECUTABLE
+
 from cc2_mce.filesystem import digest
 from cc2_mce.reports import engine_hash
 
@@ -14,12 +16,13 @@ auto = json.loads((evidence / "auto-apply.json").read_text())
 ui_only = "--ui-only" in sys.argv
 runtime = {} if ui_only else json.loads((evidence / "runtime-evidence.json").read_text())
 package = json.loads((evidence / "package-report.json").read_text())
-sidecar = root / "dist/CC2Engine.build.json"
+artifact = root / "dist" / APP_EXECUTABLE
+sidecar = artifact.with_suffix(".build.json")
 report = json.loads(sidecar.read_text(encoding="utf-8"))
 assert engine_hash() == report["engine_sha256"] == auto["engine_sha256"]
 if not ui_only:
     assert runtime["engine_sha256"] == report["engine_sha256"]
-assert digest((root / "dist/CC2Engine.exe").read_bytes()) == report["artifact_sha256"]
+assert digest(artifact.read_bytes()) == report["artifact_sha256"]
 if not ui_only:
     assert runtime["fresh_plugin_log_confirmed"] is True
     assert runtime["full_gameplay_verified"] is False

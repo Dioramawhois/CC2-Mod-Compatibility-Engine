@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import platform
 import re
 import shutil
@@ -10,6 +9,7 @@ from pathlib import Path
 from cc2_mce.baseline import load_baseline
 from cc2_mce.errors import MCEError
 from cc2_mce.filesystem import input_root
+from cc2_mce.installation import find_installations
 from cc2_mce.reports import envelope
 
 
@@ -18,7 +18,8 @@ def tool_version(executable: str | None, flag: str) -> tuple[str | None, bool]:
         return None, False
     try:
         result = subprocess.run(
-            [executable, flag], capture_output=True, shell=False, timeout=5, check=False
+            [executable, flag], capture_output=True, shell=False, timeout=5, check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         text = (result.stdout + result.stderr).decode("utf-8", errors="replace").strip()
         return text[:300], result.returncode == 0
@@ -27,23 +28,7 @@ def tool_version(executable: str | None, flag: str) -> tuple[str | None, bool]:
 
 
 def steam_workshop_candidates() -> list[Path]:
-    home = Path.home()
-    if platform.system() == "Darwin":
-        roots = [home / "Library/Application Support/Steam"]
-    elif platform.system() == "Windows":
-        roots = [
-            Path(os.environ[key]) / "Steam"
-            for key in ("PROGRAMFILES(X86)", "PROGRAMFILES")
-            if key in os.environ
-        ]
-    else:
-        roots = [home / ".steam/steam", home / ".local/share/Steam"]
-    # Additional libraries are deliberately explicit until a bounded VDF adapter is validated.
-    return [
-        root / "steamapps/workshop/content/1489630"
-        for root in roots
-        if (root / "steamapps/workshop/content/1489630").is_dir()
-    ]
+    return list(find_installations().workshop_roots)
 
 
 def diagnose(

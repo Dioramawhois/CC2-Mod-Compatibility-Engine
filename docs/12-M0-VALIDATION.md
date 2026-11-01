@@ -1,8 +1,32 @@
 # 12. M0: локальная проверка и неподтверждённые gates
 
+## 0.2.1 — постоянный output и автоматический GUI (2026-11-02)
+
+157 тестов прошли, 3 symlink fixtures пропущены из-за Windows privileges; Ruff и mypy Windows/darwin прошли (darwin static analysis не означает macOS execution). Установленная frozen сборка автоматически сохранила текущий состав Island Airfields + AI Bridge + SDK, заменила hash-output на `mods/CC2-MCE`, убрала прежние собственные активные/неактивные hash-пакеты в служебный cache. Payload hashes всех трёх файлов совпали с прежним активным пакетом. В GUI нет кнопок проверки/применения; фактическое состояние показано именами модов.
+
+Свежий запуск CC2 с постоянной папкой подтвердил plugin load в cc2x.log; Toolhelp snapshot показал загруженный `mods/CC2-MCE/content/cc2x/cc2x_island_airfields.dll` и игровой dinput8.dll. Игра закрыта штатно, готовый GUI оставлен открытым. `build/evidence/20261101T221338Z/{auto-apply.json,runtime-evidence.json,package-report.json}` и `dist/CC2Engine.build.json` фиксируют scope/hashes. Текущий menu rendering отдельно не подтверждался, пользовательское подтверждение меню было на прежнем запуске идентичного merged Lua/native payload. Full flight/AI command gameplay, clean-machine/macOS execution gates остаются открытыми. [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md).
+
+## Исторические результаты M0
+
 **Дата:** 2026-10-26; дополнено 2026-10-28. **Статус:** частичное discovery, M0 не завершён. Это журнал проверяемых результатов первого среза, не отчёт об успешном запуске merged мода в игре.
 
 ## Подтверждено локально
+
+### Windows package/runtime proof — 2026-11-01
+
+- AI Bridge (3828182483) + Island Airfields (3826940003): SDK/runtime screen_vehicle_control.lua совпали raw hash `626e269b88bb35d870b5a69a017bfb728f74181c2be79f3c032c14bea14908aa`. LF-normalized настоящий Git дал clean, output hash `95b72ac1198e64369563b9dc45cfb64e4131c06f26fa30ef08cd31bcd9dd34a6`; luac 5.3.6 syntax-only прошёл. Обе авторские части кода сохранены.
+- Plugin скопирован без изменения: SHA `60383f2845a5d5dc601f6196fb3716340aa0ca21437052ad1bbd7681b384591d`. Предоставленный SDK/content/dinput8.dll SHA `2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba` распознан и установлен, исходник сохранён.
+- Создан и реально активирован отдельный combined mod. Свежий cc2x.log: CC2X 0.5.1, 1.5.18-win32-r2, Island Airfields v45 active и plugin loaded из `CC2-MCE: AI Bridge + Island Airfields`. Пользователь подтвердил видимое меню игры; захват изображения агентом не служит visual proof.
+- После закрытия CC2 её сериализатор переписал отступы и повторил тот же active path. Recovery теперь сравнивает известную структуру/единственный distinct пакет; прежний mods.xml восстановлен в реальной установке, backups сохранены. Источники Workshop/SDK/rom_0 не изменялись; сохранения до запуска скопированы в локальное evidence, чужие assets в репозиторий не добавлены.
+- Пределы: полёт/посадка, полный AI client command channel, macOS execution и чистая ОС не проверены. AI Bridge сам содержит авторский Windows command path другого профиля; это не исправляется догадкой в merge. Полный generic MVP не объявляется принятым на основании одного startup proof.
+
+### Windows discovery/GUI (текущий прототип)
+
+- Автопоиск через registry → libraryfolders.vdf → appmanifest_1489630.acf нашёл одну установленную CC2 и её Workshop без ручного ввода пути. В реальном Tk GUI автоматически показаны все 9 Workshop пакетов; локальные `mods`/`libraries` в установке отсутствовали и при поиске не создавались.
+- На Windows пройдены synthetic discovery и Tk regression tests; новая exe-сборка включает schema/исходники для engine hash. Проверки путей для Darwin есть на fixtures и mypy, но не заменяют запуск на macOS.
+- Игра и native DLL не запускались, vanilla/SDK/Workshop/mods.xml/dinput8.dll не изменялись. Build mapping, реальный Lua 5.3, package/runtime и полный игровой smoke остаются неподтверждёнными. Discovery не означает, что `rom_0` или SDK автоматически признаны корректной базой.
+
+### Исторические проверки первого среза
 
 - macOS host: доступна установка `carriercommand.app` в стандартной Steam library; внутри обнаружены `Contents/Resources/rom_0/scripts`. Это не доказательство, что runtime-ресурсы подходят как baseline текущей сборки.
 - В одном легитимно установленном Workshop-моде прочитаны metadata `<data name="…" author="…" description="…">` и layout `content/game_objects/*.xml`. Перед XML declaration есть пустая строка; read-only metadata adapter допускает этот вариант без переписывания файла. Содержимое assets не копировалось в проект.

@@ -38,6 +38,7 @@ class BuiltinMergeAdapter:
             return MergeOutcome("clean", "text-3way", result.content)
         return MergeOutcome("conflict", "text-3way")
 
+
 class GitMergeAdapter:
     def __init__(self, executable: str | None = None, timeout: float = 10.0) -> None:
         self.executable = executable or shutil.which("git") or "git"
@@ -63,7 +64,12 @@ class GitMergeAdapter:
                     *map(str, paths),
                 ]
                 result = subprocess.run(
-                    command, capture_output=True, shell=False, timeout=self.timeout, check=False
+                    command,
+                    capture_output=True,
+                    shell=False,
+                    timeout=self.timeout,
+                    check=False,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                 )
             if result.returncode == 0:
                 return MergeOutcome("clean", "text-3way", result.stdout)
@@ -106,6 +112,7 @@ def merge_file(
     baseline_verified: bool = False,
     git: GitMergeAdapter | None = None,
     luac: str | None = None,
+    canonical_eol: bool = False,
 ) -> MergeOutcome:
     strategy = "text-3way"
     if not variants or len(variants) > 32:
@@ -142,7 +149,9 @@ def merge_file(
             decoded = [decode_text(item.content) for item in unique]
             decoded.append(decode_text(base))
             formats = [item[1] for item in decoded]
-            if len(set(formats)) != 1:
+            if len({fmt.bom for fmt in formats}) != 1 or (
+                not canonical_eol and len(set(formats)) != 1
+            ):
                 raise ValueError("Encoding/EOL disagreement")
             for text, _ in decoded:
                 if has_conflict_markers(text):
@@ -153,7 +162,12 @@ def merge_file(
                     )
         except (UnicodeError, ValueError):
             return MergeOutcome("encoding_conflict", strategy)
-        adapter = git or BuiltinMergeAdapter()
+        if canonical_eol:
+            unique = [
+                MergeInput(item.mod_id, item.content.replace(b"\r\n", b"\n")) for item in unique
+            ]
+            base = base.replace(b"\r\n", b"\n")
+        adapter = git or GitMergeAdapter()
         for left, right in itertools.combinations(unique, 2):
             preflight = adapter.merge(left.content, base, right.content)
             if preflight.status == "conflict":

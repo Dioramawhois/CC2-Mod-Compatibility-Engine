@@ -1,5 +1,9 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+**0.2.2:** владелец разрешил автоматическую подготовку mods/libraries при первом запуске; только внутри выбранной проверенной игры после portable placement. Existing file/junction/permission error не обходится, SDK/vanilla/Workshop остаются read-only. После неудачного изменения UI возвращает реальную активацию и разрешает запуск прежнего набора, если нет незавершённой транзакции. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
+
+**0.2.1:** пользователь разрешил автоматическое применение по галочке без дополнительных подтверждений. Единый локальный output — пользовательский `mods/CC2-MCE`, имя в игре «CC2 Engine — мои моды». Исторические активные собственные hash-папки архивируются обратимо в служебный cache. Перед записью игра закрыта; при открытой игре UI ожидает и повторяет автоматически. Снятие всех галочек очищает active_mod_folders. Workshop/vanilla/SDK/executable не изменяются. [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md) заменяет прежние шаги кнопок/имя output.
+
 ## 1. Подтверждённые факты
 
 1. Игра позволяет устанавливать Workshop-моды и выбирать активные в меню. Если два мода содержат один и тот же игровой файл, штатное меню не даёт активировать оба. После изменения модов необходим рестарт. Источник: официальная документация Geometa.
@@ -16,6 +20,10 @@
 Размещение Steam library, local mods и SDK проверяется отдельно для каждой ОС в M0; Windows-пути не используются как fallback для macOS. Пока игровой runtime/layout macOS не подтверждён, нельзя обещать автоматическую установку или игровой smoke на Mac. Ограничения Windows-only CC2X сохраняются; DLL обнаруживаются и блокируют сборку по той же политике на обеих ОС.
 
 ## 2. Input adapter
+
+**0.2.0:** [SDK declaration](17-LIBRARY-SDK.md) классифицирует library по mod.xml и разрешает зависимости независимо от Workshop/local location. Обычные моды без секции сохраняют стандартное поведение. Пользователь явно разрешил активацию и тест AI Bridge + Island Airfields: новый GUI publisher создаёт output в настоящем `%APPDATA%/Carrier Command 2/mods`, включает его через backup-protected mods.xml при закрытой игре и при необходимости копирует предоставленный reviewed runtime из libraries. Правила не перезаписывать vanilla/SDK/Workshop/executable/неизвестный dinput8 сохраняются; прежний запрет любой записи mods.xml относится к историческому read-only срезу. [ADR-0009](adr/0009-package-activation-and-library-sdk.md).
+
+Реализованы Steam auto-discovery и `<game>/mods/<id>/content`, `<game>/libraries/<id>/content` как входы Engine ([ADR-0008](adr/0008-portable-discovery-and-library-collections.md)). Это не означает, что CC2 сама загружает эти два каталога. Workshop читается на месте во всех найденных библиотеках, DLL не исполняются. Upstream CC2X документирует `<game>/cc2x/plugins` как developer fallback; произвольная libraries требует отдельного проверенного профиля/пакета, не слияния DLL в инъектор.
 
 - Сканировать игровые моды по `<mod>/content/**`; `mod.xml` и `thumbnail.png` — метаданные пакета, **не** сливаемые «по общему пути» игровые ресурсы.
 - На M0 взять реальные локальные/Workshop моды и проверить точную схему их `mod.xml` (например, XML `data` + атрибуты); **не конструировать metadata из догадок**.

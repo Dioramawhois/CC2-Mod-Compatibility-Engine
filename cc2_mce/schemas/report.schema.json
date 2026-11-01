@@ -3,34 +3,331 @@
   "$id": "urn:cc2-mce:report:1",
   "title": "CC2-MCE first-slice read-only report",
   "type": "object",
-  "required": ["schema_version", "engine_version", "engine_sha256", "command", "status", "installable", "dry_run", "mod_order", "sources", "files", "conflicts", "blockers", "warnings"],
+  "required": [
+    "schema_version",
+    "engine_version",
+    "engine_sha256",
+    "command",
+    "status",
+    "installable",
+    "dry_run",
+    "mod_order",
+    "sources",
+    "files",
+    "conflicts",
+    "blockers",
+    "warnings"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "engine_version": {"type": "string"},
-    "engine_sha256": {"$ref": "#/$defs/hash"},
-    "command": {"enum": ["doctor", "scan", "plan", "build", "report", "error"]},
-    "status": {"enum": ["ok", "blocked"]},
-    "installable": {"const": false},
-    "dry_run": {"const": true},
-    "mod_order": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
-    "files": {"type": "array", "items": {"$ref": "#/$defs/mergedFile"}},
-    "conflicts": {"type": "array", "items": {"type": "object", "required": ["id", "kind", "file", "mods", "resolution"], "properties": {"id": {"type": "string"}, "kind": {"type": "string"}, "file": {"type": "string"}, "mods": {"type": "array", "items": {"type": "string"}}, "resolution": {"const": "unresolved"}}, "additionalProperties": false}},
-    "blockers": {"type": "array", "items": {"type": "object", "required": ["code"], "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "file": {"type": "string"}}, "additionalProperties": false}},
-    "warnings": {"type": "array", "items": {"type": "string"}},
-    "game": {"type": ["object", "null"]},
-    "baseline": {"type": ["object", "null"]},
-    "tools": {"type": "object"},
-    "policies": {"type": "object"},
-    "host": {"type": "object"},
-    "build_id": {"$ref": "#/$defs/hash"},
-    "scan_sha256": {"$ref": "#/$defs/hash"}
+    "schema_version": {
+      "const": 1
+    },
+    "engine_version": {
+      "type": "string"
+    },
+    "engine_sha256": {
+      "$ref": "#/$defs/hash"
+    },
+    "command": {
+      "enum": [
+        "doctor",
+        "scan",
+        "plan",
+        "build",
+        "report",
+        "error"
+      ]
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "blocked"
+      ]
+    },
+    "installable": {
+      "const": false
+    },
+    "dry_run": {
+      "const": true
+    },
+    "mod_order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/mergedFile"
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "file",
+          "mods",
+          "resolution"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "mods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "resolution": {
+            "const": "unresolved"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "game": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "baseline": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "tools": {
+      "type": "object"
+    },
+    "policies": {
+      "type": "object"
+    },
+    "host": {
+      "type": "object"
+    },
+    "build_id": {
+      "$ref": "#/$defs/hash"
+    },
+    "scan_sha256": {
+      "$ref": "#/$defs/hash"
+    }
   },
   "additionalProperties": false,
   "$defs": {
-    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "source": {"type": "object", "required": ["id", "name", "sha256", "files"], "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "sha256": {"$ref": "#/$defs/hash"}, "files": {"type": "array", "items": {"$ref": "#/$defs/inputFile"}}}, "additionalProperties": false},
-    "inputFile": {"type": "object", "required": ["logical_path", "sha256", "kind", "size"], "properties": {"logical_path": {"type": "string"}, "sha256": {"$ref": "#/$defs/hash"}, "kind": {"enum": ["text", "binary", "native", "unknown"]}, "size": {"type": "integer", "minimum": 0}}, "additionalProperties": false},
-    "mergedFile": {"type": "object", "required": ["logical_path", "strategy", "status", "sources", "source_sha256", "baseline_sha256", "output_sha256", "conflict_ids", "diagnostics"], "properties": {"logical_path": {"type": "string"}, "strategy": {"type": "string"}, "status": {"enum": ["copied", "identical", "clean", "conflict", "no_base", "unsupported_binary", "native_plugin_review_required", "needs_review", "encoding_conflict", "validation_error", "input_error", "tool_error"]}, "sources": {"type": "array", "items": {"type": "string"}}, "source_sha256": {"type": "object", "additionalProperties": {"$ref": "#/$defs/hash"}}, "baseline_sha256": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]}, "output_sha256": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]}, "conflict_ids": {"type": "array", "items": {"type": "string"}}, "diagnostics": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false}
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "sha256",
+        "files"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/inputFile"
+          }
+        },
+        "package_kind": {
+          "enum": [
+            "mod",
+            "library"
+          ]
+        },
+        "package_id": {
+          "type": "string"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sdk": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "api": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "inputFile": {
+      "type": "object",
+      "required": [
+        "logical_path",
+        "sha256",
+        "kind",
+        "size"
+      ],
+      "properties": {
+        "logical_path": {
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "kind": {
+          "enum": [
+            "text",
+            "binary",
+            "native",
+            "unknown"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "mergedFile": {
+      "type": "object",
+      "required": [
+        "logical_path",
+        "strategy",
+        "status",
+        "sources",
+        "source_sha256",
+        "baseline_sha256",
+        "output_sha256",
+        "conflict_ids",
+        "diagnostics"
+      ],
+      "properties": {
+        "logical_path": {
+          "type": "string"
+        },
+        "strategy": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "copied",
+            "identical",
+            "clean",
+            "conflict",
+            "no_base",
+            "unsupported_binary",
+            "native_plugin_review_required",
+            "needs_review",
+            "encoding_conflict",
+            "validation_error",
+            "input_error",
+            "tool_error"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_sha256": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/hash"
+          }
+        },
+        "baseline_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/hash"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/hash"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conflict_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
   }
 }

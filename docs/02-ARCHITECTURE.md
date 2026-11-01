@@ -1,6 +1,14 @@
 # 02. Архитектура
 
+**0.2.2:** GUI хранит раздельно requested и applied ID; окончательный отказ восстанавливает applied selection, а не оставляет ложную галочку. Чистый `ui_feedback` форматирует уже структурированные blockers с именами/ресурсом; merge-правила не меняет. Первый scan готовит собственные каталоги, passive scan не сбрасывает отказ и не пересобирает изменения только невыбранных пакетов. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
+
+**0.2.1:** GUI debounce/проверка/применение автоматически следуют за галочкой; устаревшие результаты не публикуются. Один destination `mods/CC2-MCE` заменяется через полный stage и сохранение предыдущей собственной папки в служебный cache под OS lock. Pending journal позволяет восстановить payload/config при ошибке и перед следующей записью после прерывания процесса. Undo восстанавливает обе части. Источники и неизвестные outputs не перезаписываются. Контроль source updates повторным bounded scan, game-running wait и empty-set activation описаны в [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md), заменяющем immutable hash-named output ADR-0009.
+
 ## 1. Стиль
+
+**0.2.0:** `workflow` теперь реализует plan→stage→publish→activation, `toolchain` проверяет bundled Git/luac manifest, `locking` изолирует операции двух экземпляров, game profiles связывают executable/base/native hashes. GUI использует этот сервис и actual activation state, не CLI/raw stdout. «Применить к игре» и recovery journal реализованы для проверенного Windows layout; historical read-only описания ниже не определяют этот pipeline. [ADR-0009](adr/0009-package-activation-and-library-sdk.md).
+
+Текущий adapter `installation.py` читает bounded Steam KeyValues/manifest и проверяет соседнюю игру; он общий для GUI и поиска Workshop в CLI. GUI выполняет discovery/scan/анализ в фоне, разделяет `mods` и `libraries`, игнорирует результаты старого выбора. Найденная игра не создаёт synthetic baseline и не разрешает native plugin loading; создание пакета отключено. См. [ADR-0008](adr/0008-portable-discovery-and-library-collections.md).
 
 **Hexagonal / ports-and-adapters:** чистое доменное ядро, адаптеры Steam/файловой системы/Git/SDK, стратегии по форматам. В будущем integration-host (CC2X) не должен менять контракт `MergeEngine`.
 

@@ -27,4 +27,6 @@
 
 ## Проверки и связи
 
+Локальный packaging spike 2026-10-29: существующее tkinter-окно собрано PyInstaller 6.22.3 на Windows 10 x64 / Python 3.14.0. Проверены packaged JSON schema/исходники для engine hash, запуск из другого каталога без developer tools в PATH и штатное закрытие окна. Это ограниченное доказательство упаковки окна: выбор окончательного кроссплатформенного toolkit/поставки, встроенные Git/Lua, clean-machine, accessibility, UX/e2e и игровые gates остаются открытыми. JSON-контракт и правила merge этой задачей не изменяются.
+
 [PRD FR-15..FR-20](../01-PRODUCT-REQUIREMENTS.md), [экраны и UX-критерии](../13-UX-UI.md), [GUI тесты](../06-TEST-STRATEGY.md), [roadmap](../07-ROADMAP.md). Проверка лицензий/подписи и требования к безопасному output остаются частью [release gates](../10-SECURITY-AND-RELEASE.md).

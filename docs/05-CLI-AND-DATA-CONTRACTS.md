@@ -6,6 +6,10 @@
 
 ## 1. CLI
 
+**0.2.0:** GUI использует отдельный `workflow.py` и [package.schema.json](../cc2_mce/schemas/package.schema.json), schema v2: installable допускается только без blockers, с known game/baseline/toolchain/native identity. Есть atomic staging, recovery journal и подтверждаемая GUI активация. Старый report v1 остаётся неустанавливаемым; source properties расширены optional `package_kind`, `package_id`, `dependencies`, `sdk`, `api`. SDK declaration описана в [17](17-LIBRARY-SDK.md). CLI не требуется игроку, raw developer outputs не равны игровому пакету. [ADR-0009](adr/0009-package-activation-and-library-sdk.md).
+
+Автоматический поиск Workshop теперь использует общий Steam adapter: registry/default roots, bounded `libraryfolders.vdf`, дополнительные библиотеки. Аргументы CLI и JSON schema v1 не меняются; GUI показывает расположения отдельно от отчёта и не превращает наличие игры в доверенный baseline. Изменение discovery и portable policy: [ADR-0008](adr/0008-portable-discovery-and-library-collections.md).
+
 ```text
 cc2-mce doctor --game <GAME_DIR> --baseline <SDK_DIR>
 cc2-mce scan --mods-dir <LOCAL_DIR> --workshop-dir <WORKSHOP_DIR> --json scan.json
@@ -121,6 +125,12 @@ binary_conflict_policy = "block"
 `kind: synthetic` допускает только `version: synthetic-*` и `executable_sha256: null`, отчёт не называет такую базу проверенной игровой. Для `kind: game` обязательны заявленная версия и совпадение SHA-256 явно переданного `--game-executable`. Это пользовательское свидетельство mapping, а не автоматическое доказательство происхождения SDK: соответствие SDK этой сборке ещё проверяется M0. Манифест не должен собираться из изменённых файлов мода.
 
 Mapping пока неполный (`complete: false`): отсутствие записи не доказывает, что ресурс новый. Разные версии без указанного оригинала дают `no_base`; автоматический add/add доступен только доменному API при явно доказанном отсутствии базы, CLI такую политику пока не включает. Baseline и исходники перечитываются/хешируются после анализа; изменение, добавление или удаление ресурса блокирует результат.
+
+## GUI package v2: постоянная папка и пустой набор (0.2.1)
+
+**UX 0.2.2:** JSON schema v2 не меняется. Report при отказе описывает отклонённый requested набор; не считается текущей активацией. GUI отдельно хранит applied ID, возвращает к ним галочки, сохраняет rejected report для добровольного экспорта и выводит названия/ресурс через чистый presenter. Нельзя выдавать mod_order отклонённого report за включённый состав. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
+
+Новые manifests включают `output_folder: "CC2-MCE"`; поле необязательное при чтении прежних v2 пакетов для миграции. `mod_order` допускает 0..32 уникальных ID: пустой набор имеет пустые sources/files/payload, а активация — пустой active_mod_folders. Все source/base/output/engine/tool hashes и внутренний build_id сохраняются. Обратно совместимое расширение schema v2 не меняет developer CLI/report v1. Постоянный путь не является build identity; reuse/undo сравнивают manifest и все файлы. [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md).
 
 ## 7. Ручное разрешение в P1
 

@@ -24,4 +24,6 @@ def test_module_entrypoint_from_another_directory(tmp_path: Path) -> None:
         timeout=10,
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "0.1.0"
+    from cc2_mce import __version__
+
+    assert result.stdout.strip() == __version__

@@ -1,3 +1,25 @@
+## 0.2.0 — применение модов к игре и SDK библиотек (2026-11-01)
+
+- Рабочий Windows GUI pipeline: проверенная база/игровой fingerprint, настоящий Git с явной LF policy, bundled luac 5.3.6, отдельный package, backup/journal-protected активация и rollback. Добавлены process/source/integrity gates, OS lock и запрет посторонних файлов в reused output.
+- Предоставленный reviewed dinput8.dll из libraries распознаётся и устанавливается рядом с игрой. Native DLL сохраняются как отдельные reviewed плагины; неизвестные DLL/сборки блокируются. Публичной бинарной склейки/компиляции DLL нет.
+- Добавлена opt-in cc2mce секция mod.xml для library/mod, package ID, SDK/API и зависимостей. Без секции это обычный мод независимо от каталога. Новый package manifest/schema v2; read-only report v1 расширен compatible optional source metadata.
+- Реально применены AI Bridge + Island Airfields: clean Git merge после LF normalization, настоящий syntax-only checker, свежая загрузка v45 DLL из combined mod и подтверждённое пользователем меню. Реальный rollback учёл game XML reformat/duplicate path. Full gameplay и macOS/clean-machine certification не заявляются.
+- Новый exe: CC2Engine.exe. Проверяется выполнение встроенных Git/Lua внутри frozen приложения без developer PATH. [ADR-0009](docs/adr/0009-package-activation-and-library-sdk.md), [SDK](docs/17-LIBRARY-SDK.md).
+
+## Unreleased — автопоиск игры, Workshop и библиотеки
+
+- Добавлен безопасный read-only adapter Steam VDF/ACF: registry, дополнительные библиотеки, соседняя игра, проверка appid/executable, лимиты, path/link safeguards. CLI Workshop discovery использует тот же adapter; JSON v1 не изменён.
+- Windows portable требует exe рядом с carrier_command.exe и показывает найденный путь; GUI отдельно отображает Workshop/local mods и Lua/DLL-пакеты libraries. Добавлены фоновый scan/анализ, invalidation, подготовка только двух собственных каталогов по кнопке и regression/UI fixtures.
+- Удалён GUI fallback, создававший synthetic baseline из непроверенных игровых скриптов. Создание игрового пакета отключено до verified baseline/staging gates; DLL не исполняются. Runtime/профильная загрузка libraries и зависимости ещё не реализованы.
+- На локальной Windows автоматически найдена установленная CC2 и показаны 9 Workshop пакетов без записи в них; это не игровой тест или macOS acceptance. [ADR-0008](docs/adr/0008-portable-discovery-and-library-collections.md).
+
+## Unreleased — локальная Windows exe-сборка (2026-10-29)
+
+- Исправлена упаковка: spec включает JSON-схему отчёта и Python-исходники для корректного `engine_sha256`; добавлен regression fixture с совпадением хеша исходного и распакованного движка и валидацией схемы. JSON v1 не изменён.
+- `build_windows.bat` работает из другого каталога, поддерживает Python launcher, переиспользует build-venv и сохраняет ошибку на экране; `--no-pause` предназначен для автоматизации. PyInstaller закреплён на 6.22.3, сборка использует общий spec.
+- Собран локальный exe на Windows 10 x64 / Python 3.14.0; проверены открытие/закрытие GUI без developer tools в PATH, целостность packaged data; 93 теста проходят, 2 symlink-теста пропущены. Исправлены lint/typecheck замечания GUI без изменения его поведения.
+- Git/Lua не встроены; чистая ОС, полноценный GUI workflow, macOS и игра не проверены. Это тестовая упаковка окна, не пользовательский релиз или установочный пакет мода.
+
 ## Unreleased — Windows merged-mod build (2026-10-31)
 
 - `cc2-mce build --mods-dir DIR --mods A B --baseline DIR --output OUT` теперь записывает объединённые файлы, если весь план чистый (статусы clean/copied/identical). Конфликт, блокировка или отсутствие `--output` ничего не записывают и возвращают ненулевой код.
@@ -6,6 +28,20 @@
 - Тесты: 91 проходят, включая реальную запись разных правок и отказ записи при конфликте.
 
 # Changelog
+
+## 0.2.2 — UX-аудит и честные галочки (2026-11-02)
+
+- При конфликте/ошибке применения галочки возвращаются к реально работающему составу; новый мод не остаётся ложно отмеченным, запуск прежнего набора доступен.
+- Ошибка называет отказанный мод, участников и ресурс; видна у строки и в banner, не стирается пассивным scan. Обязательная зависимость объясняет, кому нужна.
+- mods/libraries готовятся автоматически при первом запуске. Главный экран сокращён до списка/результата/запуска, служебные действия перенесены в одно меню; добавлены прогресс/состояния строк, сортировка и прокрутка.
+- Merge/schema/native/provenance gates сохранены. [Аудит](docs/18-UX-AUDIT.md), [ADR-0011](docs/adr/0011-truthful-checkboxes-and-minimal-interface.md).
+
+## 0.2.1 — одна папка, применение по галочке (2026-11-02)
+
+- Убраны обязательные кнопки проверки/применения и подтверждение набора: галочки автоматически проверяют, объединяют и включают моды; быстрые переключения используют последний выбор.
+- Постоянный output `mods/CC2-MCE`, игровое имя «CC2 Engine — мои моды». Полная замена убирает остатки снятых модов; пустой выбор отключает моды. Хеши сохраняются внутри manifest, не в именах папок.
+- Обновления выбранных sources пересобираются автоматически; при запущенной игре выбор ожидает её закрытия. Конфликт сохраняет прежний рабочий пакет.
+- Pending journal/backup восстанавливают папку и активацию после ошибки/прерывания; undo теперь возвращает payload. Прежний hash-output мигрирует в служебный cache. Generated outputs исключены из discovery, schema v2 допускает output_folder и empty set. [ADR-0010](docs/adr/0010-checkbox-auto-apply-and-stable-output.md).
 
 ## Unreleased — native install safety gate (2026-10-31)
 

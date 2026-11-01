@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cc2-mce"
-version = "0.1.0"
-description = "Read-only discovery and dry-run compatibility analysis for Carrier Command 2 mods"
+version = "0.2.2"
+description = "Offline compatibility analysis, verified packaging and activation for CC2 mods"
 readme = "README.md"
 requires-python = ">=3.12"
 # License selection is deliberately deferred to the project owner before publication.
@@ -21,7 +21,7 @@ cc2-mce = "cc2_mce.cli:main"
 include = ["cc2_mce*"]
 
 [tool.setuptools.package-data]
-cc2_mce = ["schemas/*.json", "py.typed"]
+cc2_mce = ["schemas/*.json", "profiles/*.json", "py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

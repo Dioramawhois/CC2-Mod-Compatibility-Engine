@@ -32,6 +32,9 @@ def envelope(command: str) -> dict[str, object]:
 def engine_hash() -> str:
     root = Path(__file__).parent
     inputs = list(root.glob("*.py")) + list((root / "schemas").glob("*.json"))
+    inputs += list((root / "profiles").glob("*.json"))
+    if (root / "tools_data/manifest.json").is_file():
+        inputs.append(root / "tools_data/manifest.json")
     entries = [(p.relative_to(root).as_posix(), digest(p.read_bytes())) for p in sorted(inputs)]
     return digest(json.dumps(entries, separators=(",", ":")).encode())
 

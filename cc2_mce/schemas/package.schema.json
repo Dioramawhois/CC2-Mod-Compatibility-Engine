@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cc2-mce:package:2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "owner",
+    "engine_sha256",
+    "game_sha256",
+    "mod_order",
+    "sources",
+    "files",
+    "blockers",
+    "eol_policy",
+    "toolchain_sha256",
+    "runtime_sha256",
+    "installable",
+    "gameplay_verified",
+    "build_id",
+    "package_metadata_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "owner": {
+      "const": "cc2-mce"
+    },
+    "output_folder": {
+      "const": "CC2-MCE"
+    },
+    "engine_sha256": {
+      "$ref": "#/$defs/hash"
+    },
+    "game_sha256": {
+      "$ref": "#/$defs/hash"
+    },
+    "build_id": {
+      "$ref": "#/$defs/hash"
+    },
+    "mod_order": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "sha256",
+          "files",
+          "package_kind",
+          "dependencies"
+        ],
+        "properties": {
+          "sha256": {
+            "$ref": "#/$defs/hash"
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "logical_path",
+          "status",
+          "strategy",
+          "source_sha256",
+          "baseline_sha256",
+          "output_sha256",
+          "diagnostics"
+        ],
+        "properties": {
+          "logical_path": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "strategy": {
+            "type": "string"
+          },
+          "source_sha256": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/hash"
+            }
+          },
+          "baseline_sha256": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/hash"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "output_sha256": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/hash"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code"
+        ]
+      }
+    },
+    "eol_policy": {
+      "const": "canonical-lf-for-three-way; unique-files-preserved"
+    },
+    "toolchain_sha256": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/hash"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "runtime_sha256": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/hash"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "installable": {
+      "type": "boolean"
+    },
+    "gameplay_verified": {
+      "type": "boolean"
+    },
+    "package_metadata_sha256": {
+      "$ref": "#/$defs/hash"
+    }
+  },
+  "if": {
+    "properties": {
+      "blockers": {
+        "minItems": 1
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "installable": {
+        "const": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

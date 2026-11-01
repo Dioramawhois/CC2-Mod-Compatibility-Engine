@@ -1,16 +1,20 @@
 # AGENTS.md — CC2-MCE coding agent guide
 
-> The repository now has a **developer-only read-only discovery/dry-run CLI**, not a ready user application, mod loader or packager. GUI is mandatory for the first user release but not implemented yet. M0 game validation and Windows execution remain unverified. Source of truth: `README.md`, `docs/`, accepted ADRs and regression tests. Specifications are in Russian.
+> Version 0.2.0 has a Windows GUI, verified Git/Lua packaging and reversible activation for reviewed game/runtime/native profiles. AI Bridge + Island Airfields reached the game menu with a fresh plugin-load log; full gameplay, clean-machine and macOS release gates remain unverified. Do not disable the working GUI as if the historical read-only slice were current. Source of truth: README, docs, ADR-0009 and tests; specifications are in Russian.
 
 ## Goal
+
+UX 0.2.2: a rejected checkbox change must restore the actual applied selection and allow launching the intact working set. Explain the rejected mod/participants inline; preserve the notice during passive scans. Prepare only the selected verified game's mods/libraries automatically; no preparation button. Keep the main screen to the list, result and Launch; secondary operations live in one menu. ADR-0011 supersedes the older explicit preparation and retained rejected-selection behavior.
+
+Current user workflow (0.2.1): a checkbox is the authorized apply action, with automatic check/merge/activation, no extra confirmation or check/apply buttons. Maintain one fixed `mods/CC2-MCE` output with transactional folder/config rollback and closed-game deferral. This explicit owner request supersedes older confirmation/hash-output instructions; see ADR-0010. Preserve all source/native safety gates.
 
 Build an offline CC2 Mod Compatibility Engine that merges non-overlapping modifications to the same game files using a verified vanilla baseline and **existing Git three-way merge**, then produces a separate local merged mod. Core motto: «Конфликтуют не файлы, а несовместимые изменения».
 
 ## Non-negotiable constraints
 
 1. Read `docs/01-PRODUCT-REQUIREMENTS.md`, `02-ARCHITECTURE.md`, `03-MERGE-SPEC.md`, `04-CC2-INTEGRATION.md` and ADRs before design/code edits.
-2. Do not modify vanilla CC2, Mod SDK, subscribed Workshop folders, other authors' mods, `mods.xml`, `dinput8.dll` or executable.
-3. No 'last mod wins'. On uncertain merge, missing baseline, native CC2X plugin, unknown binary type, invalid output — **fail closed**.
+2. Do not modify vanilla CC2, Mod SDK, subscribed Workshop folders, other authors' mods or the game executable. Changes to mods.xml and installation of a hash-reviewed, user-provided dinput8.dll are permitted only through the explicitly confirmed reversible GUI workflow, or a real-game test expressly requested by the user (ADR-0009). Never overwrite an unknown installed loader.
+3. No 'last mod wins'. On uncertain merge, missing baseline, unreviewed native CC2X plugin, unknown binary type, invalid output — **fail closed**. Reviewed plugins may be copied byte-identically for their approved game/runtime; DLLs are never merged.
 4. Treat all mod contents and filenames as untrusted input (path traversal/junction/XXE/DoS). Avoid running mod Lua/DLLs in development utilities.
 5. Do not pretend CC2X provides a resource-merging hook; first prove it through tests if implementing later.
 6. For Lua in MVP, use a real 3-way merge and syntax validation, not invented AST parsing or ad hoc regex merging.
@@ -40,7 +44,7 @@ Build an offline CC2 Mod Compatibility Engine that merges non-overlapping modifi
 
 - `uv sync --frozen --extra dev`, then `uv run pytest -q`, `uv run ruff check cc2_mce tests`, `uv run mypy cc2_mce`.
 - `uv run cc2-mce --config examples/mce.synthetic.toml build --dry-run` is synthetic only; never report it as game acceptance.
-- `build` without `--dry-run` and plan replay are deliberately blocked. See [ADR-0006](docs/adr/0006-read-only-first-slice.md).
+- Legacy CLI/raw payload is a developer adapter, not the GUI package publisher. Plan replay remains unsupported. Schema v1 stays non-installable; GUI package/activation uses schema v2 and ADR-0009, which supersedes the historical read-only limitations of ADR-0006.
 
 ## Definition of Done
 

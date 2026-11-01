@@ -51,4 +51,10 @@ Python >=3.12; runtime `jsonschema` (MIT) для локальной валида
 
 ## 5. Первоисточники
 
+В 0.2.0 Windows exe включены Git 2.56.0.windows.2 с рекурсивно найденными DLL dependencies и upstream notices, а также luac 5.3.6, собранный из официального source archive SHA `fc5fd69bb8736323f026672b1b7235da613d7177e72558893a0bdcd320466d60`. Lua source/readme-license включены; Git source reference и точные binary hashes записаны в bundled manifest. Это локальная поставка, не разрешение на публичную публикацию проекта с ещё не выбранной лицензией. CC2X runtime/DLL плагина не вендорятся в exe, берутся из предоставленных пользователем/Workshop файлов при совпадении reviewed hashes; source assets игры не поставляются.
+
+### Локальная Windows-упаковка (2026-10-29)
+
+Developer build использует уже выбранный в `build_windows.bat` PyInstaller, теперь закреплённый на 6.22.3. В metadata установленного пакета указана GPLv2-or-later со специальным исключением для сборки и распространения non-free приложений; полный текст сохранён upstream в `pyinstaller-6.22.3.dist-info/licenses/COPYING.txt`. Локальная сборка не является разрешением публичного распространения: лицензия проекта, notices/SBOM и проверка всех транзитивных компонентов остаются release gates. Нового merge backend нет, Git и Lua validator в exe не включены.
+
 Ссылки на первичные README и инструкции доступны в [11-SOURCES.md](11-SOURCES.md).

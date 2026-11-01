@@ -1,5 +1,9 @@
 # 06. Стратегия тестирования и Definition of Done
 
+**Регрессии 0.2.2:** отказ real Git и ошибка apply снимают новую галочку, оставляют рабочие галочки/payload и разрешают launch; названы моды/ресурс; пассивный scan/невыбранный новый мод не стирают отказ; обязательная зависимость объясняет возврат галочки. Первый запуск создаёт каталоги автоматически, а файл на месте libraries сохраняется и блокирует scan. На главном экране одна кнопка запуска и меню; отдельные pure feedback tests проверяют removal/source-update/long names. [Аудит](18-UX-AUDIT.md), [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
+
+**Регрессии 0.2.1:** одна папка при разных наборах; исчезновение obsolete files; пустой выбор; отказ неизвестной папке; config-write rollback; прерывание между двумя rename и recovery; миграция прежнего hash-output; undo payload/config и повторный запуск после game XML formatting. GUI fixtures проверяют применение только по галочке без askyesno, debounce, сохранение рабочего набора при конфликте, ожидание закрытия игры и автоматическую пересборку обновлённого source. Это дополняет/уточняет U-003/U-005/U-006/U-009 по [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md), не заменяя отдельные macOS/clean-machine/gameplay gates.
+
 ## Обязательная GUI-приёмка
 
 Первая пользовательская версия — графическое приложение без обязательных команд ([UX/UI](13-UX-UI.md), [ADR-0007](adr/0007-gui-first-user-experience.md)). Ниже CLI-тесты относятся к внутреннему ядру/CI, не заменяют UI/e2e и проверку готовой поставки на чистой ОС без developer tools. GUI ещё не реализован; тесты UX ниже — требования, не уже пройденные результаты.
@@ -11,6 +15,10 @@
 [CI](../.github/workflows/ci.yml) на Windows/macOS с Python 3.12/3.13 запускает одинаковый golden hash. Наличие workflow не означает прошедший удалённый CI или завершённый M1; версия Git runner может различаться, сравнивается payload, а не окружение. M-016/M-029 packaging/rollback и игровые tests пока не реализованы. Текущие ограничения: [M0 validation](12-M0-VALIDATION.md).
 
 ## 1. Уровни тестов
+
+0.2.0: `test_workflow.py` покрывает настоящий Git с canonical EOL, создание game mod, активацию/rollback, running-game/source-change gates, отказ unknown DLL, посторонний executable в reused output, write failure, зависимости/циклы и реальное переписывание XML игрой. `test_metadata.py` покрывает default-mod и opt-in library XML. Настоящие Tk buttons проверяют check→apply→activation. Frozen smoke запускает bundled Git/luac без developer PATH. Свежий game log подтвердил plugin из AI Bridge + Island Airfields, пользователь подтвердил меню; полный flight/AI-command gameplay не проверен.
+
+`tests/test_installation.py` проверяет bounded Steam metadata, secondary/legacy libraries, appid, traversal/DoS, adjacent priority и управляемые каталоги. `tests/test_gui_discovery.py` использует настоящие Tk widgets для mods/libraries, portable placement, фонового scan, invalidation и native refusal без запуска DLL/Lua. Недоступный GUI display явно пропускает GUI tests и не считается GUI acceptance. На текущей Windows проверены read-only обнаружение установленной CC2 и отображение 9 настоящих Workshop пакетов; игровой запуск не выполнялся.
 
 - `unit`: планировщик, path normalization, change-set, status transitions, policy selection, hashing.
 - `integration`: реальные вызовы `git merge-file` на fixtures, разные EOL/BOM, staging + atomic rename, error codes.

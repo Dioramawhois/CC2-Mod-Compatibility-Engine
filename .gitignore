@@ -14,3 +14,5 @@ experiments/
 
 # Windows build outputs (build_windows.bat)
 .build-venv/
+.build-tools/
+cc2_mce/tools_data/

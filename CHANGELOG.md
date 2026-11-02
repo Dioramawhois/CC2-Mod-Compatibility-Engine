@@ -1,5 +1,11 @@
 ## Unreleased — аудит Native Bridge и cc2mods (2026-11-02)
 
+- По запросу владельца подготовлена карта общего CC2X SDK и отдельных модов:
+  учтены code namespaces в едином output, сохранение identity/catalog и сетевые
+  ограничения. GPL-моды cc2mods выделяются воспроизводимо из SHA-locked sources
+  через инструмент companion SDK, без его копирования в моды.
+  [План](docs/22-UNIFIED-SDK-AND-MOD-SPLIT.md). Общий runtime ещё не реализован.
+
 - Проверены переданные исходники, лицензии, lifecycle и границы multiplayer.
   Обнаружен конфликт раскладки API 5 между SDK development и Native Bridge;
   companion MR переходят на именованное сессионное расширение с проверкой ABI.

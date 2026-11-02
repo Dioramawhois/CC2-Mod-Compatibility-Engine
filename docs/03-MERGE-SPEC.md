@@ -1,6 +1,18 @@
 # 03. Спецификация движка слияния
 
+**0.3.3:** `.glsl` проходит text validation и настоящий Git three-way с сохранением CC2 directives; GPU compilation не выполняется. `.txtr` распознаётся как binary только по TXTR magic и никогда не объединяется побайтно. Strict collision блокируется, ordered collision даёт whole-file override. Unknown header в любом участнике блокирует оба режима. Полная декодировка texture не реализована. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
+
+**0.3.2:** overridden не означает игровую совместимость. Успех ordered-patches показывает постоянное предупреждение с ресурсом и порядком участников. Clean/identical не получают его. Details различают hunk merge/whole-file replacement; N-way не приписывает каждую перезаписанную строку последнему участнику без такого доказательства. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).
+
+**Актуальный GUI 0.3.0:** пользователь явно запросил порядок патчей и отмену no-base allowlist gate. `ordered-patches` сохраняет независимые изменения через Git и разрешает пересечения в пользу позднего патча (`git-three-way-later-hunks`). Если оригинала нет, последний data файл заменяет прежние целиком (`ordered-replacement-no-base`); известные binary collisions аналогично отмечаются как replacement. Status — `overridden`, не `clean`. Реальные installed originals, их SHA и источник фиксируются, пустая/выдуманная база не создаётся. CLI/core default strict и прежняя строгая таблица ниже сохраняются при отключённом приоритете. Native, syntax, encoding/path gates остаются обязательными. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
+
+**0.2.2:** новые UX-правила не ослабляют blockers и не выбирают победителя. При отказе откатывается только запрошенный UI выбор к реально применённому составу; старый payload сохраняется. Участники и ресурс берутся из report.files/source_sha256, не угадываются из текста Git. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
+
+**0.2.1:** алгоритм Git/Lua и все блокирующие статусы сохранены. Меняется orchestration: выбор галочкой автоматически создаёт свежий plan, а только чистый результат заменяет постоянный output. Конфликт не удаляет прежний payload. Пустой набор разрешён и отключает моды без merge. [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md).
+
 ## 1. Принцип
+
+Новый package pipeline 0.2.0 вызывает настоящий Git и явно включает canonical LF для однородных UTF-8 LF/CRLF вариантов/базы. Исходные raw hashes и policy сохраняются; unique files сохраняются побайтно. BOM mismatch/mixed EOL/UTF-16 остаются blocker. Строгий default core можно использовать без canonical policy. Для native действует только reviewed byte-copy при известном runtime/game, не merge бинарников. [ADR-0009](adr/0009-package-activation-and-library-sdk.md).
 
 **3-way merge = BASE + OURS + THEIRS.** Для одного игрового пути `B` берётся из vanilla/Mod SDK той же сборки, `A` и `C` — соответствующие файлы из двух модов. `A` и `C` сравниваются **с B**, а не просто друг с другом. Разные диапазоны изменений обычно объединяются автоматически. Изменение одной и той же строки разными способами — реальный конфликт.
 

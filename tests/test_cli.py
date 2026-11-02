@@ -57,8 +57,18 @@ def test_build_dry_run_merges_without_output(tmp_path: Path, capsys) -> None:
     assert main(args) == 0
     assert read_stdout(capsys) == first
     # Real build: a clean plan writes the merged file; the report stays schema-valid read-only.
-    real = ["build", "--mods-dir", str(mods), "--mods", "a", "b", "--output", str(output),
-            "--baseline", str(baseline)]
+    real = [
+        "build",
+        "--mods-dir",
+        str(mods),
+        "--mods",
+        "a",
+        "b",
+        "--output",
+        str(output),
+        "--baseline",
+        str(baseline),
+    ]
     assert main(real) == 0
     merged = (output / "constants.txt").read_bytes()
     assert b"a=2" in merged and b"b=2" in merged
@@ -185,17 +195,34 @@ def test_non_strict_config_is_not_silently_accepted(tmp_path: Path, capsys) -> N
     assert main(["--config", str(config), "scan"]) == 4
     assert read_stdout(capsys)["status"] == "blocked"
 
+
 def test_build_writes_merged_disjoint_edits(tmp_path: Path, capsys) -> None:
     mods = tmp_path / "mods"
     make_mod(mods, "a", {"constants.txt": BASE.replace(b"a=1", b"a=2")})
     make_mod(mods, "b", {"constants.txt": BASE.replace(b"b=1", b"b=2")})
     baseline = baseline_fixture(tmp_path / "base", {"constants.txt": BASE})
     output = tmp_path / "merged"
-    assert main(["build", "--mods-dir", str(mods), "--mods", "a", "b",
-                 "--baseline", str(baseline), "--output", str(output)]) == 0
+    assert (
+        main(
+            [
+                "build",
+                "--mods-dir",
+                str(mods),
+                "--mods",
+                "a",
+                "b",
+                "--baseline",
+                str(baseline),
+                "--output",
+                str(output),
+            ]
+        )
+        == 0
+    )
     merged = (output / "constants.txt").read_bytes()
     assert b"a=2" in merged and b"b=2" in merged
     assert b"a=1" not in merged and b"b=1" not in merged
+
 
 def test_build_conflict_writes_nothing(tmp_path: Path, capsys) -> None:
     mods = tmp_path / "mods"
@@ -203,7 +230,22 @@ def test_build_conflict_writes_nothing(tmp_path: Path, capsys) -> None:
     make_mod(mods, "b", {"constants.txt": BASE.replace(b"a=1", b"a=9")})
     baseline = baseline_fixture(tmp_path / "base", {"constants.txt": BASE})
     output = tmp_path / "merged"
-    assert main(["build", "--mods-dir", str(mods), "--mods", "a", "b",
-                 "--baseline", str(baseline), "--output", str(output)]) == 2
+    assert (
+        main(
+            [
+                "build",
+                "--mods-dir",
+                str(mods),
+                "--mods",
+                "a",
+                "b",
+                "--baseline",
+                str(baseline),
+                "--output",
+                str(output),
+            ]
+        )
+        == 2
+    )
     assert read_stdout(capsys)["conflicts"]
     assert not output.exists()

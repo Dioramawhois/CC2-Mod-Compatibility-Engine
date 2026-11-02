@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "component": "libiconv",
+      "version": "1.19",
+      "url": "https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.19.tar.gz",
+      "sha256": "88dd96a8c0464eca144fc791ae60cd31cd8ee78321e67397e25fc095c4a19aa6",
+      "file": "libiconv-1.19.tar.gz"
+    },
+    {
+      "component": "gettext",
+      "version": "1.0",
+      "url": "https://ftp.gnu.org/pub/gnu/gettext/gettext-1.0.tar.lz",
+      "sha256": "d6342cbe1411a2fe7d139bfed80c2d63b1babc92acfedc72501cc105184f61ee",
+      "file": "gettext-1.0.tar.lz"
+    },
+    {
+      "component": "pcre2",
+      "version": "10.49",
+      "url": "https://github.com/PhilipHazel/pcre2/releases/download/pcre2-10.49/pcre2-10.49.tar.bz2",
+      "sha256": "53c156e1ba416a20da8e65395daa132da0d80e76910424caca3fcdae7831d384",
+      "file": "pcre2-10.49.tar.bz2"
+    },
+    {
+      "component": "zlib",
+      "version": "1.3.2",
+      "url": "https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.xz",
+      "sha256": "d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3",
+      "file": "zlib-1.3.2.tar.xz"
+    },
+    {
+      "component": "git",
+      "version": "2.56.0.windows.2",
+      "url": "https://codeload.github.com/git-for-windows/git/tar.gz/cc4dbf752a05efdc0e04e71fd3e8110d11bdd35c",
+      "file": "git-2.56.0.windows.2.tar.gz",
+      "commit": "cc4dbf752a05efdc0e04e71fd3e8110d11bdd35c",
+      "sha256": "b37e22f1649150b9cd1c0dddfaed047ad988d00308a9fd1388d5e12bb41d87cf"
+    },
+    {
+      "component": "zlib-build-patch",
+      "version": "1.3.2-2",
+      "url": "https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/sources/mingw-w64-zlib-1.3.2-2.src.tar.zst",
+      "file": "zlib-1165.patch",
+      "sha256": "0774e1368851504115f732f66230ca4a8a9cd60d4ba014502f65cc19b0b4d8bc",
+      "archive_member": "mingw-w64-zlib/1165.patch"
+    },
+    {
+      "component": "zlib-msys2-source",
+      "version": "1.3.2-2",
+      "url": "https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/sources/mingw-w64-zlib-1.3.2-2.src.tar.zst",
+      "file": "mingw-w64-zlib-1.3.2-2.src.tar.zst",
+      "sha256": "eef69dea52357e01b272d6fd6dc4d7c0773f71260cb7bcde6047c8c383518db3"
+    }
+  ],
+  "recipes": [
+    {
+      "component": "libiconv",
+      "version": "1.19",
+      "release": "1",
+      "commit": "c8f0d3000b0e7732e728b839fd25da47fd53dcd6",
+      "path": "mingw-w64-libiconv",
+      "repository": "https://github.com/msys2/MINGW-packages"
+    },
+    {
+      "component": "gettext",
+      "version": "1.0",
+      "release": "1",
+      "commit": "c8f0d3000b0e7732e728b839fd25da47fd53dcd6",
+      "path": "mingw-w64-gettext",
+      "repository": "https://github.com/msys2/MINGW-packages"
+    },
+    {
+      "component": "pcre2",
+      "version": "10.49",
+      "release": "1",
+      "commit": "c8f0d3000b0e7732e728b839fd25da47fd53dcd6",
+      "path": "mingw-w64-pcre2",
+      "repository": "https://github.com/msys2/MINGW-packages"
+    },
+    {
+      "component": "zlib",
+      "version": "1.3.2",
+      "release": "2",
+      "commit": "6430831b570304e48982fce7d65af399b801ceab",
+      "path": "mingw-w64-zlib",
+      "repository": "https://github.com/msys2/MINGW-packages"
+    }
+  ],
+  "recipe_files": {
+    "recipes/mingw-w64-gettext/0005-Fix-compilation-of-pthread_sigmask.c.patch": "cbc2f533012d646521afa20f8b256917fce040741ff42cf53fb6dd7123a6670a",
+    "recipes/mingw-w64-gettext/0021-replace-fsync.patch": "380dbddee2f9e2feee4c1435e8a942b5d11d0125e60c3350ebb10c19b19011aa",
+    "recipes/mingw-w64-gettext/0022-libasprintf.patch": "c354f6a7021069c99b90f1c6d6f6a4ccf40a01e9f6742b866df2b5a7286cb868",
+    "recipes/mingw-w64-gettext/0024-disable-gnu-format.patch": "ce7ccf6dd3a492cab322253cd67310899b546eccc25821c25cbc047a1a984633",
+    "recipes/mingw-w64-gettext/0030-fix-build-with-mingw-w64-clang.patch": "9b1b4f0c65b3bc1a3103c921a02c203cecf533d145f0bd90023406e760f81749",
+    "recipes/mingw-w64-gettext/122-Use-LF-as-newline-in-envsubst.patch": "ec39103d851262c02c27b7038f3c538e03afaefc6aa050311d62519d192ff38c",
+    "recipes/mingw-w64-gettext/PKGBUILD": "853ef80a50588f29355722a4513f24cf1a5f8de06e0b5ee326580464db539741",
+    "recipes/mingw-w64-libiconv/0002-fix-cr-for-awk-in-configure.all.patch": "89d5c0f666e50a0186cfb142ba7b77e8fe1ac4d65bdfd9ae14ae8d2f0045a87c",
+    "recipes/mingw-w64-libiconv/0003-add-cp65001-as-utf8-alias.patch": "cb2b1cca44c9b9bd11c3bd33997c10d22dff263542275324c88f34b59910ef87",
+    "recipes/mingw-w64-libiconv/fix-pointer-buf.patch": "6b6e2393840f4dc6067587165777b1a07978f4c05247d7c1010a45ad251bbeeb",
+    "recipes/mingw-w64-libiconv/iconv.pc": "56e7ec406bf42eb66b1d972f20d229f7a76ba00c38c7b4403bf348875704baae",
+    "recipes/mingw-w64-libiconv/PKGBUILD": "9b3212d06910560fb59e017e0b73a29d392a5082d3a47a613e61509bd7dcd475",
+    "recipes/mingw-w64-pcre2/0001-pcre2test-wineditline.patch": "73400390211bfaf1ad7e5b900335bc48b50d9bd1aa5b864fa54a3e8f666d5eb9",
+    "recipes/mingw-w64-pcre2/PKGBUILD": "19e2827b5ffd57b7981ec9678258107e5737f520229d36b4d15d71c24267eb19",
+    "recipes/mingw-w64-zlib/01-zlib-1.2.11-1-buildsys.mingw.patch": "b58b353d976d6fdd9a5094e60fa39439d4f14e9bf8be4a8bd475f2cd47f10226",
+    "recipes/mingw-w64-zlib/03-dont-put-sodir-into-L.mingw.patch": "7287d12db57dcf0f66964c861100bf06ebe1ddcb243e7ee0773fcab1b2935596",
+    "recipes/mingw-w64-zlib/04-fix-largefile-support.patch": "8e1cdf8edfc6ac08b0e660ca42a977942a88fab3ff59c01c87ba96500e2c3e63",
+    "recipes/mingw-w64-zlib/07-Add-no-undefined-to-link-to-enable-build-shared-vers.patch": "fb83292f494f649ea7f1835aa4abea61acc593d7f90625741d42cd99cac0e075",
+    "recipes/mingw-w64-zlib/08-Add-bzip2-library-to-pkg-config-file.patch": "0be98a7e660e7c068856f08b9e92d6c73a6b0d88c3e29a9716140b147f7c23c5",
+    "recipes/mingw-w64-zlib/PKGBUILD": "8a4a54a964eab7efa313e2faa8267052bc237ef61f8adf82a55cc93f4028db8a"
+  }
+}

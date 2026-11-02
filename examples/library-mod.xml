@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data name="Example CC2X Library" author="Library author" description="A Workshop library package">
+  <cc2mce schema="1" type="library" id="example.library" sdk="cc2x" api="4">
+    <!-- Optional: <requires id="another.library"/> -->
+  </cc2mce>
+</data>

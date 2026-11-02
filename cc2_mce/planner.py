@@ -28,7 +28,7 @@ def plan(
     report["sources"] = [mod.report() for mod in selected]
     report["game"] = baseline.game if baseline else None
     report["baseline"] = baseline.report() if baseline else None
-    # Merging is built in; git is only probed for the report, never required.
+    # Use the existing Git three-way implementation; no alternative merge fallback.
     git_version, _ = tool_version(GitMergeAdapter(git_executable).executable, "--version")
     lua_path = luac or shutil.which("luac5.3") or shutil.which("luac53") or shutil.which("luac")
     lua_version, _ = tool_version(lua_path, "-v")
@@ -57,7 +57,7 @@ def plan(
             [MergeInput(mod.id, item.content) for mod, item in participants],
             base,
             baseline_verified=bool(baseline and baseline.verified_for(logical_path)),
-            git=None,
+            git=GitMergeAdapter(git_executable),
             luac=luac,
         )
         conflict_ids = []

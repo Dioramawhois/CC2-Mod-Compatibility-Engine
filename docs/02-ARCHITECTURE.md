@@ -1,6 +1,20 @@
 # 02. Архитектура
 
+**0.3.3:** classifier включает `.glsl` text и TXTR-magic `.txtr` binary; merge проверяет kinds всех вариантов перед copy/priority. UI использует исходный diagnostic needs_review и первый logical_path вместо общей заглушки. Схема не меняется. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
+
+**0.3.2:** чистый ui_feedback строит OverrideWarning из существующих report.files/status/strategy/source_sha256/mod_order. GUI хранит предупреждение активного набора отдельно от отказа нового запроса, восстанавливает из manifest и отображает после apply. Merge/JSON schema не меняются. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).
+
+**0.3.0:** `preferences` хранит language/patch policy/per-game order атомарно; `i18n` + `translations` локализуют UI и diagnostics. GUI передаёт явный порядок в resolve_selection/analyze; apply воспроизводит merge_policy. Локальный baseline resolver использует ограниченный, case/Unicode-consistent поиск rom_0/SDK и записывает реальный SHA/source. Git `--theirs` разрешает только спорные hunks в режиме ordered-patches; no-base data получает отдельную whole-file strategy. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
+
+**0.2.2:** GUI хранит раздельно requested и applied ID; окончательный отказ восстанавливает applied selection, а не оставляет ложную галочку. Чистый `ui_feedback` форматирует уже структурированные blockers с именами/ресурсом; merge-правила не меняет. Первый scan готовит собственные каталоги, passive scan не сбрасывает отказ и не пересобирает изменения только невыбранных пакетов. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
+
+**0.2.1:** GUI debounce/проверка/применение автоматически следуют за галочкой; устаревшие результаты не публикуются. Один destination `mods/CC2-MCE` заменяется через полный stage и сохранение предыдущей собственной папки в служебный cache под OS lock. Pending journal позволяет восстановить payload/config при ошибке и перед следующей записью после прерывания процесса. Undo восстанавливает обе части. Источники и неизвестные outputs не перезаписываются. Контроль source updates повторным bounded scan, game-running wait и empty-set activation описаны в [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md), заменяющем immutable hash-named output ADR-0009.
+
 ## 1. Стиль
+
+**0.2.0:** `workflow` теперь реализует plan→stage→publish→activation, `toolchain` проверяет bundled Git/luac manifest, `locking` изолирует операции двух экземпляров, game profiles связывают executable/base/native hashes. GUI использует этот сервис и actual activation state, не CLI/raw stdout. «Применить к игре» и recovery journal реализованы для проверенного Windows layout; historical read-only описания ниже не определяют этот pipeline. [ADR-0009](adr/0009-package-activation-and-library-sdk.md).
+
+Текущий adapter `installation.py` читает bounded Steam KeyValues/manifest и проверяет соседнюю игру; он общий для GUI и поиска Workshop в CLI. GUI выполняет discovery/scan/анализ в фоне, разделяет `mods` и `libraries`, игнорирует результаты старого выбора. Найденная игра не создаёт synthetic baseline и не разрешает native plugin loading; создание пакета отключено. См. [ADR-0008](adr/0008-portable-discovery-and-library-collections.md).
 
 **Hexagonal / ports-and-adapters:** чистое доменное ядро, адаптеры Steam/файловой системы/Git/SDK, стратегии по форматам. В будущем integration-host (CC2X) не должен менять контракт `MergeEngine`.
 

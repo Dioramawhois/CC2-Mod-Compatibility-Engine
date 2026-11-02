@@ -1,3 +1,6 @@
-"""Offline, read-only CC2 mod compatibility analysis."""
+"""Offline CC2 compatibility analysis, verified packaging and reversible activation."""
 
-__version__ = "0.1.0"
+__version__ = "0.4.0b1"
+
+APP_NAME = "CC2 ModLoader"
+APP_EXECUTABLE = "CC2ModLoader.exe"

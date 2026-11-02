@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data name="CC2X SDK Runtime 0.5.1" author="Local CC2 Engine package"
+      description="Local wrapper for the user-provided CC2X 0.5.1 runtime. Upstream source: https://github.com/Dioramawhois/Carrier-Command-2-extender">
+  <cc2mce schema="1" type="library" id="cc2x.runtime" sdk="cc2x" api="4"/>
+</data>

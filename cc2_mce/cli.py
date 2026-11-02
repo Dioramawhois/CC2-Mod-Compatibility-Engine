@@ -208,6 +208,7 @@ def execute(
             _write_outputs(Path(output), outputs)
     return report, code, protected
 
+
 def _write_outputs(root: Path, outputs: dict[str, bytes]) -> None:
     # Only reached after a clean plan. Each logical path is written beneath root.
     root.mkdir(parents=True, exist_ok=True)

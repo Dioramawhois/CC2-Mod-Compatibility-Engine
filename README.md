@@ -1,151 +1,83 @@
-# CC2 Mod Loader (CC2-MCE)
+# CC2 ModLoader — CC2 Mod Compatibility Engine
 
 [Русский](#русский) · [English](#english)
 
-**Внешний полигон / External test corpus:** [totolerigolo118/carrier-command-2-mods](https://github.com/totolerigolo118/carrier-command-2-mods) — [план проверки / test scope](docs/16-EXTERNAL-TEST-CORPUS.md). Registered for future experiments; compatibility and gameplay are not yet verified.
-
----
-
 ## Русский
 
-> **Версия:** 0.1.0 · **Статус:** предварительная сборка для тестирования. Не финальный продукт.
->
-> Есть исходники окна на `tkinter`, встроенное текстовое слияние и запись объединённых файлов. **Готового Windows `.exe` и проверенного установочного пакета мода пока нет.** Работа в Windows-игре не подтверждена. Поддержка macOS отложена.
-
-### Что делает
-
-Объединяет моды Carrier Command 2, которые меняют **разные строки одного файла**. Если два мода меняют **одну и ту же строку** — программа показывает конфликт и ничего не записывает. Победитель не выбирается молча.
-
-Оригинальные моды и файлы игры **не изменяются**.
+**0.4.0b1 — открытая Windows beta: CC2 ModLoader с порядком патчей, предупреждением о перезаписи и офлайн-паком 14 языков.** По умолчанию используется язык системы. Пересекающиеся изменения получают приоритет по выбранному порядку, независимые правки сохраняются через настоящий Git. Пакеты собираются в одну постоянную папку; имя в игре содержит ModLoader и названия выбранных модов. Поддержаны игровые `.glsl` shaders и `.txtr` textures; неизвестный формат теперь объясняется с конкретным путём. Полная игровая совместимость произвольных модов не гарантируется.
 
 ### Как пользоваться
 
-1. Запустите приложение (или `python -m cc2_mce.gui` из исходников).
-2. Автопоиск стоковых скриптов реализован частично. Подготовка совместимого манифеста базы ещё не завершена; для сборки требуется корректная база с `baseline-manifest.json`.
-3. Выберите папку с модами и отметьте моды.
-4. Выберите пустую папку для результата и нажмите **«Объединить»**.
+1. Откройте `CC2ModLoader.exe`. Программа найдёт игру через Steam; Windows portable попросит поместить exe рядом с `carrier_command.exe`, если он запущен из другой папки.
+2. Отметьте нужные моды. Workshop читается на месте, локальные пакеты — из `mods` и `libraries` рядом с игрой. Эти папки создаются автоматически при первом запуске. Дополнительные папки, выбор игры и расположение файлов доступны через **«Меню»**.
+3. Проверка, разрешение зависимостей, слияние и включение происходят **сразу по галочке**, без дополнительных кнопок и подтверждений. Дождитесь строки **«Готово. Можно запускать игру»**. Верхняя строка показывает фактически включённые моды.
+4. Во вкладке **«Порядок загрузки»** перетащите моды или используйте **Alt+↑ / Alt+↓**. Поздние патчи размещаются ниже. Любое изменение порядка автоматически пересобирает файлы и сохраняется. При известном оригинале Git сохраняет независимые правки и отдаёт спорные участки позднему патчу. Без оригинала или для разных binary ресурсов поздний файл заменяет ранний целиком. Оранжевое предупреждение называет участников/ресурс и остаётся у активного набора: результат в игре неизвестен. Все файлы и тип замены — в подробностях меню. Строгую проверку можно вернуть, отключив **«Приоритет поздних патчей»** в меню.
+5. Нажмите **«Запустить игру»**. Для следующих открытий включите **«Меню → Запускать игру при открытии»**: приложение сначала подготовит выбранный набор и затем запустит игру. Если изменения отклонены, автозапуск отменяется. Предупреждение о перезаписи остаётся в открытом окне. Для возврата предыдущего набора используйте **«Меню → Вернуть предыдущий набор»** при закрытой игре; восстанавливаются и содержимое сборки, и активация. Диагностика и экспорт отчёта также доступны в меню.
 
-Инструкция для тестировщика: [TESTING.md](TESTING.md).
+Python, Git, Lua, терминал и ручные manifests игроку не нужны. Проверенные Git и Lua 5.3 входят в exe. Reports экспортируются только по вашему действию.
 
-### Ограничения
+Если игра открыта, изменения применятся после её закрытия. При ошибке синтаксиса/неподдержанном DLL/другом окончательном отказе галочки и порядок возвращаются к рабочему набору, который можно запустить. Обязательные зависимости объясняют повторное включение. Путь проблемного файла доступен через меню подробностей.
 
-- **Revolution и Island Airfields** меняют одни и те же экраны (`screen_vehicle_control.lua`, `screen_holomap.lua`) с пересекающимися правками. Автоматически не объединяются.
-- Слияние проверено на текстовых файлах. Lua, XML и бинарные ресурсы обрабатываются иначе или не объединяются.
-- Объединённый мод **не проверен в игре**.
-- Нативные плагины (DLL) не объединяются — по политике безопасности.
+**Язык:** по умолчанию язык системы. Включены русский, английский, немецкий, французский, испанский, португальский (Бразилия), итальянский, польский, турецкий, украинский, упрощённый/традиционный китайский, японский и корейский. Неподдержанная локаль использует English. Изменить выбор можно через **«Меню → Язык»**. Переводы входят в exe и работают без интернета; базовые названия элементов выверены, остальные сообщения имеют машинный перевод с проверкой параметров. Настройка сохраняется; смена языка переносит ожидающий выбор/порядок. Выбранная вкладка крупнее соседних и выделена жирным.
 
-### Командная строка (для разработчиков)
+### Каталоги и загрузчик
 
-```bash
-cc2-mce build --mods-dir DIR --mods A B --baseline DIR --output OUT   # записывает при чистом плане
-cc2-mce build --dry-run ...                                           # только анализ
+```text
+Carrier Command 2/
+  carrier_command.exe
+  CC2ModLoader.exe
+  dinput8.dll                 # установленный проверенный runtime, если нужен
+  mods/<mod-id>/content/...
+  libraries/<package>/mod.xml
+  libraries/<package>/content/...
 ```
 
-Отчёт остаётся схемой v1 только для чтения (`installable: false`).
+Предоставленный dinput8.dll может находиться, например, в `libraries/SDK/content/dinput8.dll`: поддержанная версия будет установлена рядом с игрой при применении, исходник сохранится. Неизвестный уже установленный dinput8.dll не перезаписывается.
 
-### Сборка для Windows
+Результат всегда находится в одной папке пользовательского каталога CC2: `mods/CC2-MCE`, с `mod.xml`, `content` и manifest вне `content`. Название в игре — **«CC2 ModLoader: Island Airfields + AI Bridge + …»**, с фактически выбранными именами и ограничением длины. Эта папка полностью заменяется после успешной проверки, старые файлы снятых модов не остаются. Хеши хранятся внутри manifest. Резервная сборка и журнал находятся отдельно в служебной папке `cc2-mce`. Исходники Workshop, vanilla/SDK и executable игры остаются неизменны. При восстановлении SDK loader может оставаться установленным; это отдельный компонент. [ADR-0010](docs/adr/0010-checkbox-auto-apply-and-stable-output.md).
 
-Запустите `build_windows.bat` на Windows (Python 3.12+). Результат: `dist\CC2ModLoader-0.1.0.exe`. PyInstaller собирает программу только под ОС, на которой запущен.
+### Библиотеки через Workshop
 
-### Тесты
+Автор добавляет секцию `cc2mce` в обычный `mod.xml`:
 
-```bash
-pytest          # 94 теста
-mypy cc2_mce    # проверка типов
+```xml
+<cc2mce schema="1" type="library" id="author.library" sdk="cc2x" api="4">
+  <requires id="author.base"/>
+</cc2mce>
 ```
 
-### Документация
+**Нет секции — обычный мод**, независимо от папки. Есть корректная секция — библиотека в отдельной вкладке; зависимости включаются в план. Lua сохраняет настоящие игровые пути, DLL остаются отдельными плагинами одного runtime. Никакой склейки бинарников или автоматического доверия DLL по одной метке. [SDK contract](docs/17-LIBRARY-SDK.md) · [пример](examples/library-mod.xml).
 
-| Файл | Назначение |
-|---|---|
-| [TESTING.md](TESTING.md) | Инструкция для тестировщика |
-| [CHANGELOG.md](CHANGELOG.md) | История изменений |
-| [docs/01-PRODUCT-REQUIREMENTS.md](docs/01-PRODUCT-REQUIREMENTS.md) | Цели, границы, требования |
-| [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md) | Компоненты и потоки данных |
-| [docs/03-MERGE-SPEC.md](docs/03-MERGE-SPEC.md) | Правила слияния |
-| [docs/04-CC2-INTEGRATION.md](docs/04-CC2-INTEGRATION.md) | Формат модов CC2, CC2X, Workshop |
-| [docs/10-SECURITY-AND-RELEASE.md](docs/10-SECURITY-AND-RELEASE.md) | Безопасная обработка модов, релиз |
-| [docs/adr/](docs/adr/) | Архитектурные решения |
-| [AGENTS.md](AGENTS.md) | Контекст для агентов и разработчиков |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Процесс внесения изменений |
+### Проверки и границы
 
-### Что не сделано
+- AI Bridge + Island Airfields: общая база сверена с SDK/runtime, настоящий Git объединил правки после явной LF normalization, настоящий Lua 5.3 validator проверил результат; DLL скопирована побайтно. Свежий game log называет combined mod и Island Airfields v45, пользователь подтвердил меню.
+- Проверены реальные создание/активация/откат, game XML reformat/duplicate path, source-change/running-game gates и посторонние файлы в output; frozen exe выполняет Git/Lua smoke без developer tools в PATH.
+- Не проверены полноценный полёт/посадка, внешний AI command client, clean-machine certification и macOS execution. У установленного AI Bridge есть авторский command path другого Windows-профиля; Engine не переписывает семантику чужого скрипта при merge.
+- Поддержка новых game/runtime/native versions требует проверенного профиля. Общий Windows/macOS MVP, доступность и публичная лицензированная поставка имеют отдельные release gates.
 
-- Игровая проверка объединённого мода на Windows.
-- Финальный `.exe`, собранный на Windows.
-- Зависимости библиотек из Workshop и установка через интерфейс.
-- Поддержка macOS (отложена по решению владельца).
-- Независимое ревью безопасности перед публикацией.
+[Проверка](TESTING.md) · [Для разработчиков](CONTRIBUTING.md) · [CHANGELOG](CHANGELOG.md) · [ADR-0009](docs/adr/0009-package-activation-and-library-sdk.md) · [M0 evidence](docs/12-M0-VALIDATION.md)
 
----
+**Внешний полигон:** [carrier-command-2-mods](https://github.com/totolerigolo118/carrier-command-2-mods) — [границы](docs/16-EXTERNAL-TEST-CORPUS.md); полная совместимость не заявляется.
 
 ## English
 
-> **Version:** 0.1.0 · **Status:** pre-release build for testing. Not a final product.
->
-> Includes `tkinter` window source, built-in text merging and merged-file output. **No ready Windows `.exe` or verified installable mod package is available yet.** Windows in-game operation is unverified. macOS support is deferred.
+**0.4.0b1 Windows beta ships CC2ModLoader.exe, persistent override warnings and an offline 14-language pack.** Drag selected packages in **Load order**, or use Alt+Up/Down; every change rebuilds automatically. Later patches win overlapping Git hunks while unrelated edits survive. Installed originals are used without a file-hash allowlist; missing-base data and binary collisions use an explicit, reported later-file replacement. An orange warning names the sources/file, survives reopening and states that the in-game result is unknown; full details are in the menu. Game `.glsl` shaders use text merging; `.txtr` with TXTR magic use binary copy/whole-file replacement. Unknown types identify the file and reason. **Menu → Later patches take priority** can restore strict mode. Unsupported native code, unsafe paths and invalid syntax remain blocked.
 
-### What it does
+The UI follows the system language. **Menu → Language** offers RU, EN, DE, FR, ES, PT-BR, IT, PL, TR, UK, simplified/traditional Chinese, JA and KO. Primary labels are reviewed; remaining translations are machine-assisted with complete key/parameter checks. All catalogs ship offline. Preferences persist. Checkbox changes update one `mods/CC2-MCE` folder, wait for a running game to close, and revert to the working selection/order on failure. The generated game mod name contains CC2 ModLoader and the selected mod names. Git and Lua 5.3 are bundled; players need no terminal or manual tool installation.
 
-Merges Carrier Command 2 mods that edit **different lines of the same file**. If two mods edit **the same line**, it reports a conflict and writes nothing. It never silently picks a winner.
+Workshop stays in place. Local inputs use `mods/<id>/content` and `libraries/<id>/content`. A valid `cc2mce` section in mod.xml declares a library and dependencies; unmarked packages remain ordinary mods. Native DLLs remain separate reviewed plugins of one loader. A hash-matched user-provided dinput8.dll can be installed from libraries; existing unknown loaders and unsupported game/plugin versions block application.
 
-Original mod folders and game files are **not modified**.
+AI Bridge + Island Airfields were merged with real Git, syntax-checked with real Lua 5.3, packaged and activated. Fresh CC2X logs identify the combined mod and its airfields plugin; the user confirmed the game menu. Full gameplay, the external AI command client, clean-machine distribution and macOS execution remain unverified. See [SDK](docs/17-LIBRARY-SDK.md), [architecture decision](docs/adr/0009-package-activation-and-library-sdk.md) and [tests](TESTING.md).
 
-### How to use
+**Steam distribution:** [audited delivery options](docs/19-STEAM-DISTRIBUTION-AUDIT.md) and [author metadata templates](distribution/workshop/README.md). Required Items are soft dependencies; an initial GUI bootstrap is still needed. No Steam publication or automatic Workshop-only installation is claimed.
 
-1. Start the application (or run `python -m cc2_mce.gui` from source).
-2. Stock-script auto-discovery is partially implemented. Generation of a compatible baseline manifest is not complete; builds require a valid baseline containing `baseline-manifest.json`.
-3. Choose the mods folder and tick the mods.
-4. Choose an empty output folder and press **Merge**.
+## Open source / Открытый код
 
-Tester instructions: [TESTING.md](TESTING.md).
-
-### Limitations
-
-- **Revolution and Island Airfields** edit the same screens (`screen_vehicle_control.lua`, `screen_holomap.lua`) with overlapping changes. They are not merged automatically.
-- Merging is verified on text files. Lua, XML and binary resources are handled differently or not merged at all.
-- The merged mod is **not yet verified in the game**.
-- Native plugins (DLLs) are not merged — by security policy.
-
-### Command line (for developers)
-
-```bash
-cc2-mce build --mods-dir DIR --mods A B --baseline DIR --output OUT   # writes on a clean plan
-cc2-mce build --dry-run ...                                           # analysis only
-```
-
-The report stays the read-only v1 schema (`installable: false`).
-
-### Windows build
-
-Run `build_windows.bat` on Windows (Python 3.12+). Output: `dist\CC2ModLoader-0.1.0.exe`. PyInstaller builds only for the OS it runs on.
-
-### Tests
-
-```bash
-pytest          # 94 tests
-mypy cc2_mce    # type checking
-```
-
-### Documentation
-
-| File | Purpose |
-|---|---|
-| [TESTING.md](TESTING.md) | Tester instructions |
-| [CHANGELOG.md](CHANGELOG.md) | Change history |
-| [docs/01-PRODUCT-REQUIREMENTS.md](docs/01-PRODUCT-REQUIREMENTS.md) | Goals, scope, requirements |
-| [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md) | Components and data flow |
-| [docs/03-MERGE-SPEC.md](docs/03-MERGE-SPEC.md) | Merge rules |
-| [docs/04-CC2-INTEGRATION.md](docs/04-CC2-INTEGRATION.md) | CC2 mod format, CC2X, Workshop |
-| [docs/10-SECURITY-AND-RELEASE.md](docs/10-SECURITY-AND-RELEASE.md) | Safe handling of mods, release |
-| [docs/adr/](docs/adr/) | Architecture decisions |
-| [AGENTS.md](AGENTS.md) | Context for agents and developers |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Change process |
-
-### Not done yet
-
-- In-game verification of the merged mod on Windows.
-- A final `.exe` built on Windows.
-- Workshop library dependencies and installation through the interface.
-- macOS support (deferred by owner decision).
-- Independent security review before publication.
+GPL-3.0-or-later ([LICENSE](LICENSE)); third-party terms: [NOTICE](NOTICE.md).
+This is an update of the existing ModLoader, not a separate mod or new Workshop item.
+**Menu → Launch game when opening ModLoader** prepares the selected set before launch;
+a rejected change cancels automatic launch. A persistent override warning keeps the
+window open. A full in-game UI and multiplayer are separate, unverified runtime work.
+The public Windows beta does not certify a packaged macOS application or a clean OS.
+Release assets include the application's source, matching Git/Lua tool sources and
+build recipes, notices, SBOM and SHA256SUMS. [Release process](docs/20-RELEASE.md).

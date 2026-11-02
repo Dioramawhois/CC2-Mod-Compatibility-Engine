@@ -38,12 +38,15 @@ class BuiltinMergeAdapter:
             return MergeOutcome("clean", "text-3way", result.content)
         return MergeOutcome("conflict", "text-3way")
 
+
 class GitMergeAdapter:
     def __init__(self, executable: str | None = None, timeout: float = 10.0) -> None:
         self.executable = executable or shutil.which("git") or "git"
         self.timeout = timeout
 
-    def merge(self, ours: bytes, base: bytes, theirs: bytes) -> MergeOutcome:
+    def merge(
+        self, ours: bytes, base: bytes, theirs: bytes, *, favor_theirs: bool = False
+    ) -> MergeOutcome:
         try:
             with tempfile.TemporaryDirectory(prefix="cc2-mce-merge-") as temporary:
                 paths = [Path(temporary) / name for name in ("ours", "base", "theirs")]
@@ -54,6 +57,7 @@ class GitMergeAdapter:
                     "merge-file",
                     "-p",
                     "--diff3",
+                    *(["--theirs"] if favor_theirs else []),
                     "-L",
                     "OURS",
                     "-L",
@@ -63,7 +67,12 @@ class GitMergeAdapter:
                     *map(str, paths),
                 ]
                 result = subprocess.run(
-                    command, capture_output=True, shell=False, timeout=self.timeout, check=False
+                    command,
+                    capture_output=True,
+                    shell=False,
+                    timeout=self.timeout,
+                    check=False,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                 )
             if result.returncode == 0:
                 return MergeOutcome("clean", "text-3way", result.stdout)
@@ -106,25 +115,36 @@ def merge_file(
     baseline_verified: bool = False,
     git: GitMergeAdapter | None = None,
     luac: str | None = None,
+    canonical_eol: bool = False,
+    favor_later: bool = False,
 ) -> MergeOutcome:
     strategy = "text-3way"
     if not variants or len(variants) > 32:
         return MergeOutcome("input_error", "none", diagnostics=("Expected 1..32 variants",))
+    kinds = {classify(logical_path, item.content) for item in variants}
     kind = classify(logical_path, variants[0].content)
-    if kind == "native":
+    if "native" in kinds:
         return MergeOutcome("native_plugin_review_required", "blocked")
-    if kind == "unknown":
+    if "unknown" in kinds:
         return MergeOutcome("needs_review", "unsupported", diagnostics=("Unknown resource type",))
     unique = []
     seen: set[bytes] = set()
-    for item in variants:
+    for item in reversed(variants) if favor_later else variants:
         if item.content not in seen:
             seen.add(item.content)
             unique.append(item)
+    if favor_later:
+        unique.reverse()
     if len(unique) == 1:
         content = unique[0].content
         status, strategy = (
             ("copied", "copy") if len(variants) == 1 else ("identical", "deduplicate")
+        )
+    elif favor_later and (kind == "binary" or not baseline_verified or base is None):
+        content = variants[-1].content
+        status = "overridden"
+        strategy = (
+            "ordered-binary-replacement" if kind == "binary" else "ordered-replacement-no-base"
         )
     elif kind == "binary":
         return MergeOutcome("unsupported_binary", "blocked")
@@ -142,7 +162,9 @@ def merge_file(
             decoded = [decode_text(item.content) for item in unique]
             decoded.append(decode_text(base))
             formats = [item[1] for item in decoded]
-            if len(set(formats)) != 1:
+            if len({fmt.bom for fmt in formats}) != 1 or (
+                not canonical_eol and len(set(formats)) != 1
+            ):
                 raise ValueError("Encoding/EOL disagreement")
             for text, _ in decoded:
                 if has_conflict_markers(text):
@@ -153,10 +175,19 @@ def merge_file(
                     )
         except (UnicodeError, ValueError):
             return MergeOutcome("encoding_conflict", strategy)
-        adapter = git or BuiltinMergeAdapter()
+        if canonical_eol:
+            unique = [
+                MergeInput(item.mod_id, item.content.replace(b"\r\n", b"\n")) for item in unique
+            ]
+            base = base.replace(b"\r\n", b"\n")
+        adapter = git or GitMergeAdapter()
+        resolved_conflicts = False
         for left, right in itertools.combinations(unique, 2):
             preflight = adapter.merge(left.content, base, right.content)
             if preflight.status == "conflict":
+                if favor_later:
+                    resolved_conflicts = True
+                    continue
                 conflict = {
                     "kind": _conflict_kind(base, left.content, right.content),
                     "mods": [left.mod_id, right.mod_id],
@@ -168,6 +199,9 @@ def merge_file(
         content = unique[0].content
         for item in unique[1:]:
             merged = adapter.merge(content, base, item.content)
+            if merged.status == "conflict" and favor_later:
+                resolved_conflicts = True
+                merged = adapter.merge(content, base, item.content, favor_theirs=True)
             if merged.status != "clean" or merged.content is None:
                 if merged.status == "conflict":
                     conflict = {
@@ -178,7 +212,9 @@ def merge_file(
                     return MergeOutcome("conflict", strategy, conflicts=(conflict,))
                 return merged
             content = merged.content
-        status = "clean"
+        status = "overridden" if resolved_conflicts else "clean"
+        if resolved_conflicts:
+            strategy = "git-three-way-later-hunks"
     if kind == "text":
         validation_status, diagnostic = validate_content(logical_path, content, luac=luac)
         if validation_status != "valid":

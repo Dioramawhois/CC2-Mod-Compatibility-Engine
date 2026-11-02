@@ -146,6 +146,8 @@ def classify(logical_path: str, data: bytes) -> str:
         return "native"
     if path.suffix in {".png", ".jpg", ".jpeg", ".dds", ".fbx", ".wav", ".ogg", ".mesh"}:
         return "binary"
-    if path.suffix in {".lua", ".txt", ".xml"}:
+    if path.suffix == ".txtr":
+        return "binary" if data.startswith(b"TXTR") else "unknown"
+    if path.suffix in {".lua", ".txt", ".xml", ".glsl"}:
         return "text"
     return "unknown"

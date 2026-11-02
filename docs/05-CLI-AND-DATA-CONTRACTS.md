@@ -1,10 +1,18 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
+**0.3.3:** `.glsl` имеет kind=text, `.txtr` с magic TXTR kind=binary; другие/неверные header остаются unknown/needs_review. Report schemas не меняются. GUI Unknown resource type теперь объясняет отсутствие поддержки и показывает путь; missing/wrong Lua validator объясняет встроенный инструмент, raw diagnostic остаётся в подробностях.
+
+**0.3.2:** package JSON v2 не меняется. Неблокирующее GUI warning выводится из файлов status=overridden, strategy, source_sha256 и общего mod_order; language/UI presentation не меняют payload. При открытии предупреждение восстанавливается из активного собственного manifest. Strict blockers сохраняют прежний контракт. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).
+
 **Назначение:** внутренний контракт для разработчиков/CI, не инструкция для игроков. Пользовательский интерфейс — обязательный GUI без терминала ([UX/UI](13-UX-UI.md), [ADR-0007](adr/0007-gui-first-user-experience.md)). GUI должен использовать application service/структурированные результаты; JSON/CLI не становятся обязательным пользовательским шагом.
 
 **Статус 0.1.0.dev1:** реализованы `doctor`, `scan`, `plan`, `build --dry-run`, `report`. `build` без `--dry-run` и `build --plan` отклоняются с exit 2; устанавливаемый пакет не создаётся. Ниже отдельно описаны текущий read-only контракт и будущая упаковка; см. [ADR-0006](adr/0006-read-only-first-slice.md).
 
 ## 1. CLI
+
+**0.2.0:** GUI использует отдельный `workflow.py` и [package.schema.json](../cc2_mce/schemas/package.schema.json), schema v2: installable допускается только без blockers, с known game/baseline/toolchain/native identity. Есть atomic staging, recovery journal и подтверждаемая GUI активация. Старый report v1 остаётся неустанавливаемым; source properties расширены optional `package_kind`, `package_id`, `dependencies`, `sdk`, `api`. SDK declaration описана в [17](17-LIBRARY-SDK.md). CLI не требуется игроку, raw developer outputs не равны игровому пакету. [ADR-0009](adr/0009-package-activation-and-library-sdk.md).
+
+Автоматический поиск Workshop теперь использует общий Steam adapter: registry/default roots, bounded `libraryfolders.vdf`, дополнительные библиотеки. Аргументы CLI и JSON schema v1 не меняются; GUI показывает расположения отдельно от отчёта и не превращает наличие игры в доверенный baseline. Изменение discovery и portable policy: [ADR-0008](adr/0008-portable-discovery-and-library-collections.md).
 
 ```text
 cc2-mce doctor --game <GAME_DIR> --baseline <SDK_DIR>
@@ -122,6 +130,25 @@ binary_conflict_policy = "block"
 
 Mapping пока неполный (`complete: false`): отсутствие записи не доказывает, что ресурс новый. Разные версии без указанного оригинала дают `no_base`; автоматический add/add доступен только доменному API при явно доказанном отсутствии базы, CLI такую политику пока не включает. Baseline и исходники перечитываются/хешируются после анализа; изменение, добавление или удаление ресурса блокирует результат.
 
+## GUI package v2: постоянная папка и пустой набор (0.2.1)
+
+**0.3.1:** Preferences language enum расширен supported codes из i18n.LANGUAGES (14 языков) + system, schema 1 сохранена. Package owner/folder/schema v2 прежние; изменён display name metadata на CC2 ModLoader + имена модов, что отражено в metadata hash/build identity. Locale по-прежнему не влияет на payload. Source/engine hash включает статические language catalogs. [ADR-0013](adr/0013-modloader-brand-and-offline-language-pack.md).
+
+**Расширение 0.3.0:** optional `merge_policy: strict|ordered-patches`; optional `files[].baseline_source` — game-relative path или null. `overridden` и strategy `git-three-way-later-hunks|ordered-replacement-no-base|ordered-binary-replacement` отделены от clean/copied. SHA всех исходников, фактического оригинала и output, а также mod_order позволяют воспроизвести приоритет. Apply повторяет policy из plan, не подменяет её строгим default. Старые v2 manifests читаются; CLI v1 не меняется. Preferences schema 1: owner=cc2-mce, language=system|ru|en, patch_priority boolean, orders по game root, extra_roots; 64 KiB, atomic expected-byte replace. Locale не меняет package identity. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
+
+**UX 0.2.2:** JSON schema v2 не меняется. Report при отказе описывает отклонённый requested набор; не считается текущей активацией. GUI отдельно хранит applied ID, возвращает к ним галочки, сохраняет rejected report для добровольного экспорта и выводит названия/ресурс через чистый presenter. Нельзя выдавать mod_order отклонённого report за включённый состав. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).
+
+Новые manifests включают `output_folder: "CC2-MCE"`; поле необязательное при чтении прежних v2 пакетов для миграции. `mod_order` допускает 0..32 уникальных ID: пустой набор имеет пустые sources/files/payload, а активация — пустой active_mod_folders. Все source/base/output/engine/tool hashes и внутренний build_id сохраняются. Обратно совместимое расширение schema v2 не меняет developer CLI/report v1. Постоянный путь не является build identity; reuse/undo сравнивают manifest и все файлы. [ADR-0010](adr/0010-checkbox-auto-apply-and-stable-output.md).
+
 ## 7. Ручное разрешение в P1
 
 Хранить `resolution` и `input_fingerprints`; разрешение автоматически аннулируется при изменении любого участвующего исходника/базы. Внешний редактор открывает только копии во временном каталоге, не исходный Workshop мод. Валидация после редактирования обязательна.
+
+## Preferences 0.4.0b1
+
+Локальный preferences.json schema_version=1 получил optional boolean
+`launch_on_start` (default false для старых файлов). Некорректный тип отклоняется.
+Сохранение остаётся атомарным с проверкой исходных байтов. JSON report/package
+schemas не меняются; внутренний `--play` GUI использует те же apply/launch gates.
+Public RELEASE.json содержит только разрешённые поля build provenance и JUnit;
+локальные activation/evidence/mod paths и выбранные пользовательские моды не экспортируются.

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data name="Your CC2X Mod" author="Your name" description="Author template. Requires CC2X Runtime Library and a one-time CC2 ModLoader installation.">
+  <cc2mce schema="1" type="mod" id="example.workshop-mod" sdk="cc2x" api="4">
+    <requires id="cc2x.runtime"/>
+  </cc2mce>
+</data>

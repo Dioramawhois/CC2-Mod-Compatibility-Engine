@@ -1,0 +1,16 @@
+[h1]CC2X Runtime Library for CC2 ModLoader[/h1]
+Shared runtime dependency for compatible Carrier Command 2 mods.
+
+[b]A Workshop subscription downloads this library. It does not install or run the loader automatically.[/b]
+Install CC2 ModLoader once from [url=SETUP_DOWNLOAD_URL]the official project download[/url], then open it, select your subscribed mods and choose Launch game. No terminal, Python, Git or Lua installation is required by the player.
+
+[h2]Compatibility[/h2]
+This runtime targets reviewed Windows CC2 builds. It does not provide a macOS native DLL runtime. Mods remain separate plugins; native binaries are never merged together. Overwritten changes are shown with a warning because the in-game result is not guaranteed.
+
+[h2]For mod authors[/h2]
+Add this item under Required Items on your mod's Workshop page. Declare a dependency on cc2x.runtime in the cc2mce section of your mod.xml. Steam's Required Items and ModLoader's XML dependencies serve different purposes; both are needed.
+
+[h2]License and sources[/h2]
+Before publishing, include the license notices and corresponding source location for the exact runtime binary. Do not distribute original game resources or other authors' mods in this library.
+
+[b]Author draft: replace the setup download placeholder and complete the private upload test before publishing.[/b]

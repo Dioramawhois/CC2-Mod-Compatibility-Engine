@@ -162,10 +162,7 @@ def test_background_scan_updates_widgets_without_running_library(window, tmp_pat
     assert installed is not None
     window.discover_on_start = True
     window.apply_installations(Installations((installed,), (), ()))
-    deadline = time.monotonic() + 5
-    while window.library_scan is None and time.monotonic() < deadline:
-        window.update()
-        time.sleep(0.01)
+    pump_until(window, lambda: window.library_scan is not None and not window.busy)
     assert set(window.vars) == {"mod"}
     assert set(window.library_vars) == {"lib"}
     assert "Найдено модов: 1, библиотек: 1" in window.status.get()
@@ -206,10 +203,7 @@ def test_gui_checkbox_automatically_changes_game_activation(window, tmp_path: Pa
         "cc2_mce.gui.messagebox.askyesno",
         lambda *args, **kwargs: pytest.fail("No confirmation"),
     )
-    deadline = time.monotonic() + 5
-    while window.selection_dirty and time.monotonic() < deadline:
-        window.update()
-        time.sleep(0.01)
+    pump_until(window, lambda: not window.selection_dirty)
     assert window.active_package is not None
     assert str(window.active_package).encode() in (user / "mods.xml").read_bytes()
     assert not window.selection_dirty
@@ -241,9 +235,18 @@ def auto_pair(window, tmp_path: Path, monkeypatch):
 
 def pump_until(window, condition):
     deadline = time.monotonic() + 8
-    while not condition() and time.monotonic() < deadline:
-        window.update()
-        time.sleep(0.01)
+
+    def check():
+        if condition() or time.monotonic() >= deadline:
+            window.quit()
+        else:
+            window.after(10, check)
+
+    if not condition():
+        window.after(0, check)
+        # Use the same event loop as the shipped app. Nested update() can hang Aqua Tk
+        # on a withdrawn window even after the scan worker has completed.
+        window.mainloop()
     assert condition(), window.status.get()
 
 

@@ -66,3 +66,13 @@ ModLoader сканирует все установленное из Workshop и 
 Проверка private acceptance обязательна до обещания «нативно»: новый Windows профиль/чистая машина, подписка на мод и реально установленная dependency, первый GUI bootstrap без команд, plugin DLL путь из активного output в свежем логе, AI Bridge + Island Airfields с конфликтом, reorder, удаление мода, Steam update и rollback, неизвестная DLL, offline и несколько Steam libraries. Для macOS отдельно data merging/GUI/tool bundle; Windows CC2X DLL на Mac не обещается.
 
 Результат аудита не требует публиковать что-либо от имени пользователя. Ни item ID, ни Steamworks app/depot, ни свежая private upload acceptance пока не созданы.
+
+## Обновление владельца 2026-11-02
+
+Лицензия ModLoader выбрана: GPL-3.0-or-later (LICENSE). Исторические пометки
+о невыбранной лицензии выше больше не блокируют собственный код. Остаются
+обязательства notices/corresponding sources включённых компонентов и реальные
+bootstrap/runtime gates. Развитие SDK и аэродромов выпускается новыми версиями
+существующих проектов; имя/ID Island Airfields и Workshop item 3826940003 сохраняются.
+Новый native код не становится доверенным только из-за новой версии: reviewed
+game/runtime/plugin fingerprints в ModLoader обновляются после проверки.

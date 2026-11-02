@@ -3,6 +3,8 @@
 # ruff: noqa: E501 -- message IDs and translations are kept as complete catalog entries.
 
 EN: dict[str, str] = {
+    "Запускать игру при открытии": "Launch game when opening ModLoader",
+    "Не удалось сохранить настройку запуска.": "Could not save the launch preference.",
     "Приложение пока не поддерживает этот тип файла.": "The app does not support this file type yet.",
     "Не работает встроенный проверяющий Lua 5.3. Обновите ModLoader.": "The bundled Lua 5.3 validator is unavailable or incompatible. Update ModLoader.",
     "Файл требует проверки: {p0}": "File needs review: {p0}",

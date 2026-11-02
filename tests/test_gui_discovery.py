@@ -490,6 +490,39 @@ def test_running_game_defers_checkbox_until_game_closes(auto_pair, monkeypatch):
     assert (user / "mods/CC2-MCE/content/a.txt").is_file()
 
 
+def test_play_mode_launches_only_after_the_selected_payload_is_active(auto_pair, monkeypatch):
+    from cc2_mce.workflow import active_paths
+
+    window, user = auto_pair
+    observed = []
+
+    def launch():
+        package = user / "mods/CC2-MCE"
+        observed.append(((package / "content/a.txt").read_bytes(), active_paths(user)))
+        return True
+
+    monkeypatch.setattr(window, "launch", launch)
+    monkeypatch.setattr(window, "request_close", lambda: None)
+    window._play_requested = True
+    window.checks["a"].invoke()
+    pump_until(window, lambda: bool(observed))
+    assert observed == [(b"a=2\n\n\nb=1\n", (user / "mods/CC2-MCE",))]
+    assert not window._play_requested
+
+
+def test_play_mode_does_not_launch_a_previous_set_after_rejection(auto_pair, tmp_path, monkeypatch):
+    window, _ = auto_pair
+    window.checks["a"].invoke()
+    pump_until(window, lambda: not window.selection_dirty)
+    (tmp_path / "workshop/b/content/a.txt").write_bytes(b"a=3\n\n\nb=1\n")
+    monkeypatch.setattr(window, "launch", lambda: pytest.fail("Rejected play request must stop"))
+    window._play_requested = True
+    window.checks["b"].invoke()
+    pump_until(window, lambda: bool(window.notice_title.get()))
+    assert not window._play_requested
+    assert not window.vars["b"].get()
+
+
 def test_changed_source_rebuilds_without_losing_selection(auto_pair, tmp_path):
     window, user = auto_pair
     window.vars["a"].set(True)

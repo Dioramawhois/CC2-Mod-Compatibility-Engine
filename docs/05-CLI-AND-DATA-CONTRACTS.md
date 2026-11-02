@@ -143,3 +143,12 @@ Mapping пока неполный (`complete: false`): отсутствие за
 ## 7. Ручное разрешение в P1
 
 Хранить `resolution` и `input_fingerprints`; разрешение автоматически аннулируется при изменении любого участвующего исходника/базы. Внешний редактор открывает только копии во временном каталоге, не исходный Workshop мод. Валидация после редактирования обязательна.
+
+## Preferences 0.4.0b1
+
+Локальный preferences.json schema_version=1 получил optional boolean
+`launch_on_start` (default false для старых файлов). Некорректный тип отклоняется.
+Сохранение остаётся атомарным с проверкой исходных байтов. JSON report/package
+schemas не меняются; внутренний `--play` GUI использует те же apply/launch gates.
+Public RELEASE.json содержит только разрешённые поля build provenance и JUnit;
+локальные activation/evidence/mod paths и выбранные пользовательские моды не экспортируются.

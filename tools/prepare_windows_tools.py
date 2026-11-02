@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import argparse
 import json
 import os
 import shutil
@@ -25,6 +26,14 @@ def sha(path: Path) -> str:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--from-source", action="store_true", help="maintainer toolchain refresh")
+    args = parser.parse_args()
+    if not args.from_source:
+        from windows_tool_archive import install_pinned_tools
+
+        install_pinned_tools(ROOT, DEST)
+        return
     DEST.mkdir(parents=True, exist_ok=True)
     BUILD.mkdir(exist_ok=True)
     git_cmd = shutil.which("git")
@@ -77,7 +86,7 @@ def main() -> None:
     compiler = Path(
         os.environ.get(
             "CC2_MCE_ZIG",
-            str(Path.home() / "Documents/CC2 Modding/cc2x/.deps/zig-x86_64-windows-0.15.2/zig.exe"),
+            shutil.which("zig") or str(BUILD / "zig/zig.exe"),
         )
     )
     if not compiler.is_file():

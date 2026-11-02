@@ -4,11 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cc2-mce"
-version = "0.3.3"
+version = "0.4.0b1"
 description = "Offline compatibility analysis, verified packaging and activation for CC2 mods"
 readme = "README.md"
 requires-python = ">=3.12"
-# License selection is deliberately deferred to the project owner before publication.
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE", "NOTICE.md"]
 dependencies = ["jsonschema>=4.23,<5"]
 
 [project.optional-dependencies]

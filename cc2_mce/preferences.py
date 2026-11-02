@@ -19,6 +19,7 @@ class Preferences:
     root: Path
     language: str = "system"
     patch_priority: bool = True
+    launch_on_start: bool = False
     orders: dict[str, list[str]] = field(default_factory=dict)
     extra_roots: list[str] = field(default_factory=list)
     _original: bytes | None = None
@@ -37,6 +38,7 @@ class Preferences:
                 or value["schema_version"] != 1
                 or value["language"] not in {"system", *LANGUAGES}
                 or type(value["patch_priority"]) is not bool
+                or type(value.get("launch_on_start", False)) is not bool
                 or not isinstance(value["orders"], dict)
                 or not isinstance(value["extra_roots"], list)
             ):
@@ -58,6 +60,7 @@ class Preferences:
             raise InputError("Не удалось прочитать настройки приложения.") from exc
         result.language = value["language"]
         result.patch_priority = value["patch_priority"]
+        result.launch_on_start = value.get("launch_on_start", False)
         result.orders = value["orders"]
         result.extra_roots = value["extra_roots"]
         result._original = raw
@@ -79,6 +82,7 @@ class Preferences:
             "schema_version": 1,
             "language": self.language,
             "patch_priority": self.patch_priority,
+            "launch_on_start": self.launch_on_start,
             "orders": self.orders,
             "extra_roots": self.extra_roots,
         }

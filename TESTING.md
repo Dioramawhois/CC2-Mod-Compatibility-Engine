@@ -35,3 +35,11 @@ UX-регрессии 0.2.2: 168 тестов прошли, 3 Windows symlink sk
 Уже выполнено локально: 157 regression tests, 3 Windows symlink skips; Ruff и mypy (Windows/darwin analysis); frozen Git/Lua и GUI smoke. Установленный exe автоматически перенёс текущие AI Bridge + Island Airfields + SDK в постоянную папку без кнопок применения, сохранив выбор и hashes всех трёх payload files. После нового запуска игры fresh log и Toolhelp module paths подтвердили загрузку плагина из `mods/CC2-MCE/content/cc2x`; тестовая игра закрыта штатно. Evidence: `build/evidence/20261101T221338Z` (UTC directory name; местная дата 2026-11-02). Пользовательское подтверждение меню относится к прежнему запуску идентичного Lua/native payload. Полный flight/AI command gameplay, macOS execution и чистая ОС не подтверждены.
 
 Перед первым игровым тестом сохраняются settings/persistent data/mods.xml/старый log и копии сохранений в локальное evidence. Отчёты с личными путями и чужие assets не публикуются автоматически. Для проблемы сообщите версию, названия выбранных пакетов, стадию (проверка/применение/запуск), видимый текст и выполнялось ли применение; пароли/Steam account files не нужны.
+
+## 0.4.0b1 regression scope
+
+Added GUI coverage proves launch observes the activated selected payload, and a
+rejected selection never starts the old set. Preferences cover old-file defaults
+and invalid types. Release/tool tests cover privacy, source filtering, exact archive
+hashes and malicious ZIP names before writing. These are offline/GUI tests, not
+multiplayer, in-game UI, dedicated-server or clean-machine acceptance.

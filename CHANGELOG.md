@@ -1,3 +1,17 @@
+## 0.4.0b1 — открытая Windows beta и подготовленный запуск (2026-11-02)
+
+- GPL-3.0-or-later выбрана владельцем: добавлены LICENSE/NOTICE и metadata проекта.
+- «Меню → Запускать игру при открытии» сохраняет настройку; запуск происходит после
+  проверки и активации выбранного набора. Отказ отменяет автозапуск; предупреждение
+  о перезаписи остаётся доступным. Добавлены переводы в 14 offline-каталогах.
+- Чистая developer-сборка получает закреплённые Git/Lua по SHA без приватного SDK.
+  Добавлены bounded ZIP validation и регрессии повреждённых/опасных архивов.
+- Release packager проверяет provenance/JUnit, исключает личные данные из public report,
+  собирает Windows/source/tool-source assets, notices, SBOM и checksums.
+- Это обновление существующего ModLoader; новых Workshop items нет. In-game UI,
+  multiplayer аэродромов, clean-machine и packaged macOS certification не заявляются.
+  [ADR-0016](docs/adr/0016-open-source-beta-and-prepared-launch.md).
+
 ## 0.2.0 — применение модов к игре и SDK библиотек (2026-11-01)
 
 - Рабочий Windows GUI pipeline: проверенная база/игровой fingerprint, настоящий Git с явной LF policy, bundled luac 5.3.6, отдельный package, backup/journal-protected активация и rollback. Добавлены process/source/integrity gates, OS lock и запрет посторонних файлов в reused output.

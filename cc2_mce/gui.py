@@ -52,6 +52,7 @@ class App(tk.Tk):
         preferences_dir: Path | None = None,
         language: str | None = None,
         resume_request: tuple[Path, set[str], list[str]] | None = None,
+        play_on_ready: bool | None = None,
     ) -> None:
         super().__init__()
         self.title(APP_NAME)
@@ -91,6 +92,9 @@ class App(tk.Tk):
             self.preferences.patch_priority if patch_priority is None else patch_priority
         )
         self._applied_patch_priority = self.patch_priority
+        self._play_requested = (
+            self.preferences.launch_on_start if play_on_ready is None else play_on_ready
+        )
         self.language_choice = language or self.preferences.language
         self.translator = Translator(self.language_choice)
         self.extra_roots = [Path(value) for value in self.preferences.extra_roots]
@@ -202,6 +206,12 @@ class App(tk.Tk):
         )
         self.actions_menu.add_command(label=self.tr("Сохранить отчёт…"), command=self.export_report)
         self.priority_var = tk.BooleanVar(value=self.patch_priority)
+        self.auto_launch_var = tk.BooleanVar(value=self.preferences.launch_on_start)
+        self.actions_menu.add_checkbutton(
+            label=self.tr("Запускать игру при открытии"),
+            variable=self.auto_launch_var,
+            command=self.change_auto_launch,
+        )
         self.actions_menu.add_checkbutton(
             label=self.tr("Приоритет поздних патчей"),
             variable=self.priority_var,
@@ -413,6 +423,16 @@ class App(tk.Tk):
         self.patch_priority = self.priority_var.get()
         self.selection_changed()
 
+    def change_auto_launch(self) -> None:
+        previous = self.preferences.launch_on_start
+        self.preferences.launch_on_start = self.auto_launch_var.get()
+        try:
+            self.preferences.save()
+        except (OSError, MCEError):
+            self.preferences.launch_on_start = previous
+            self.auto_launch_var.set(previous)
+            self.status.set(self.tr("Не удалось сохранить настройку запуска."))
+
     def show_problem(self) -> None:
         dialog = tk.Toplevel(self)
         dialog.title(self.tr("Подробности проблемы"))
@@ -493,6 +513,7 @@ class App(tk.Tk):
             self.notice_frame.pack(fill="x", before=self.tabs, pady=(4, 4))
 
     def _reject_change(self, rejection: Rejection) -> None:
+        self._play_requested = False
         if self._auto_timer is not None:
             self.after_cancel(self._auto_timer)
             self._auto_timer = None
@@ -873,6 +894,7 @@ class App(tk.Tk):
                 self.selection_dirty = True
                 self._queue_rebuild()
             self._refresh_controls()
+            self._maybe_play()
 
         def scan() -> Scan:
             try:
@@ -1166,10 +1188,17 @@ class App(tk.Tk):
             self._update_rows()
             self._render_order()
             self._refresh_controls()
+            self._maybe_play()
 
         self._background(
             lambda: apply_plan(current, game_user_dir()), receive, reject_selection=True
         )
+
+    def _maybe_play(self) -> None:
+        if self._play_requested and not self.busy and self.launch_button.instate(["!disabled"]):
+            self._play_requested = False
+            if self.launch() and self._applied_warning is None:
+                self.request_close()
 
     def restore(self) -> None:
         if self.applying:
@@ -1224,30 +1253,33 @@ class App(tk.Tk):
             except (MCEError, OSError):
                 self.status.set(self.tr("Отчёт не сохранён: выберите новый файл вне исходников."))
 
-    def launch(self) -> None:
+    def launch(self) -> bool:
         if self.applying:
             self.status.set(self.tr("Дождитесь завершения применения модов."))
-            return
+            return False
         if self.game is None or self.needs_placement:
             self.status.set(self.tr("Сначала выберите игру и разместите приложение рядом с ней."))
-            return
+            return False
         if (game_user_dir() / "cc2-mce/pending.json").exists():
             self.status.set(self.tr("Сначала дождитесь восстановления незавершённой сборки."))
-            return
+            return False
         if self.selection_dirty:
             self.status.set(
                 self.tr("Выбранный набор ещё не готов. Дождитесь сборки или устраните конфликт.")
             )
-            return
+            return False
         try:
             input_root(self.game.root)
             url = f"steam://rungameid/{GAME_ID}"
             if sys.platform == "win32":
                 os.startfile(url)
             else:
-                webbrowser.open(url)
+                if not webbrowser.open(url):
+                    raise OSError("Steam URL handler unavailable")
+            return True
         except (OSError, MCEError):
             self.status.set(self.tr("Не удалось открыть игру через Steam."))
+            return False
 
 
 def main() -> None:
@@ -1263,8 +1295,9 @@ def main() -> None:
         return
     geometry = None
     resume_request = None
+    play_on_ready = True if "--play" in sys.argv[1:] else None
     while True:
-        app = App(resume_request=resume_request)
+        app = App(resume_request=resume_request, play_on_ready=play_on_ready)
         if geometry:
             app.geometry(geometry)
         app.mainloop()
@@ -1272,6 +1305,7 @@ def main() -> None:
             break
         geometry = app.restart_geometry
         resume_request = app.restart_selection
+        play_on_ready = app._play_requested
 
 
 if __name__ == "__main__":

@@ -4,7 +4,12 @@
   учтены code namespaces в едином output, сохранение identity/catalog и сетевые
   ограничения. GPL-моды cc2mods выделяются воспроизводимо из SHA-locked sources
   через инструмент companion SDK, без его копирования в моды.
-  [План](docs/22-UNIFIED-SDK-AND-MOD-SPLIT.md). Общий runtime ещё не реализован.
+  [Статус](docs/22-UNIFIED-SDK-AND-MOD-SPLIT.md). В companion SDK уже собирается
+  один runtime с независимым Lua host и registry/UI. Сторона SDK читает ordered
+  module bundles; publisher в выпущенной beta ModLoader ещё не подключён.
+- Владелец подтвердил все разрешения своей команды. Сохранены GPL/MIT notices
+  и provenance. F-16/F-15 выделен отдельно с исходными ID и 57 файлами.
+  Native/static проверки проходят; свежая игровая и multiplayer приёмка открыты.
 
 - Проверены переданные исходники, лицензии, lifecycle и границы multiplayer.
   Обнаружен конфликт раскладки API 5 между SDK development и Native Bridge;

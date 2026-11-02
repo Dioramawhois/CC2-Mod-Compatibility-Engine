@@ -1,3 +1,12 @@
+## Unreleased — аудит Native Bridge и cc2mods (2026-11-02)
+
+- Проверены переданные исходники, лицензии, lifecycle и границы multiplayer.
+  Обнаружен конфликт раскладки API 5 между SDK development и Native Bridge;
+  companion MR переходят на именованное сессионное расширение с проверкой ABI.
+- По примеру явной репликации Hold исправлена публикация изменённых waypoint
+  в companion Island Airfields MR, добавлена регрессия фактического обработчика.
+  Multiplayer acceptance не заявляется. [Аудит](docs/21-NATIVE-BRIDGE-AND-CC2MODS-AUDIT.md).
+
 ## 0.4.0b1 — открытая Windows beta и подготовленный запуск (2026-11-02)
 
 - GPL-3.0-or-later выбрана владельцем: добавлены LICENSE/NOTICE и metadata проекта.

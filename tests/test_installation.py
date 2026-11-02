@@ -154,9 +154,12 @@ def test_explicit_prepare_creates_only_engine_collections(tmp_path: Path) -> Non
     root = game(tmp_path / "game")
     installed = inspect_game(root)
     assert installed is not None
+    original_entries = set(root.iterdir())
+    executable_bytes = installed.executable.read_bytes()
     prepare_collections(installed)
     prepare_collections(installed)
-    assert {path.name for path in root.iterdir()} == {"carrier_command.exe", "mods", "libraries"}
+    assert set(root.iterdir()) == original_entries | {root / "mods", root / "libraries"}
+    assert installed.executable.read_bytes() == executable_bytes
     assert not list((root / "mods").iterdir())
     assert not list((root / "libraries").iterdir())
 

@@ -434,14 +434,33 @@ def test_order_change_rebuilds_automatically_and_is_persisted(auto_pair, tmp_pat
     pump_until(window, lambda: not window.selection_dirty)
     package = user / "mods/CC2-MCE"
     assert (package / "content/a.txt").read_bytes() == b"a=3\n\n\nb=2\n"
+    assert "перезаписывают" in window.notice_title.get()
+    assert "a.txt" in window.notice_text.get()
+    assert "неизвестен" in window.notice_text.get()
+    assert "Включён" in window.row_status["a"].get()
+    assert window.launch_button.instate(["!disabled"])
+    before_notice = window.notice_text.get()
+    window.scan_sources(preserve_selection=True, rebuild_after_scan=False)
+    pump_until(window, lambda: not window.busy)
+    assert window.notice_text.get() == before_notice
+    # A newly opened window must also recover the active warning without rebuilding.
+    window._applied_warning = None
+    window._clear_notice()
+    window.scan_sources(preserve_selection=False, rebuild_after_scan=False)
+    pump_until(window, lambda: not window.busy)
+    assert window.notice_text.get() == before_notice
     window.move_mod("b", 0)
     pump_until(window, lambda: not window.selection_dirty)
     assert window._applied_order == ["b", "a"]
     assert list(window.order_tree.get_children()) == ["b", "a"]
     assert (package / "content/a.txt").read_bytes() == b"a=2\n\n\nb=2\n"
+    assert "a.txt" in window.notice_text.get()
     from cc2_mce.preferences import Preferences
 
     assert Preferences.load(window.preferences.root).order(installation.root)[:2] == ["b", "a"]
+    window.checks["b"].invoke()
+    pump_until(window, lambda: not window.selection_dirty)
+    assert not window.notice_title.get(), "Removing the overlap must clear the warning"
 
 
 def test_selected_tab_has_larger_padding(window):

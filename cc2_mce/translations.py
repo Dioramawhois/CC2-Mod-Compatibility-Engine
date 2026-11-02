@@ -3,6 +3,14 @@
 # ruff: noqa: E501 -- message IDs and translations are kept as complete catalog entries.
 
 EN: dict[str, str] = {
+    "Внимание: моды перезаписывают изменения": "Warning: mods overwrite other mods' changes",
+    "Результат в игре неизвестен: часть изменений других модов заменена. Будьте осторожны. Подробности — в меню.": "The in-game result is unknown: some changes from other mods were replaced. Use caution. Details are in the menu.",
+    "Спорные участки заменены по порядку; независимые изменения сохранены.": "Overlapping sections were replaced in merge order; independent changes were preserved.",
+    "Оригинал не найден: файл заменён целиком последним модом в порядке.": "Original not found: the last mod in merge order replaced the entire file.",
+    "Двоичный файл заменён целиком последним модом в порядке.": "The last mod in merge order replaced the entire binary file.",
+    "Порядок: {p0}. Поздние моды имеют приоритет.": "Order: {p0}. Later mods take priority.",
+    "Включён · есть перезапись изменений": "Enabled · changes overwritten",
+    "Ещё файлов с перезаписью: {p0}.": "Other files with overwritten changes: {p0}.",
     " · Выключен": " · Disabled",
     " и ещё {p0}": " and {p0} more",
     " — не найден, снимите галочку": " — missing; uncheck to remove",

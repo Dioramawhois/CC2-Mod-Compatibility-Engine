@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data name="CC2X Runtime Library" author="Your name" description="CC2X runtime dependency. Requires a one-time CC2 ModLoader installation; a Workshop subscription alone does not install the loader.">
+  <cc2mce schema="1" type="library" id="cc2x.runtime" sdk="cc2x" api="4"/>
+</data>

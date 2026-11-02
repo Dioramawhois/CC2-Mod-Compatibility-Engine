@@ -69,7 +69,13 @@ def fetch(language, values):
 def build(code, target):
     cache = ROOT / "build/language-cache" / (code + ".json")
     if cache.exists():
-        return code, json.loads(cache.read_text(encoding="utf-8"))
+        cached = json.loads(cache.read_text(encoding="utf-8"))
+        if set(cached) == set(EN):
+            return code, cached
+    # Preserve checked-in, reviewed translations when only the development cache is stale.
+    from cc2_mce.language_packs import PACKS
+    if code in PACKS and set(PACKS[code]) == set(EN):
+        return code, dict(PACKS[code])
     entries = list(EN.items())
     chunks, current, size = [], [], 0
     for index, (_, value) in enumerate(entries):

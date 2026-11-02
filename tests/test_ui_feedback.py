@@ -1,4 +1,4 @@
-from cc2_mce.ui_feedback import explain_rejection
+from cc2_mce.ui_feedback import explain_overrides, explain_rejection
 
 
 def report():
@@ -36,3 +36,52 @@ def test_long_names_cannot_expand_main_notice_without_bound():
     feedback = explain_rejection(value, set(), {str(i) for i in range(32)})
     assert len(feedback.title) < 300
     assert "ещё 29" in feedback.title
+
+
+def override_report():
+    value = report()
+    value["mod_order"] = ["b", "a"]
+    value["files"][0].update(status="overridden", strategy="git-three-way-later-hunks")
+    return value
+
+
+def test_override_warning_names_sources_file_and_uncertain_game_result():
+    warning = explain_overrides(override_report())
+    assert warning is not None
+    assert "scripts/common.lua" in warning.message
+    assert warning.message.index("New Mod") < warning.message.index("Working Mod")
+    assert "неизвестен" in warning.message
+    assert set(warning.rows) == {"a", "b"}
+    assert all("Включён" in text for text in warning.rows.values())
+    assert "участки" in warning.details
+
+
+def test_clean_merge_and_identical_files_have_no_override_warning():
+    for status in ("clean", "identical", "unique"):
+        value = override_report()
+        value["files"][0]["status"] = status
+        assert explain_overrides(value) is None
+
+
+def test_whole_file_override_is_not_described_as_hunk_merge():
+    for strategy in ("ordered-replacement-no-base", "ordered-binary-replacement"):
+        value = override_report()
+        value["files"][0]["strategy"] = strategy
+        warning = explain_overrides(value)
+        assert warning is not None
+        assert "целиком" in warning.details
+        assert "участки" not in warning.details
+
+
+def test_override_banner_is_bounded_but_details_keep_all_paths():
+    value = override_report()
+    value["sources"][0]["name"] = "A" * 256
+    value["files"] = [
+        {**value["files"][0], "logical_path": f"scripts/{i}-" + "x" * 200 + ".lua"}
+        for i in range(100)
+    ]
+    warning = explain_overrides(value)
+    assert warning is not None
+    assert len(warning.message) < 550
+    assert "99" in warning.message
+    assert all(item["logical_path"] in warning.details for item in value["files"])

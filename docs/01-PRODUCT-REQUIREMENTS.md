@@ -1,5 +1,7 @@
 # 01. Product Requirements (PRD)
 
+**0.3.2:** status=overridden оставляет предупреждение об участниках/ресурсе и неизвестном результате в игре, включая повторное открытие. Запуск не блокируется. Steam Required Items не считаются auto-installer. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md), [аудит Steam](19-STEAM-DISTRIBUTION-AUDIT.md).
+
 **0.3.1:** пользовательское имя CC2 ModLoader и CC2ModLoader.exe; имя generated mod включает выбранные названия. Offline language pack покрывает 14 основных языков, по умолчанию system; новые language codes сохраняются без ручного конфига. [ADR-0013](adr/0013-modloader-brand-and-offline-language-pack.md).
 
 **0.3.0, приоритет владельца:** редактируемый порядок выбранных пакетов автоматически пересобирает файлы и сохраняется. GUI по умолчанию разрешает явно описанный приоритет поздних патчей: Git отдаёт им спорные hunks, без оригинала происходит отмеченная замена целого data-файла. Локальные rom_0/SDK originals читаются без per-file hash allowlist; это заменяет прежний безусловный no-base запрет для этого режима. Сохраняются native/path/syntax/transaction gates. RU/EN следуют языку системы, выбранная вкладка крупнее соседних. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).

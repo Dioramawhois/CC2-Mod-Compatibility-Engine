@@ -1,4 +1,8 @@
-# CC2 ModLoader 0.3.1 — порядок патчей, языки и применение по галочке
+# CC2 ModLoader 0.3.2 — предупреждение, порядок патчей и применение по галочке
+
+0.3.2: добавлены fixtures до реализации предупреждения: участники и порядок, ресурс, неизвестный результат в игре, разные формулировки hunk/whole-file replacement, ограниченный banner/полные details и отсутствие предупреждения на clean/identical/unique. Tk fixture с настоящим Git проверяет apply/reorder, доступность launch, passive scan, восстановление warning из активного manifest без rebuild и исчезновение после снятия конфликтующего мода. Проверены все 182 сообщения в каждом из 12 дополнительных каталогов (2184 перевода), RU и EN; формат/параметры совпадают. Локальный uv suite: 186 passed, 4 skips (3 symlink и build-only packaging). Ruff/format и mypy Windows/darwin прошли. Frozen build/installed GUI проверяются отдельно; эти тесты не доказывают игровой runtime.
+
+Steam: [аудит](docs/19-STEAM-DISTRIBUTION-AUDIT.md) сверяет текущий CC2X0.5.1 source с официальными Valve/Microsoft контрактами. [Шаблоны](distribution/workshop/README.md) не содержат payload/игровых assets/реального item ID; private upload, чистая машина и новый installer не проверены и не выдаются за готовую поставку.
 
 0.3.1: canonical artifact `dist/CC2ModLoader.exe`, sidecar `CC2ModLoader.build.json`, заголовок/имя приложения CC2 ModLoader. Generated mod содержит названия выбранных модов. В exe включены 14 языков; 12 дополнительных каталогов по 174 сообщения (2088 строк) проверены на полную coverage, параметры и успешное format. Основные labels выверены; остальные переводы машинные. Runtime offline. 183 tests passed, 3 symlink skips, frozen product title/tools/source smoke прошёл. Установленный exe сохранил пользовательский порядок; старый собственный Engine сохранён вне игровой папки и dist. Evidence `build/evidence/20261101T233724Z`. CI macOS host теперь macos-15; новый game acceptance не заявляется.
 

@@ -1,5 +1,7 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+**0.3.2:** [Steam-аудит](19-STEAM-DISTRIBUTION-AUDIT.md) сверяет официальный UGC контракт и текущий CC2X0.5.1: plugins из активных Workshop папок уже обнаруживаются, первоначальный game-root bootstrap всё ещё нужен. Подготовлены авторские metadata templates; публикация/саморазмещающийся installer не сделаны. Required Items и XML requires — разные уровни.
+
 **0.3.0:** data baselines берутся из rom_0, иначе mod_dev_kit/source, без заранее записанного списка одобренных файлов. Неизвестная game build допускает data merge, но не получает разрешения native/runtime. Порядок во вкладке — порядок слияния файлов внутри единого output, не обещание нового CC2X DLL resource/loading hook. No-base data replacement явно включена владельцем. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
 
 **0.2.2:** владелец разрешил автоматическую подготовку mods/libraries при первом запуске; только внутри выбранной проверенной игры после portable placement. Existing file/junction/permission error не обходится, SDK/vanilla/Workshop остаются read-only. После неудачного изменения UI возвращает реальную активацию и разрешает запуск прежнего набора, если нет незавершённой транзакции. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).

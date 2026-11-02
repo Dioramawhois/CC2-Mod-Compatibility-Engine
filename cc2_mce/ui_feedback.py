@@ -13,6 +13,69 @@ class Rejection:
     rows: dict[str, str]
 
 
+@dataclass(frozen=True)
+class OverrideWarning:
+    title: str
+    message: str
+    details: str
+    rows: dict[str, str]
+
+
+def explain_overrides(
+    report: dict[str, Any], translate: Callable[..., str] | None = None
+) -> OverrideWarning | None:
+    """Describe reported overrides, never infer incompatibility from file overlap alone."""
+    files = [item for item in report["files"] if item["status"] == "overridden"]
+    if not files:
+        return None
+    tr = translate or (lambda message, **values: message.format(**values) if values else message)
+    names = {source["id"]: source["name"] for source in report["sources"]}
+    risk = tr(
+        "Результат в игре неизвестен: часть изменений других модов заменена. "
+        "Будьте осторожны. Подробности — в меню."
+    )
+    strategies = {
+        "git-three-way-later-hunks": tr(
+            "Спорные участки заменены по порядку; независимые изменения сохранены."
+        ),
+        "ordered-replacement-no-base": tr(
+            "Оригинал не найден: файл заменён целиком последним модом в порядке."
+        ),
+        "ordered-binary-replacement": tr(
+            "Двоичный файл заменён целиком последним модом в порядке."
+        ),
+    }
+    details = [risk]
+    rows: dict[str, str] = {}
+    summary = ""
+    for item in files:
+        participants = [key for key in report["mod_order"] if key in item["source_sha256"]]
+        ordered_names = " → ".join(f"«{names.get(key, key)[:64]}»" for key in participants)
+        if not summary:
+            short_names = " → ".join(f"«{names.get(key, key)[:64]}»" for key in participants[:3])
+            if len(participants) > 3:
+                short_names += tr(" и ещё {p0}", p0=len(participants) - 3)
+            summary = item["logical_path"][:120] + ": " + short_names
+        details.append(
+            tr("Файл: ")
+            + item["logical_path"]
+            + "\n"
+            + tr("Порядок: {p0}. Поздние моды имеют приоритет.", p0=ordered_names)
+            + "\n"
+            + strategies.get(item["strategy"], item["strategy"])
+        )
+        for key in participants:
+            rows[key] = tr("Включён · есть перезапись изменений")
+    if len(files) > 1:
+        summary += "\n" + tr("Ещё файлов с перезаписью: {p0}.", p0=len(files) - 1)
+    return OverrideWarning(
+        tr("Внимание: моды перезаписывают изменения"),
+        summary + "\n" + risk,
+        "\n\n".join(details),
+        rows,
+    )
+
+
 def explain_rejection(
     report: dict[str, Any],
     applied: set[str],

@@ -1,5 +1,7 @@
 # 03. Спецификация движка слияния
 
+**0.3.2:** overridden не означает игровую совместимость. Успех ordered-patches показывает постоянное предупреждение с ресурсом и порядком участников. Clean/identical не получают его. Details различают hunk merge/whole-file replacement; N-way не приписывает каждую перезаписанную строку последнему участнику без такого доказательства. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).
+
 **Актуальный GUI 0.3.0:** пользователь явно запросил порядок патчей и отмену no-base allowlist gate. `ordered-patches` сохраняет независимые изменения через Git и разрешает пересечения в пользу позднего патча (`git-three-way-later-hunks`). Если оригинала нет, последний data файл заменяет прежние целиком (`ordered-replacement-no-base`); известные binary collisions аналогично отмечаются как replacement. Status — `overridden`, не `clean`. Реальные installed originals, их SHA и источник фиксируются, пустая/выдуманная база не создаётся. CLI/core default strict и прежняя строгая таблица ниже сохраняются при отключённом приоритете. Native, syntax, encoding/path gates остаются обязательными. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
 
 **0.2.2:** новые UX-правила не ослабляют blockers и не выбирают победителя. При отказе откатывается только запрошенный UI выбор к реально применённому составу; старый payload сохраняется. Участники и ресурс берутся из report.files/source_sha256, не угадываются из текста Git. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).

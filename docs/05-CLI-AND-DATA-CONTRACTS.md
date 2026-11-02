@@ -1,5 +1,7 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
+**0.3.2:** package JSON v2 не меняется. Неблокирующее GUI warning выводится из файлов status=overridden, strategy, source_sha256 и общего mod_order; language/UI presentation не меняют payload. При открытии предупреждение восстанавливается из активного собственного manifest. Strict blockers сохраняют прежний контракт. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).
+
 **Назначение:** внутренний контракт для разработчиков/CI, не инструкция для игроков. Пользовательский интерфейс — обязательный GUI без терминала ([UX/UI](13-UX-UI.md), [ADR-0007](adr/0007-gui-first-user-experience.md)). GUI должен использовать application service/структурированные результаты; JSON/CLI не становятся обязательным пользовательским шагом.
 
 **Статус 0.1.0.dev1:** реализованы `doctor`, `scan`, `plan`, `build --dry-run`, `report`. `build` без `--dry-run` и `build --plan` отклоняются с exit 2; устанавливаемый пакет не создаётся. Ниже отдельно описаны текущий read-only контракт и будущая упаковка; см. [ADR-0006](adr/0006-read-only-first-slice.md).

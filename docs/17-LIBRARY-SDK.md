@@ -1,5 +1,7 @@
 # 17. SDK: моды и библиотеки в Steam Workshop
 
+**Распространение:** [полный аудит Steam](19-STEAM-DISTRIBUTION-AUDIT.md) и [metadata для авторов](../distribution/workshop/README.md). Steam Required Items — soft relation по PublishedFileId; requires — локальная зависимость по package ID. Для первого запуска bootstrap нужен отдельно, подписка его не устанавливает автоматически. DLL остаются отдельными plugin файлами под общим runtime; компиляции всех библиотек в один injector нет.
+
 Это контракт для авторов пакетов. Игрок выбирает готовый пакет в GUI и не редактирует XML/JSON.
 
 ## mod.xml

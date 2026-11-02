@@ -1,5 +1,7 @@
 # 02. Архитектура
 
+**0.3.2:** чистый ui_feedback строит OverrideWarning из существующих report.files/status/strategy/source_sha256/mod_order. GUI хранит предупреждение активного набора отдельно от отказа нового запроса, восстанавливает из manifest и отображает после apply. Merge/JSON schema не меняются. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).
+
 **0.3.0:** `preferences` хранит language/patch policy/per-game order атомарно; `i18n` + `translations` локализуют UI и diagnostics. GUI передаёт явный порядок в resolve_selection/analyze; apply воспроизводит merge_policy. Локальный baseline resolver использует ограниченный, case/Unicode-consistent поиск rom_0/SDK и записывает реальный SHA/source. Git `--theirs` разрешает только спорные hunks в режиме ordered-patches; no-base data получает отдельную whole-file strategy. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).
 
 **0.2.2:** GUI хранит раздельно requested и applied ID; окончательный отказ восстанавливает applied selection, а не оставляет ложную галочку. Чистый `ui_feedback` форматирует уже структурированные blockers с именами/ресурсом; merge-правила не меняет. Первый scan готовит собственные каталоги, passive scan не сбрасывает отказ и не пересобирает изменения только невыбранных пакетов. [ADR-0011](adr/0011-truthful-checkboxes-and-minimal-interface.md).

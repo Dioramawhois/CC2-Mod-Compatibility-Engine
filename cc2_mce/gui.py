@@ -30,7 +30,7 @@ from cc2_mce.installation import (
 from cc2_mce.preferences import Preferences
 from cc2_mce.reports import write_report
 from cc2_mce.toolchain import bundled_tools
-from cc2_mce.ui_feedback import Rejection, explain_rejection
+from cc2_mce.ui_feedback import OverrideWarning, Rejection, explain_overrides, explain_rejection
 from cc2_mce.workflow import (
     PackagePlan,
     _running,
@@ -99,6 +99,7 @@ class App(tk.Tk):
         self.row_status: dict[str, tk.StringVar] = {}
         self.row_labels: dict[str, ttk.Label] = {}
         self._row_errors: dict[str, str] = {}
+        self._applied_warning: OverrideWarning | None = None
         self._required_notes: dict[str, str] = {}
         self.row_origins: dict[str, str] = {}
         self._scroll_canvases: dict[ttk.Frame, tk.Canvas] = {}
@@ -481,6 +482,15 @@ class App(tk.Tk):
         self._row_errors.clear()
         self.problem_details = ""
         self.problem_report = None
+        self._show_applied_warning()
+
+    def _show_applied_warning(self) -> None:
+        if warning := self._applied_warning:
+            self.notice_title.set(warning.title)
+            self.notice_text.set(warning.message)
+            self.problem_details = warning.details
+            self._row_errors = dict(warning.rows)
+            self.notice_frame.pack(fill="x", before=self.tabs, pady=(4, 4))
 
     def _reject_change(self, rejection: Rejection) -> None:
         if self._auto_timer is not None:
@@ -622,6 +632,7 @@ class App(tk.Tk):
         self.row_labels.clear()
         self.row_origins.clear()
         self._required_notes.clear()
+        self._applied_warning = None
         self._clear_notice()
         self._render_order()
         self._refresh_controls()
@@ -731,6 +742,7 @@ class App(tk.Tk):
                 applied: set[str] = set()
                 applied_order: list[str] = []
                 names: list[str] = []
+                active_report = None
                 for path in paths:
                     if (path.name == "CC2-MCE" or path.name.startswith("CC2-MCE-")) and (
                         path / "mce-manifest.json"
@@ -745,6 +757,7 @@ class App(tk.Tk):
                         )
                         if not isinstance(saved, dict) or saved.get("owner") != "cc2-mce":
                             raise InputError(self.tr("Неизвестный журнал активного пакета"))
+                        active_report = saved
                         current_names = {mod.id: mod.name for mod in combined.mods}
                         names.extend(
                             current_names.get(mod_id, mod_id)
@@ -775,6 +788,15 @@ class App(tk.Tk):
                 self._applied_ids = applied
                 self._applied_order = list(dict.fromkeys(applied_order))
                 self._activation_known = True
+                showing_warning = (
+                    self._applied_warning is not None
+                    and self.notice_title.get() == self._applied_warning.title
+                )
+                self._applied_warning = (
+                    explain_overrides(active_report, self.tr) if active_report else None
+                )
+                if not preserve_selection or not self.notice_title.get() or showing_warning:
+                    self._clear_notice()
             except (MCEError, OSError, ValueError):
                 self._activation_known = False
                 self.activation_status.set(self.tr("Не удалось прочитать текущую активацию игры."))
@@ -1129,6 +1151,7 @@ class App(tk.Tk):
                     self.status.set(
                         self.tr("Зависимость остаётся включённой: она нужна выбранным модам.")
                     )
+            self._applied_warning = explain_overrides(current.report, self.tr)
             self._clear_notice()
             overridden = sum(item["status"] == "overridden" for item in current.report["files"])
             if overridden:

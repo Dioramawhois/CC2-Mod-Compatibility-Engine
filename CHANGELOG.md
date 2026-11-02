@@ -29,6 +29,12 @@
 
 # Changelog
 
+## 0.3.3 — игровые форматы и конкретная причина отказа (2026-11-02)
+
+- Исправлен отказ Combined Fleet на двух `.glsl` shaders и двух `.txtr` textures, подтверждённых в установленном rom_0: шейдеры обрабатываются настоящим text merge, TXTR-magic ресурсы копируются/заменяются целиком по прежней policy. Unknown header в любом варианте остаётся blocker; неизвестные типы/DLL не разрешены молча.
+- Общая needs_review заглушка заменена объяснением неподдержанного типа или неисправного встроенного Lua validator, путь виден прямо в banner, diagnostics — в подробностях. Все 14 языков обновлены.
+- Исправлена Windows-only фабрика synthetic game layout, обнаруженная реальным CI macos-15. Added Windows/Darwin layout regression; production discovery не ослаблен. [ADR-0015](docs/adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
+
 ## 0.3.2 — предупреждение о перезаписи и аудит Steam (2026-11-02)
 
 - Успешный ordered-patches apply оставляет заметное предупреждение с именами/порядком модов, файлом и неопределённостью результата в игре. Подробности различают конфликтующие hunks и замену целого файла; все 14 языков обновлены. Clean/identical overlap не называется несовместимостью.

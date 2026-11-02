@@ -1,5 +1,7 @@
 # 02. Архитектура
 
+**0.3.3:** classifier включает `.glsl` text и TXTR-magic `.txtr` binary; merge проверяет kinds всех вариантов перед copy/priority. UI использует исходный diagnostic needs_review и первый logical_path вместо общей заглушки. Схема не меняется. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
+
 **0.3.2:** чистый ui_feedback строит OverrideWarning из существующих report.files/status/strategy/source_sha256/mod_order. GUI хранит предупреждение активного набора отдельно от отказа нового запроса, восстанавливает из manifest и отображает после apply. Merge/JSON schema не меняются. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).
 
 **0.3.0:** `preferences` хранит language/patch policy/per-game order атомарно; `i18n` + `translations` локализуют UI и diagnostics. GUI передаёт явный порядок в resolve_selection/analyze; apply воспроизводит merge_policy. Локальный baseline resolver использует ограниченный, case/Unicode-consistent поиск rom_0/SDK и записывает реальный SHA/source. Git `--theirs` разрешает только спорные hunks в режиме ordered-patches; no-base data получает отдельную whole-file strategy. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).

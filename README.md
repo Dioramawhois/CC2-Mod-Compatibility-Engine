@@ -4,7 +4,7 @@
 
 ## Русский
 
-**0.3.2 — CC2 ModLoader с порядком патчей, предупреждением о перезаписи и офлайн-паком 14 языков.** По умолчанию используется язык системы. Пересекающиеся изменения получают приоритет по выбранному порядку, независимые правки сохраняются через настоящий Git. Пакеты собираются в одну постоянную папку; имя в игре содержит ModLoader и названия выбранных модов. Полная игровая совместимость произвольных модов не гарантируется.
+**0.3.3 — CC2 ModLoader с порядком патчей, предупреждением о перезаписи и офлайн-паком 14 языков.** По умолчанию используется язык системы. Пересекающиеся изменения получают приоритет по выбранному порядку, независимые правки сохраняются через настоящий Git. Пакеты собираются в одну постоянную папку; имя в игре содержит ModLoader и названия выбранных модов. Поддержаны игровые `.glsl` shaders и `.txtr` textures; неизвестный формат теперь объясняется с конкретным путём. Полная игровая совместимость произвольных модов не гарантируется.
 
 ### Как пользоваться
 
@@ -61,7 +61,7 @@ Carrier Command 2/
 
 ## English
 
-**0.3.2 ships CC2ModLoader.exe, persistent override warnings and an offline 14-language pack.** Drag selected packages in **Load order**, or use Alt+Up/Down; every change rebuilds automatically. Later patches win overlapping Git hunks while unrelated edits survive. Installed originals are used without a file-hash allowlist; missing-base data and binary collisions use an explicit, reported later-file replacement. An orange warning names the sources/file, survives reopening and states that the in-game result is unknown; full details are in the menu. **Menu → Later patches take priority** can restore strict mode. Unsupported native code, unsafe paths and invalid syntax remain blocked.
+**0.3.3 ships CC2ModLoader.exe, persistent override warnings and an offline 14-language pack.** Drag selected packages in **Load order**, or use Alt+Up/Down; every change rebuilds automatically. Later patches win overlapping Git hunks while unrelated edits survive. Installed originals are used without a file-hash allowlist; missing-base data and binary collisions use an explicit, reported later-file replacement. An orange warning names the sources/file, survives reopening and states that the in-game result is unknown; full details are in the menu. Game `.glsl` shaders use text merging; `.txtr` with TXTR magic use binary copy/whole-file replacement. Unknown types identify the file and reason. **Menu → Later patches take priority** can restore strict mode. Unsupported native code, unsafe paths and invalid syntax remain blocked.
 
 The UI follows the system language. **Menu → Language** offers RU, EN, DE, FR, ES, PT-BR, IT, PL, TR, UK, simplified/traditional Chinese, JA and KO. Primary labels are reviewed; remaining translations are machine-assisted with complete key/parameter checks. All catalogs ship offline. Preferences persist. Checkbox changes update one `mods/CC2-MCE` folder, wait for a running game to close, and revert to the working selection/order on failure. The generated game mod name contains CC2 ModLoader and the selected mod names. Git and Lua 5.3 are bundled; players need no terminal or manual tool installation.
 

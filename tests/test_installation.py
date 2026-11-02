@@ -1,3 +1,4 @@
+import platform
 from pathlib import Path
 
 import pytest
@@ -6,7 +7,8 @@ from cc2_mce.errors import InputError
 from cc2_mce.installation import find_installations, inspect_game, parse_vdf, prepare_collections
 
 
-def game(root: Path, host: str = "Windows") -> Path:
+def game(root: Path, host: str | None = None) -> Path:
+    host = host or platform.system()
     executable = root / (
         "carriercommand.app/Contents/MacOS/build_mac" if host == "Darwin" else "carrier_command.exe"
     )
@@ -32,9 +34,9 @@ def libraries(steam: Path, entries: dict[str, object]) -> None:
 
 
 def test_adjacent_executable_has_priority_and_creates_nothing(tmp_path: Path) -> None:
-    adjacent = game(tmp_path / "portable")
+    adjacent = game(tmp_path / "portable", "Windows")
     steam = tmp_path / "steam"
-    other = game(steam / "steamapps/common/Carrier Command 2")
+    other = game(steam / "steamapps/common/Carrier Command 2", "Windows")
     manifest(steam)
     result = find_installations(app_dir=adjacent, steam_roots=[steam], host="Windows")
     assert [item.root for item in result.games] == [adjacent, other]
@@ -122,13 +124,21 @@ def test_malformed_library_does_not_hide_valid_adjacent_game(tmp_path: Path) -> 
 
 
 def test_linked_game_is_rejected(tmp_path: Path) -> None:
-    source = game(tmp_path / "source")
+    source = game(tmp_path / "source", "Windows")
     link = tmp_path / "linked"
     try:
         link.symlink_to(source, target_is_directory=True)
     except OSError:
         pytest.skip("symlink creation unavailable")
     assert inspect_game(link, host="Windows") is None
+
+
+@pytest.mark.parametrize("host", ["Windows", "Darwin"])
+def test_synthetic_game_layout_matches_selected_host(tmp_path: Path, host: str) -> None:
+    root = game(tmp_path / host, host)
+    assert inspect_game(root, host=host) is not None
+    other = "Darwin" if host == "Windows" else "Windows"
+    assert inspect_game(root, host=other) is None
 
 
 def test_adjacent_steam_library_found_without_registry(tmp_path: Path) -> None:

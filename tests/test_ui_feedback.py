@@ -30,6 +30,33 @@ def test_source_update_failure_says_previous_version_is_still_active():
     assert all("предыдущая версия" in text for text in feedback.rows.values())
 
 
+def test_unsupported_resource_names_file_and_real_reason():
+    value = report()
+    value["blockers"] = [
+        {"code": "needs_review", "file": "textures/test.xyz", "message": "Unknown resource type"}
+    ]
+    feedback = explain_rejection(value, {"a"}, {"a", "b"})
+    assert "textures/test.xyz" in feedback.message
+    assert "не поддерживает" in feedback.message
+    assert "безопасно" not in feedback.message
+    assert "Unknown resource type" in feedback.details
+
+
+def test_missing_lua_validator_is_not_called_an_incompatible_mod():
+    value = report()
+    value["blockers"] = [
+        {
+            "code": "needs_review",
+            "file": "scripts/test.lua",
+            "message": "Lua 5.3 syntax validator is unavailable",
+        }
+    ]
+    feedback = explain_rejection(value, {"a"}, {"a", "b"})
+    assert "Lua 5.3" in feedback.message
+    assert "встроенный" in feedback.message
+    assert "scripts/test.lua" in feedback.message
+
+
 def test_long_names_cannot_expand_main_notice_without_bound():
     value = report()
     value["sources"] = [{"id": str(i), "name": "X" * 256} for i in range(32)]

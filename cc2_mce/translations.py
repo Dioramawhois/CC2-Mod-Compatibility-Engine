@@ -3,6 +3,9 @@
 # ruff: noqa: E501 -- message IDs and translations are kept as complete catalog entries.
 
 EN: dict[str, str] = {
+    "Приложение пока не поддерживает этот тип файла.": "The app does not support this file type yet.",
+    "Не работает встроенный проверяющий Lua 5.3. Обновите ModLoader.": "The bundled Lua 5.3 validator is unavailable or incompatible. Update ModLoader.",
+    "Файл требует проверки: {p0}": "File needs review: {p0}",
     "Внимание: моды перезаписывают изменения": "Warning: mods overwrite other mods' changes",
     "Результат в игре неизвестен: часть изменений других модов заменена. Будьте осторожны. Подробности — в меню.": "The in-game result is unknown: some changes from other mods were replaced. Use caution. Details are in the menu.",
     "Спорные участки заменены по порядку; независимые изменения сохранены.": "Overlapping sections were replaced in merge order; independent changes were preserved.",

@@ -1,5 +1,7 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+**0.3.3:** read-only проверка Combined Fleet3783006839 нашла два GLSL shader и две TXTR texture по тем же logical paths в установленном rom_0. Поддержка этих resource types устранила четыре Unknown resource type blockers; текущий набор + Fleet дал plan252 resources/5 overrides/0 blockers. Пакет с Fleet не активировался нами; игровая совместимость не проверена. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
+
 **0.3.2:** [Steam-аудит](19-STEAM-DISTRIBUTION-AUDIT.md) сверяет официальный UGC контракт и текущий CC2X0.5.1: plugins из активных Workshop папок уже обнаруживаются, первоначальный game-root bootstrap всё ещё нужен. Подготовлены авторские metadata templates; публикация/саморазмещающийся installer не сделаны. Required Items и XML requires — разные уровни.
 
 **0.3.0:** data baselines берутся из rom_0, иначе mod_dev_kit/source, без заранее записанного списка одобренных файлов. Неизвестная game build допускает data merge, но не получает разрешения native/runtime. Порядок во вкладке — порядок слияния файлов внутри единого output, не обещание нового CC2X DLL resource/loading hook. No-base data replacement явно включена владельцем. [ADR-0012](adr/0012-user-ordered-patches-and-system-language.md).

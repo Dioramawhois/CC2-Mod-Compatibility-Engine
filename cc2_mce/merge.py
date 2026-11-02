@@ -121,10 +121,11 @@ def merge_file(
     strategy = "text-3way"
     if not variants or len(variants) > 32:
         return MergeOutcome("input_error", "none", diagnostics=("Expected 1..32 variants",))
+    kinds = {classify(logical_path, item.content) for item in variants}
     kind = classify(logical_path, variants[0].content)
-    if any(classify(logical_path, item.content) == "native" for item in variants):
+    if "native" in kinds:
         return MergeOutcome("native_plugin_review_required", "blocked")
-    if kind == "unknown":
+    if "unknown" in kinds:
         return MergeOutcome("needs_review", "unsupported", diagnostics=("Unknown resource type",))
     unique = []
     seen: set[bytes] = set()

@@ -74,6 +74,39 @@ def test_binary_and_unknown() -> None:
     assert merge(b"\x00", b"\x01", path="fake.txt").status == "encoding_conflict"
 
 
+def test_cc2_shader_uses_real_three_way_and_preserves_independent_edits() -> None:
+    result = merge(A, B, path="shaders/screen_crt.glsl")
+    assert result.status == "clean"
+    assert result.content == A.replace(b"beta=1", b"beta=2")
+    assert merge(b"\xff", path="shaders/bad.glsl").status == "encoding_conflict"
+
+
+def test_cc2_texture_is_copied_or_replaced_whole_and_unknown_header_stays_blocked() -> None:
+    left, right = b"TXTR\x02\x00left", b"TXTR\x02\x00right"
+    assert merge(left, path="textures/a.txtr").content == left
+    assert merge(left, right, path="textures/a.txtr").status == "unsupported_binary"
+    result = merge_file(
+        "textures/a.txtr",
+        [MergeInput("a", left), MergeInput("b", right)],
+        None,
+        favor_later=True,
+    )
+    assert result.content == right
+    assert result.status == "overridden"
+    assert result.strategy == "ordered-binary-replacement"
+    assert merge(b"unknown", path="textures/a.txtr").status == "needs_review"
+    assert merge(left, b"MZ-not-a-texture", path="textures/a.txtr").status == "needs_review"
+    for contents in ((left, b"invalid"), (b"invalid", right)):
+        for priority in (False, True):
+            invalid = merge_file(
+                "textures/a.txtr",
+                [MergeInput(str(i), content) for i, content in enumerate(contents)],
+                None,
+                favor_later=priority,
+            )
+            assert invalid.status == "needs_review"
+
+
 def test_eol_and_bom_roundtrip() -> None:
     variants = [
         MergeInput("a", b"\xef\xbb\xbf" + A.replace(b"\n", b"\r\n")),

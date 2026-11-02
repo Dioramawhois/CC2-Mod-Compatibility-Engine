@@ -110,7 +110,6 @@ def explain_rejection(
         "unsupported_binary": tr("Эти двоичные ресурсы нельзя автоматически объединить."),
         "input_error": tr("Исходные файлы изменились или недоступны."),
         "encoding_conflict": tr("Файлы используют несовместимые кодировки."),
-        "needs_review": tr("Это изменение пока нельзя безопасно подключить."),
         "runtime_missing": tr("Не найден поддерживаемый загрузчик CC2X."),
         "runtime_conflict": tr("Установленный загрузчик CC2X не подходит этому набору."),
         "sdk_api": tr("Для этой библиотеки нужна другая версия SDK."),
@@ -131,13 +130,30 @@ def explain_rejection(
         named = display(participants)
         if blocker["code"] == "conflict":
             reason = tr("Несовместимые изменения") + (": " + named if named else "") + "."
+        elif blocker["code"] == "needs_review":
+            diagnostic = blocker.get("message", "")
+            reason = (
+                tr("Приложение пока не поддерживает этот тип файла.")
+                if diagnostic == "Unknown resource type"
+                else tr("Не работает встроенный проверяющий Lua 5.3. Обновите ModLoader.")
+                if diagnostic
+                in {
+                    "Lua 5.3 syntax validator is unavailable",
+                    "Lua validator must be version 5.3",
+                }
+                else tr("Файл требует проверки: {p0}", p0=diagnostic)
+            )
         else:
             reason = messages.get(
                 blocker["code"], blocker.get("message", tr("Проверка не пройдена."))
             )
         if not first_message:
-            first_message = reason
-        details.append((tr("Файл: ") + logical + "\n" if logical else "") + reason)
+            first_message = (logical[:160] + ": " if logical else "") + reason
+        details.append(
+            (tr("Файл: ") + logical + "\n" if logical else "")
+            + reason
+            + ("\n" + blocker["message"] if blocker.get("message") else "")
+        )
         for key in added or participants:
             other_names = display(participants - {key})
             rows[key] = (

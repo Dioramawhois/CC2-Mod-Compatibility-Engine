@@ -55,8 +55,10 @@ resources и при необходимости свой `content/cc2x/<plugin>.d
 
 Для cc2mods подготовлены три отдельных исходных проекта. Из upstream сохранены
 byte-identical C sources/tests/config examples, GPL и авторство Yolo /
-totolerigolo118. Старые UI generators сохранены как reference. Небезопасные
-installer/game-launch scripts не включались. Исходники F-16/F-15 и других Bridge
+totolerigolo118. Старые UI generators сохранены как reference и не вызываются
+новой сборкой. В частности, исходный Modes script содержит также команды установки:
+он не является поддержанным install entrypoint нового проекта. Отдельные старые
+installer/game-launch scripts не переносились. Исходники F-16/F-15 и других Bridge
 mods сейчас только инвентаризованы, без публичного копирования assets.
 
 Все три plugin DLL собраны через один внешний SDK. Исходные C fixtures прошли:

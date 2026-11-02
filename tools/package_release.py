@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import tkinter
 import uuid
 import zipfile
@@ -77,6 +78,21 @@ def write_zip(path: Path, contents: dict[str, bytes]) -> None:
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o100644 << 16
             archive.writestr(info, data)
+
+
+def finalize_release(staging: Path, destination: Path) -> None:
+    for attempt in range(10):
+        if destination.exists():
+            raise ValueError("A previous release is never overwritten")
+        try:
+            staging.rename(destination)
+            return
+        except PermissionError:
+            # Windows scanners can briefly retain a newly written asset handle.
+            # Keep the complete staging directory and preserve atomic promotion.
+            if attempt == 9:
+                raise
+            time.sleep(0.2)
 
 
 def runtime_notices(root: Path) -> tuple[dict[str, bytes], list[dict]]:
@@ -253,7 +269,7 @@ def main() -> None:
         ),
         encoding="ascii",
     )
-    output.rename(destination)
+    finalize_release(output, destination)
     print(
         json.dumps(
             {

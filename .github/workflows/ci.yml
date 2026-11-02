@@ -30,7 +30,8 @@ jobs:
       - name: Type check
         run: uv run --frozen mypy cc2_mce
       - name: Test real Git and synthetic regression corpus
-        run: uv run --frozen pytest -q
+        timeout-minutes: 5
+        run: uv run --frozen pytest -vv -o faulthandler_timeout=60
       - name: Installed CLI smoke
         run: uv run --frozen cc2-mce --version
       - name: Golden dry run (same expected SHA-256 on every host)

@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tkinter
 import uuid
 import zipfile
 from pathlib import Path
@@ -116,7 +117,15 @@ def runtime_notices(root: Path) -> tuple[dict[str, bytes], list[dict]]:
         if b"Scriptics Corporation" not in data:
             raise ValueError("Missing Tcl/Tk redistribution notice")
         files["LICENSES/" + name + "/license.terms"] = data
-        components.append({"type": "framework", "name": name, "version": "8.6"})
+        if name.startswith("tcl"):
+            version = tkinter.Tcl().eval("info patchlevel")
+        else:
+            script = (python / "tcl" / name / "tk.tcl").read_text(encoding="utf-8")
+            match = re.search(r"package require -exact Tk\s+([0-9.]+)", script)
+            if match is None:
+                raise ValueError("Missing exact Tk version")
+            version = match.group(1)
+        components.append({"type": "framework", "name": name, "version": version})
     components.append({"type": "framework", "name": "CPython", "version": sys.version.split()[0]})
     for file in sorted((root / "cc2_mce/tools_data/notices").rglob("*")):
         if file.is_file():
@@ -168,6 +177,18 @@ def main() -> None:
         {"type": "application", "name": "Git for Windows", "version": manifest["git_version"]},
         {"type": "application", "name": "Lua syntax validator", "version": manifest["lua_version"]},
     ]
+    lock = json.loads((root / "distribution/windows-source-lock.json").read_text())
+    versions = {item["component"]: item["version"] for item in lock["sources"]}
+    for filename, digest in manifest["files"].items():
+        components.append(
+            {
+                "type": "file",
+                "name": filename,
+                "hashes": [{"alg": "SHA-256", "content": digest}],
+            }
+        )
+    for name in ("libiconv", "gettext", "pcre2", "zlib"):
+        components.append({"type": "library", "name": name, "version": versions[name]})
     sbom = {
         "bomFormat": "CycloneDX",
         "specVersion": "1.6",

@@ -1,5 +1,18 @@
 # 22. Общий CC2X SDK и отдельные моды
 
+Current owner clarification (2026-11-03): the SDK must be a framework with no
+built-in gameplay. New releases of the separate mods must use Lua/content, with
+no private C plugin. The earlier native-consumer packages below describe the
+published client beta's history, not completion of this new requirement.
+See [ADR-0024](adr/0024-framework-only-sdk-and-lua-gameplay-mods.md) for the new
+boundary, compatibility contract, current implementation and open acceptance.
+
+Further owner clarification: the framework supports both C/C++ plugins and Lua
+as equal development routes. Shared engine capabilities need public interfaces
+for both, backed by one implementation and paired tests. Our supplied gameplay
+mods are being migrated to Lua; native plugin support stays available for other
+authors. No per-mod gameplay policy is built into the framework in either case.
+
 Решение владельца: 2026-11-02. Развиваем существующий CC2X, сохраняя его runtime
 ID `cc2x.runtime`. ModLoader и Island Airfields сохраняют свои проекты и Workshop
 идентичности. Общий runtime и отдельные полные пакеты собраны, совместная
@@ -26,10 +39,11 @@ review, без постоянного уведомления в ModLoader. См.
 | Manual landing brake | Политика ручной посадки/торможения и настройки |
 | CC2 ModLoader | Поиск/выбор/порядок, Git merge игровых ресурсов, транзакционная активация, установка проверенного runtime и запуск. Python/Git не объявляются частью игрового Lua API |
 
-SDK предоставляет общие операции движка. Игровая политика остаётся в модах;
-её постепенно переносим в Lua после появления проверенных публичных primitives.
-Нужную механику в конкретном native tick можно оставить в небольшом C/C++ plugin.
-Рабочий C flight director не переписывается вслепую ради формального «всё в Lua».
+SDK предоставляет общие операции движка. По новому требованию владельца игровая
+политика и интерфейсы остаются в отдельных Lua-модах; необходимые проверенные
+операции движка реализуются один раз в SDK. Прежнее разрешение оставлять игровой
+алгоритм в отдельном C/C++ plugin относится к старым beta-пакетам и не выполняет
+новое требование к подготавливаемым релизам. Перенос требует проверки поведения.
 
 ## Одно ядро и совместимый API
 

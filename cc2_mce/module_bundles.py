@@ -77,7 +77,9 @@ def _relative(value: object) -> str:
     return logical
 
 
-def _manifest(data: bytes, available: dict[str, FileRef], manifest_root: str) -> str:
+def _manifest(
+    data: bytes, available: dict[str, FileRef], manifest_root: str, *, lua_api: int = 0
+) -> str:
     value = _json(data)
     owner = _identifier(value.get("id")).lower()
     schema = value.get("schema", 2)
@@ -100,6 +102,10 @@ def _manifest(data: bytes, available: dict[str, FileRef], manifest_root: str) ->
     scripts = ([value["entry"]] if "entry" in value else []) + scripts
     if not scripts:
         raise ValueError("Module has no declared scripts")
+    if "rules" in value:
+        if schema != 2 or lua_api < 2 or not isinstance(value["rules"], str):
+            raise ValueError("A separate rules entry requires SDK Lua API 2")
+        scripts = scripts + [value["rules"]]
     # Legacy content/bridge.json sometimes keeps a package-relative entry.
     script_root = (
         ""
@@ -252,7 +258,7 @@ def prepare_modules(
         available = {"content/" + item.key: item for item in mod.files}
         available.update(roots)
         try:
-            owner = _manifest(chosen.content, available, manifest_root)
+            owner = _manifest(chosen.content, available, manifest_root, lua_api=mod.lua_api)
             if owner in owners:
                 raise ValueError("Duplicate active module owner: " + owner)
             owners.add(owner)

@@ -12,6 +12,9 @@ ROOT = Path(__file__).parents[1] / "cc2_mce"
 def test_client_candidate_runtime_matches_reviewed_profile_and_pe_architecture():
     profile = json.loads((ROOT / "profiles/windows-1.5.18-r2.json").read_text())
     assert profile["runtime_api"] == 8
+    assert profile["runtime_lua_api"] == 2
+    assert profile["runtime_framework_api"] == 1
+    assert {"lua-mod-api-v2", "framework-c-api-v1"} <= set(profile["runtime_capabilities"])
     assert "ordered-module-bundles-v1" in profile["runtime_capabilities"]
     assert profile["runtime_review"]["stage"] == "client-candidate"
     assert not profile["runtime_review"]["multiplayer_verified"]
@@ -27,6 +30,16 @@ def test_client_candidate_runtime_matches_reviewed_profile_and_pe_architecture()
     assert provenance["artifact_sha256"] == profile["runtime_sha256"]
     assert not provenance["source_dirty"] and provenance["api"] == 8
     assert provenance["source_commit"] == profile["runtime_review"]["source_commit"]
+    lock = json.loads((ROOT.parent / "distribution/windows-runtime.json").read_text())
+    assert lock["sha256"] == digest(data) and lock["bytes"] == len(data)
+    assert "/0.7.0-client-beta.1/" in lock["url"]
+    assert b"cc2x_query_framework_v1" in data
+    assert profile["runtime_review"]["verified_scope"] == [
+        "sdk-alone-bootstrap-no-external-plugins",
+        "legacy-native-mod-bootstrap",
+        "public-c-and-cpp-framework-consumer-bootstrap",
+    ]
+    assert "full-gameplay" in profile["runtime_review"]["unverified_scope"]
     assert b"GNU GENERAL PUBLIC LICENSE" in (folder / "LICENSE").read_bytes()
     assert b"Lua" in (folder / "Lua-LICENSE.txt").read_bytes()
     assert (folder / "NOTICE.md").is_file()
@@ -45,5 +58,6 @@ def test_only_tested_native_bytes_receive_client_settings_defaults():
     }
     assert actual == expected
     assert profile["previous_runtime_sha256"] == [
-        "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba"
+        "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba",
+        "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
     ]

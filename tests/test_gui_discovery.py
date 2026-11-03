@@ -339,10 +339,11 @@ def test_rejection_names_mods_and_allows_launching_working_set(auto_pair, tmp_pa
     assert not window.vars["b"].get()
     assert window.launch_button.instate(["!disabled"])
     opened = []
-    monkeypatch.setattr(gui.os, "startfile", opened.append, raising=False)
-    monkeypatch.setattr(gui.webbrowser, "open", opened.append)
+    monkeypatch.setattr(
+        gui, "launch_game", lambda game, user, package: opened.append(game.executable)
+    )
     window.launch_button.invoke()
-    assert opened == ["steam://rungameid/1489630"]
+    assert opened == [window.game.executable]
     assert (user / "mods/CC2-MCE/mce-manifest.json").read_bytes() == before
 
 
@@ -539,7 +540,58 @@ def test_changed_source_rebuilds_without_losing_selection(auto_pair, tmp_path):
         ),
     )
     assert window.vars["a"].get()
-    assert not window.vars["b"].get()
+
+
+def test_every_open_rechecks_the_saved_set_even_with_unchanged_inputs(auto_pair, monkeypatch):
+    window, _ = auto_pair
+    window.checks["a"].invoke()
+    pump_until(window, lambda: not window.selection_dirty)
+    import cc2_mce.gui as gui
+
+    calls = []
+    original = gui.analyze
+
+    def tracked(*args, **kwargs):
+        calls.append(args[2])
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(gui, "analyze", tracked)
+    window.auto_enabled = False
+    window.scan_sources()
+    pump_until(window, lambda: bool(calls) and not window.selection_dirty and not window.busy)
+    assert calls == [["a"]]
+
+
+def test_open_rebuilds_updated_workshop_and_restores_only_the_remembered_set(auto_pair, tmp_path):
+    from cc2_mce.workflow import active_paths
+
+    window, user = auto_pair
+    obsolete = tmp_path / "workshop/a/content/obsolete.txt"
+    obsolete.write_bytes(b"old file")
+    window.checks["a"].invoke()
+    pump_until(window, lambda: not window.selection_dirty)
+    (tmp_path / "workshop/a/content/a.txt").write_bytes(b"a=7\n\n\nb=1\n")
+    obsolete.unlink()
+    (tmp_path / "workshop/a/content/added.txt").write_bytes(b"new file")
+    (user / "mods.xml").write_text(
+        f'<data><active_mod_folders><path value="{tmp_path / "workshop/b"}"/>'
+        "</active_mod_folders></data>"
+    )
+    window.auto_enabled = False
+    window.scan_sources()
+    output = user / "mods/CC2-MCE/content/a.txt"
+    pump_until(
+        window,
+        lambda: (
+            not window.applying
+            and not window.selection_dirty
+            and output.read_bytes() == b"a=7\n\n\nb=1\n"
+        ),
+    )
+    assert window.vars["a"].get() and not window.vars["b"].get()
+    assert active_paths(user) == (user / "mods/CC2-MCE",)
+    assert (output.parent / "added.txt").read_bytes() == b"new file"
+    assert not (output.parent / "obsolete.txt").exists()
 
 
 def test_disappeared_selected_mod_can_be_unchecked(auto_pair, tmp_path):

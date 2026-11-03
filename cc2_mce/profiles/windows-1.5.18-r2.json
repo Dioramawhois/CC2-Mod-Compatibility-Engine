@@ -59,7 +59,7 @@
     "scripts/vr_bindings_oculus_touch.json": "bd4ef597d848300eb029eade0eab1c1d3d88cb8390a85401f91e568fff374341",
     "scripts/vr_bindings_vive_controller.json": "ff0e507562fe7ca7e8d669e2c401956d00bf7d378a5e4af9bf8e3dadf905270f"
   },
-  "runtime_sha256": "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
+  "runtime_sha256": "ed27641315e3957e991bb5fb00de8481c4a5ba7432d48a2638dee1d939110ff0",
   "runtime_api": 8,
   "native_plugins": {
     "60383f2845a5d5dc601f6196fb3716340aa0ca21437052ad1bbd7681b384591d": {
@@ -120,27 +120,28 @@
     }
   },
   "previous_runtime_sha256": [
-    "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba"
+    "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba",
+    "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3"
   ],
   "runtime_capabilities": [
     "independent-lua-v1",
     "ordered-module-bundles-v1",
-    "session-query-v1"
+    "session-query-v1",
+    "lua-mod-api-v2",
+    "framework-c-api-v1"
   ],
   "runtime_review": {
     "stage": "client-candidate",
-    "source_commit": "2eecbd93c3555fed9a2b3f25e5b9c91abb55196f",
-    "runtime_version": "0.6.0-dev",
-    "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/2eecbd93c3555fed9a2b3f25e5b9c91abb55196f",
+    "source_commit": "8bafe71a9d43d8ed31e9eab1955d90d85f91b157",
+    "runtime_version": "0.7.0-client-beta.1",
+    "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/8bafe71a9d43d8ed31e9eab1955d90d85f91b157",
     "verified_scope": [
-      "windows-1.5.18-r2-client",
-      "combined-native-load",
-      "ordered-module-load",
-      "custom-definition-readiness",
-      "custom-hangar-spawn",
-      "same-catalog-save-reload"
+      "sdk-alone-bootstrap-no-external-plugins",
+      "legacy-native-mod-bootstrap",
+      "public-c-and-cpp-framework-consumer-bootstrap"
     ],
     "unverified_scope": [
+      "full-gameplay",
       "remote-multiplayer",
       "dedicated-server",
       "changed-catalog-save-migration",
@@ -150,6 +151,8 @@
     ],
     "multiplayer_verified": false,
     "dedicated_verified": false,
-    "evidence_log_sha256": "42285a4ad14d7ea1cb7fd1d55e94878d40de6c8480abace3e119d8f942044b80"
-  }
+    "evidence_log_sha256": "77d548b08b82d8ea7bb26f82f6bef20bdec7575a5845e2ccd7ca749d614916ea"
+  },
+  "runtime_lua_api": 2,
+  "runtime_framework_api": 1
 }

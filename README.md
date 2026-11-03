@@ -5,7 +5,9 @@
 Ветка разработки готовит **0.4.0b2**: независимые Lua-модули в одной сборке,
 автоматические настройки проверенных native-модов и обратимое обновление SDK.
 Это кандидат следующей версии; опубликованная beta ниже остаётся 0.4.0b1.
-Новые native hashes не включаются без отдельной приёмки.
+Кандидат включает точный SDK API 8 и профили прошедших одиночную проверку
+Hold/Modes/Brake/Island Airfields v46. Мультиплеер и dedicated ещё не проверены;
+GUI показывает это предупреждение у такого набора. См. ADR-0020.
 [Объединение SDK и текущие проверки](docs/22-UNIFIED-SDK-AND-MOD-SPLIT.md).
 
 ## Русский
@@ -38,7 +40,11 @@ Carrier Command 2/
   libraries/<package>/content/...
 ```
 
-Предоставленный dinput8.dll может находиться, например, в `libraries/SDK/content/dinput8.dll`: поддержанная версия будет установлена рядом с игрой при применении, исходник сохранится. Неизвестный уже установленный dinput8.dll не перезаписывается.
+В кандидате 0.4.0b2 проверенный общий SDK входит в приложение: отдельная ручная
+установка DLL не нужна. Он устанавливается при выборе требующего его мода;
+известная предыдущая версия обновляется обратимо. Предоставленный dinput8.dll
+также может находиться в `libraries/SDK/content/dinput8.dll`: поддержанный источник
+сохраняется. Неизвестный уже установленный dinput8.dll не перезаписывается.
 
 Результат всегда находится в одной папке пользовательского каталога CC2: `mods/CC2-MCE`, с `mod.xml`, `content` и manifest вне `content`. Название в игре — **«CC2 ModLoader: Island Airfields + AI Bridge + …»**, с фактически выбранными именами и ограничением длины. Эта папка полностью заменяется после успешной проверки, старые файлы снятых модов не остаются. Хеши хранятся внутри manifest. Резервная сборка и журнал находятся отдельно в служебной папке `cc2-mce`. Исходники Workshop, vanilla/SDK и executable игры остаются неизменны. При восстановлении SDK loader может оставаться установленным; это отдельный компонент. [ADR-0010](docs/adr/0010-checkbox-auto-apply-and-stable-output.md).
 
@@ -58,7 +64,15 @@ Carrier Command 2/
 
 - AI Bridge + Island Airfields: общая база сверена с SDK/runtime, настоящий Git объединил правки после явной LF normalization, настоящий Lua 5.3 validator проверил результат; DLL скопирована побайтно. Свежий game log называет combined mod и Island Airfields v45, пользователь подтвердил меню.
 - Проверены реальные создание/активация/откат, game XML reformat/duplicate path, source-change/running-game gates и посторонние файлы в output; frozen exe выполняет Git/Lua smoke без developer tools в PATH.
-- Не проверены полноценный полёт/посадка, внешний AI command client, clean-machine certification и macOS execution. У установленного AI Bridge есть авторский command path другого Windows-профиля; Engine не переписывает семантику чужого скрипта при merge.
+- Кандидат API 8: все шесть источников AI Bridge + Island Airfields v46 + Hold +
+  Modes + Brake + F-16/F-15 проверены вместе в новом игровом мире. Четыре native
+  plugins загрузились, Lua module работал без ошибок, оба самолёта созданы в
+  ангаре. Новый тестовый save загружен с прежними aircraft IDs; повторное создание
+  самолёта после reload успешно. Старые файлы/сохранения восстановлены.
+- Не проверены полноценный полёт/посадка, multiplayer/dedicated, изменение
+  каталога определений между сохранениями, внешний AI command client,
+  clean-machine certification и macOS execution. У установленного AI Bridge есть
+  авторский command path другого Windows-профиля; Engine не переписывает его.
 - Поддержка новых game/runtime/native versions требует проверенного профиля. Общий Windows/macOS MVP, доступность и публичная лицензированная поставка имеют отдельные release gates.
 
 [Проверка](TESTING.md) · [Для разработчиков](CONTRIBUTING.md) · [CHANGELOG](CHANGELOG.md) · [ADR-0009](docs/adr/0009-package-activation-and-library-sdk.md) · [M0 evidence](docs/12-M0-VALIDATION.md)

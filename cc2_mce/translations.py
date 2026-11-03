@@ -3,6 +3,8 @@
 # ruff: noqa: E501 -- message IDs and translations are kept as complete catalog entries.
 
 EN: dict[str, str] = {
+    "Тестовая версия SDK": "SDK test version",
+    "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "The SDK has been tested in single-player. Multiplayer and dedicated servers have not been verified.",
     "Запускать игру при открытии": "Launch game when opening ModLoader",
     "Не удалось сохранить настройку запуска.": "Could not save the launch preference.",
     "Приложение пока не поддерживает этот тип файла.": "The app does not support this file type yet.",

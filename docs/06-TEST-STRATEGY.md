@@ -1,5 +1,12 @@
 # 06. Стратегия тестирования и Definition of Done
 
+Client-candidate regressions проверяют shipped PE32/hash/source provenance,
+approved defaults, полные offline переводы предупреждения и его сочетание с
+override notice. Release fixtures отклоняют изменённые DLL/source/generated
+headers/notices и dirty/mismatched source commit; pinned Git source приводится
+только к подтверждённым build report line endings. Реальная одиночная приёмка
+spawn/save/reload описана отдельно в docs/22; это не network/flight acceptance.
+
 Runtime upgrade fixtures проверяют initial install/upgrade/Undo, failure/crash recovery, unknown/external writers, old wrappers и corrupt bundle; native bytes не исполняются. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
 
 SDK settings: fixtures покрывают create/undo/preserve, ordinary failure и

@@ -34,6 +34,7 @@ def test_windows_spec_preserves_schema_and_engine_hash(tmp_path, monkeypatch) ->
     expected = [*sorted((root / "cc2_mce").glob("*.py"))]
     expected += list((root / "cc2_mce/schemas").glob("*.json"))
     expected += list((root / "cc2_mce/profiles").glob("*.json"))
+    expected += [p for p in (root / "cc2_mce/runtime_data").rglob("*") if p.is_file()]
     if (root / "cc2_mce/tools_data/manifest.json").is_file():
         expected.append(root / "cc2_mce/tools_data/manifest.json")
     for source in expected:

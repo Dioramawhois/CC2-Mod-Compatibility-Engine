@@ -1,5 +1,10 @@
 # 01. Product Requirements (PRD)
 
+0.4.0b2 client-candidate поставляет точный проверенный SDK API 8 для выбранных
+native consumers без ручной установки. GUI постоянно сообщает границы одиночной
+приёмки; multiplayer/dedicated не заявляются. Unknown native остаётся запрещён.
+[ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
+
 Обновление общего SDK допускается только с exact reviewed previous runtime; backup и Undo обязательны. Built-in reviewed runtime удовлетворяет отсутствующую cc2x.runtime dependency. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
 
 Reviewed native profiles могут автоматически создавать отсутствующие SDK INI,

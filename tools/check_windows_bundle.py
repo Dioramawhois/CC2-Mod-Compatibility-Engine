@@ -29,6 +29,7 @@ names = {name.replace("\\", "/"): name for name in archive.toc}
 sources = [*sorted((root / "cc2_mce").glob("*.py"))]
 sources += list((root / "cc2_mce/schemas").glob("*.json"))
 sources += list((root / "cc2_mce/profiles").glob("*.json"))
+sources += [p for p in (root / "cc2_mce/runtime_data").rglob("*") if p.is_file()]
 sources += [root / "cc2_mce/tools_data/manifest.json"]
 hashes = {}
 for source in sources:

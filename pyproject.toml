@@ -22,7 +22,7 @@ cc2-mce = "cc2_mce.cli:main"
 include = ["cc2_mce*"]
 
 [tool.setuptools.package-data]
-cc2_mce = ["schemas/*.json", "profiles/*.json", "py.typed"]
+cc2_mce = ["schemas/*.json", "profiles/*.json", "runtime_data/**/*", "py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

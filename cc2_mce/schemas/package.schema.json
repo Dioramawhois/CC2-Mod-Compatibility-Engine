@@ -181,6 +181,22 @@
         }
       ]
     },
+    "runtime_review": {
+      "type": "object",
+      "required": ["stage", "source_commit", "verified_scope", "unverified_scope", "multiplayer_verified", "dedicated_verified"],
+      "properties": {
+        "stage": {"const": "client-candidate"},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "runtime_version": {"type": "string", "maxLength": 64},
+        "source_url": {"type": "string", "maxLength": 512},
+        "verified_scope": {"type": "array", "maxItems": 32, "items": {"type": "string", "maxLength": 128}},
+        "unverified_scope": {"type": "array", "maxItems": 32, "items": {"type": "string", "maxLength": 128}},
+        "multiplayer_verified": {"const": false},
+        "dedicated_verified": {"const": false},
+        "evidence_log_sha256": {"$ref": "#/$defs/hash"}
+      },
+      "additionalProperties": false
+    },
     "runtime_inputs": {
       "type": "object",
       "additionalProperties": {"$ref": "#/$defs/hash"}

@@ -2,8 +2,10 @@
 
 Решение владельца: 2026-11-02. Развиваем существующий CC2X, сохраняя его runtime
 ID `cc2x.runtime`. ModLoader и Island Airfields сохраняют свои проекты и Workshop
-идентичности. Объединённый development runtime уже собирается; текущие проверки
-и оставшиеся ограничения описаны ниже. Это ещё не готовый игровой релиз.
+идентичности. Общий runtime и отдельные полные пакеты собраны, совместная
+одиночная сессия со spawn/save/reload проверена. Кандидат ModLoader 0.4.0b2
+включает этот SDK и точные native-профили. Это клиентский кандидат; полный
+сетевой/native релиз ещё не объявлен. См. ADR-0020 и границы ниже.
 
 ## Границы продуктов
 
@@ -101,7 +103,7 @@ Workshop IDs не придумываются. Публикация обновл�
 SDK reader и development publisher реализованы с регрессиями. Publisher
 сохраняет private bytes, source/manifest/output hashes и транзакцию обычной
 сборки; metadata/code не перезаписываются поздним модом. Старый выпущенный beta
-EXE не объявляется поддерживающим новый формат. До реальной активации нужен
+EXE не объявляется поддерживающим новый формат. В кандидате 0.4.0b2 есть
 reviewed capability profile точного runtime и отдельный игровой прогон.
 [ADR-0017](adr/0017-independent-lua-module-bundles.md).
 Общие игровые resources продолжают проходить Git merge с выбранным порядком.
@@ -162,9 +164,13 @@ client offsets не переиспользуются. UI модули должн
    Hold/Modes/Brake и аэродромы собираются с общим заголовком; Brake адаптирован
    к каноническому профилю без удаления PE/native-byte guards. Проверить пары
    и все поддержанные сочетания, независимость настроек и отсутствие конфликтов hooks.
-6. Обычный host+remote client и dedicated: permission, disconnect/reconnect,
-   одинаковый catalog, late join и save/reload. Только затем public native release
-   и новые reviewed hashes в ModLoader.
+6. **Проверен одиночный client-candidate:** одновременная загрузка всех модов,
+   aircraft Lua lifecycle, реальные spawn и save/reload того же каталога. ADR-0020
+   разрешает точные reviewed hashes в локальном кандидате с постоянным warning.
+   Это не закрывает полный native release gate.
+7. Обычный host+remote client и dedicated: permission, disconnect/reconnect,
+   одинаковый catalog, late join и сетевой save/reload. Только затем полный
+   public native release; dedicated требует своего executable profile/bootstrap.
 
 Vanilla, EXE, Mod SDK и Workshop не меняются. Явно запрошенные игровые проверки
 используют обратимую замену только известного runtime и generated output/activation;
@@ -196,18 +202,26 @@ API-prefix adaptations Hold/Modes имеют собственные failing-befo
 
 Совместный реальный запуск AI Bridge + Island Airfields v46 + Hold + Modes +
 Brake + aircraft подтвердил загрузку четырёх plugins, два early vehicle definitions
-без diagnostics и публикацию шести atlas regions. Lua module lifecycle требует
-запущенной игровой сессии: меню не доказывает on_load/on_update, spawn, физику
-или сетевую синхронизацию. Промежуточный запуск с private output обнаружил, что
-игра возвращает прежний local output в activation; поэтому проверка повторяется
-через настоящий fixed-output workflow с сохранением прежнего payload/Undo state.
+без diagnostics и публикацию шести atlas regions. Итоговый прогон выполнен через
+настоящий fixed-output workflow: 118 ресурсов, AI Bridge/Island Airfields overlap
+обработан Git с явной отметкой overridden. Aircraft module on_load/on_update
+работал в новом мире без ошибок Lua. После исправления definition hooks F-16/F-15
+готовы как definitions 102/103 и реально созданы в ангаре carrier 2 (vehicles 5/6).
+Новый save записан в пустой slot и загружен через игровой GUI; read-only snapshot
+подтвердил прежние vehicle/definition IDs и docking. Повторный F-16 spawn после
+reload (vehicle 7, session generation 2) успешен. Существующие saves не загружались.
+После проверки прежние runtime, output, activation/Undo и save snapshot восстановлены.
 
 ModLoader source также реализует reviewed config defaults (ADR-0018) и
 transactional known-runtime upgrade/dependency fallback (ADR-0019). Неизвестный
 runtime сохраняется; source settings не дают неизвестной DLL прав на запись.
-В production profiles новые native hashes пока не добавлены. Host/client,
-dedicated, catalog/save/reload, чистая ОС и macOS binary acceptance остаются
-отдельными незакрытыми gates. Права команды не являются блокировкой.
+В профиль client-candidate добавлены только точные проверенные native hashes;
+shipped SDK SHA `ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3`
+получен из clean SDK commit `2eecbd93c3555fed9a2b3f25e5b9c91abb55196f`.
+Host/remote, dedicated, смена каталога определений между saves, полный полёт/посадка,
+чистая ОС и macOS binary acceptance остаются отдельными незакрытыми gates.
+Права команды не являются блокировкой. SDK не компилирует моды внутрь себя:
+native DLL остаются отдельными plugins, Lua — отдельными контекстами.
 
 Первая проверка нового мира выявила: module on_load/on_update работает без Lua
 errors, но vehicle definitions не готовы. Loader/reset и name-map expansion
@@ -215,4 +229,5 @@ errors, но vehicle definitions не готовы. Loader/reset и name-map exp
 в production definition adapter с теми же exact-byte guards; regression использует
 сам production adapter, проверяет atomic install/abort, relocation и произвольный
 размер каталога. Никакой F-16/F-15 policy или research activation в SDK не возвращено.
-Исправленный runtime требует повторной проверки нового мира.
+Исправленный runtime прошёл описанную выше повторную проверку нового мира,
+реального spawn и save/reload. Это не доказательство remote multiplayer.

@@ -376,6 +376,8 @@ def analyze(
         report["modules"] = bundle.modules
     if runtime_inputs:
         report["runtime_inputs"] = runtime_inputs
+    if needs_runtime and profile.get("runtime_review"):
+        report["runtime_review"] = profile["runtime_review"]
     if config_defaults:
         report["config_defaults"] = [
             {

@@ -2,6 +2,10 @@
 
 Exact previous-runtime whitelist разрешает обратимое обновление общего SDK; неизвестный dinput8.dll сохраняется. Bundled runtime проверяется по hash до dependency fallback. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
 
+Кандидат 0.4.0b2 содержит SDK API 8 и точные review-профили Hold/Modes/Brake/v46,
+проверенные вместе на Windows client 1.5.18. Warning обозначает client-only scope;
+dedicated/client offsets не смешиваются. [ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
+
 SDK API config_dir соответствует `<user-data>/cc2x`; только reviewed defaults
 точного native hash могут автоматически создать отсутствующий INI. Существующие
 settings не заменяются. Это часть transactional GUI apply, не инструкция игроку

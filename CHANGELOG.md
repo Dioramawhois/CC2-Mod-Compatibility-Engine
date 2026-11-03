@@ -2,6 +2,20 @@
 
 ## 0.4.0b2 — кандидат: общий SDK и независимые Lua-модули
 
+- В локальный client-candidate включён точный CC2X API 8 runtime, clean build
+  report, исходная ревизия и сторонние notices. Профиль Windows 1.5.18 принимает
+  только проверенные DLL Hold/Modes/Brake/Island Airfields v46; прежний v45 сохранён.
+  Отдельная ручная установка SDK не нужна. Неизвестные DLL остаются блокированы.
+- GUI сохраняет предупреждение об одиночной приёмке SDK и непроверенных multiplayer/
+  dedicated, в том числе вместе с предупреждением о перезаписи. Переведено на все
+  14 offline языков; schema v2 содержит optional runtime_review. ADR-0020.
+- Реальный общий набор: F-16/F-15 созданы в ангаре, сохранены в новом пустом slot,
+  загружены с прежними ID; повторный spawn после reload успешен. Это не полная
+  flight/landing/network приёмка. Прежние runtime/output/Undo/saves восстановлены.
+- Release assets содержат отдельные SDK runtime/corresponding-source/toolchain-source
+  архивы и notices C++ runtimes. Source archive сверяется со всеми входами точного
+  native build, включая generated headers и исходные Windows line endings.
+
 - Original-directory lookup accounts each directory once per analysis, preventing
   false scan-budget failures for mods adding many resources. Runtime recovery
   preserves the full relative executable path, including macOS app layouts.

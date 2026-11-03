@@ -9,13 +9,13 @@ from __future__ import annotations
 import hashlib
 import io
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tarfile
 import tempfile
 import urllib.request
+from pathlib import Path
 
 URL = "https://www.lua.org/ftp/lua-5.3.6.tar.gz"
 SHA256 = "fc5fd69bb8736323f026672b1b7235da613d7177e72558893a0bdcd320466d60"

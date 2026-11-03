@@ -1003,9 +1003,19 @@ class App(tk.Tk):
         self._generation += 1
         self.auto_enabled = True
         self._clear_notice()
-        self._desired_ids = {
-            key for key, value in {**self.vars, **self.library_vars}.items() if value.get()
-        }
+        variables = {**self.vars, **self.library_vars}
+        desired = {key for key, value in variables.items() if value.get()}
+        added = desired - self._desired_ids
+        if self.scan is not None and len(added) == 1:
+            selected = next((mod for mod in self.scan.mods if mod.id in added), None)
+            if selected is not None:
+                identity = selected.package_id or selected.id
+                for mod in self.scan.mods:
+                    if mod.id != selected.id and (mod.package_id or mod.id) == identity:
+                        desired.discard(mod.id)
+                        if mod.id in variables:
+                            variables[mod.id].set(False)
+        self._desired_ids = desired
         self.status.set(self.tr("Обновляем сборку…"))
         self.package_plan = None
         self.selection_dirty = True

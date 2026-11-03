@@ -9,7 +9,7 @@ root = Path(SPECPATH)
 # These files must also be available on disk in a frozen application.
 datas = collect_data_files(
     'cc2_mce', include_py_files=True,
-    includes=['*.py', 'schemas/*.json', 'profiles/*.json', 'tools_data/**/*']
+    includes=['*.py', 'schemas/*.json', 'profiles/*.json', 'tools_data/**/*', 'runtime_data/**/*']
 )
 binaries = []
 hiddenimports = []

@@ -1,10 +1,59 @@
-## Unreleased — аудит Native Bridge и cc2mods (2026-11-02)
+# Changelog
+
+## 0.4.0b2 — кандидат: общий SDK и независимые Lua-модули
+
+- Workshop и локальная новая версия одного package могут быть видны вместе.
+  Галочка новой версии снимает старую и применяет одну транзакцию; отказ возвращает
+  прежнюю. Dependencies следуют явно выбранной версии. Одновременный выбор двух
+  версий и неоднозначные зависимости блокируются. ADR-0021, 9 regressions.
+
+- В локальный client-candidate включён точный CC2X API 8 runtime, clean build
+  report, исходная ревизия и сторонние notices. Профиль Windows 1.5.18 принимает
+  только проверенные DLL Hold/Modes/Brake/Island Airfields v46; прежний v45 сохранён.
+  Отдельная ручная установка SDK не нужна. Неизвестные DLL остаются блокированы.
+- GUI сохраняет предупреждение об одиночной приёмке SDK и непроверенных multiplayer/
+  dedicated, в том числе вместе с предупреждением о перезаписи. Переведено на все
+  14 offline языков; schema v2 содержит optional runtime_review. ADR-0020.
+- Реальный общий набор: F-16/F-15 созданы в ангаре, сохранены в новом пустом slot,
+  загружены с прежними ID; повторный spawn после reload успешен. Это не полная
+  flight/landing/network приёмка. Прежние runtime/output/Undo/saves восстановлены.
+- Release assets содержат отдельные SDK runtime/corresponding-source/toolchain-source
+  архивы и notices C++ runtimes. Source archive сверяется со всеми входами точного
+  native build, включая generated headers и исходные Windows line endings.
+
+- Original-directory lookup accounts each directory once per analysis, preventing
+  false scan-budget failures for mods adding many resources. Runtime recovery
+  preserves the full relative executable path, including macOS app layouts.
+
+- Journaled exact-runtime upgrade and Undo, approved previous-runtime inputs and built-in SDK dependency fallback; unknown loaders remain protected (ADR-0019).
+
+- Отсутствующие INI approved native consumers создаются автоматически по точному
+  hash-профилю; существующие настройки сохраняются. Creation, interruption и Undo
+  используют inode/hash journal без overwrite. Исправлен повторный apply, который
+  мог пропускать восстановление удалённого runtime/settings при прежнем payload.
+  Добавлены 14 regressions; source metadata не даёт неизвестной DLL прав на запись.
+
+- Development publisher сохраняет отдельные owner/code roots Bridge-модулей
+  внутри одной CC2-MCE папки; порядок, зависимости, обновление и Undo используют
+  тот же транзакционный workflow. Поддержаны три manifest layouts, включая
+  root-only legacy. Обычные game resources продолжают Git merge.
+- Manifests/private Lua не перезаписываются поздними патчами. Повторные owners,
+  unsafe/invalid metadata, stock-script entries и неизвестный native блокируются;
+  runtime требует API 8, bundle capability и точный reviewed hash. Добавлены
+  module provenance в schema v2 и 27 packaging/metadata/order regressions.
+
+## Аудит Native Bridge и cc2mods (2026-11-02)
 
 - По запросу владельца подготовлена карта общего CC2X SDK и отдельных модов:
   учтены code namespaces в едином output, сохранение identity/catalog и сетевые
   ограничения. GPL-моды cc2mods выделяются воспроизводимо из SHA-locked sources
   через инструмент companion SDK, без его копирования в моды.
-  [План](docs/22-UNIFIED-SDK-AND-MOD-SPLIT.md). Общий runtime ещё не реализован.
+  [Статус](docs/22-UNIFIED-SDK-AND-MOD-SPLIT.md). В companion SDK уже собирается
+  один runtime с независимым Lua host и registry/UI. Сторона SDK читает ordered
+  module bundles; publisher в выпущенной beta ModLoader ещё не подключён.
+- Владелец подтвердил все разрешения своей команды. Сохранены GPL/MIT notices
+  и provenance. F-16/F-15 выделен отдельно с исходными ID и 57 файлами.
+  Native/static проверки проходят; свежая игровая и multiplayer приёмка открыты.
 
 - Проверены переданные исходники, лицензии, lifecycle и границы multiplayer.
   Обнаружен конфликт раскладки API 5 между SDK development и Native Bridge;
@@ -55,8 +104,6 @@
 - Отчёт остаётся read-only схемой v1 (`installable` = false): запись файлов не меняет схему отчёта.
 - Внешний `git` по-прежнему используется для трёхстороннего слияния; встроенного слияния для Windows без git ещё нет.
 - Тесты: 91 проходят, включая реальную запись разных правок и отказ записи при конфликте.
-
-# Changelog
 
 ## 0.3.3 — игровые форматы и конкретная причина отказа (2026-11-02)
 

@@ -59,8 +59,8 @@
     "scripts/vr_bindings_oculus_touch.json": "bd4ef597d848300eb029eade0eab1c1d3d88cb8390a85401f91e568fff374341",
     "scripts/vr_bindings_vive_controller.json": "ff0e507562fe7ca7e8d669e2c401956d00bf7d378a5e4af9bf8e3dadf905270f"
   },
-  "runtime_sha256": "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba",
-  "runtime_api": 4,
+  "runtime_sha256": "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
+  "runtime_api": 8,
   "native_plugins": {
     "60383f2845a5d5dc601f6196fb3716340aa0ca21437052ad1bbd7681b384591d": {
       "api": 3,
@@ -71,6 +71,85 @@
       ],
       "evidence_log_sha256": "8c57035fb96560eab9e043294cb239063e4e75181bc8a2b84c813a8a6fe6ce5c",
       "tested_merged_lua_sha256": "95b72ac1198e64369563b9dc45cfb64e4131c06f26fa30ef08cd31bcd9dd34a6"
+    },
+    "abda60ece8cdf595166ec63f9710719077168ae24b5790c4333059d0f6cd80f8": {
+      "api": 4,
+      "review": "Exact PE32 bytes, source/header provenance and real combined client session",
+      "verified_scope": [
+        "windows-1.5.18-r2-client-native-load",
+        "combined-client-session"
+      ],
+      "evidence_log_sha256": "42285a4ad14d7ea1cb7fd1d55e94878d40de6c8480abace3e119d8f942044b80",
+      "multiplayer_verified": false,
+      "config_defaults": {
+        "frein.ini": "[frein]\nbrake_enabled=1\nbrake=1.0\ngrip=1.0\nzone_m=150\nneed_airborne=1\nflight_state=1\nmin_wheels=2\ngrace_s=0.5\nheight_m=40\nmax_speed=30\nhold_brake=0.6\nrecall_force=0\n"
+      }
+    },
+    "113f423127230d408086f63a0d921f75068659e6611d1ab91ae8f95888183c74": {
+      "api": 4,
+      "review": "Exact PE32 bytes, source/header provenance and real combined client session",
+      "verified_scope": [
+        "windows-1.5.18-r2-client-native-load",
+        "combined-client-session"
+      ],
+      "evidence_log_sha256": "42285a4ad14d7ea1cb7fd1d55e94878d40de6c8480abace3e119d8f942044b80",
+      "multiplayer_verified": false
+    },
+    "f05062ce65216e40491ed0001f5195eebadb63ae931b96b9473aa5c2142bb82c": {
+      "api": 4,
+      "review": "Exact PE32 bytes, source/header provenance and real combined client session",
+      "verified_scope": [
+        "windows-1.5.18-r2-client-native-load",
+        "combined-client-session"
+      ],
+      "evidence_log_sha256": "42285a4ad14d7ea1cb7fd1d55e94878d40de6c8480abace3e119d8f942044b80",
+      "multiplayer_verified": false
+    },
+    "16666efca5b156b86fdeb4dede8fa3ed4c6989d1a67529b1a875dc4cd9a43de4": {
+      "api": 4,
+      "review": "Exact PE32 bytes, source/header provenance and real combined client session",
+      "verified_scope": [
+        "windows-1.5.18-r2-client-native-load",
+        "combined-client-session"
+      ],
+      "evidence_log_sha256": "42285a4ad14d7ea1cb7fd1d55e94878d40de6c8480abace3e119d8f942044b80",
+      "multiplayer_verified": false,
+      "config_defaults": {
+        "modes.ini": "[modes]\nenabled=1\neco_all=0\nflank_all=0\nobserve_s=0\n"
+      }
     }
+  },
+  "previous_runtime_sha256": [
+    "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba"
+  ],
+  "runtime_capabilities": [
+    "independent-lua-v1",
+    "ordered-module-bundles-v1",
+    "session-query-v1"
+  ],
+  "runtime_review": {
+    "stage": "client-candidate",
+    "source_commit": "2eecbd93c3555fed9a2b3f25e5b9c91abb55196f",
+    "runtime_version": "0.6.0-dev",
+    "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/2eecbd93c3555fed9a2b3f25e5b9c91abb55196f",
+    "verified_scope": [
+      "windows-1.5.18-r2-client",
+      "combined-native-load",
+      "ordered-module-load",
+      "custom-definition-readiness",
+      "custom-hangar-spawn",
+      "same-catalog-save-reload"
+    ],
+    "unverified_scope": [
+      "remote-multiplayer",
+      "dedicated-server",
+      "changed-catalog-save-migration",
+      "full-flight-and-island-landing",
+      "clean-machine",
+      "macos-native-runtime"
+    ],
+    "multiplayer_verified": false,
+    "dedicated_verified": false,
+    "evidence_log_sha256": "42285a4ad14d7ea1cb7fd1d55e94878d40de6c8480abace3e119d8f942044b80"
   }
 }

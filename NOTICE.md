@@ -11,8 +11,18 @@ merchantability or fitness for a particular purpose. See [LICENSE](LICENSE).
 
 This license covers this project's original code and documentation. Third-party
 components retain their own copyrights, licenses and notices. Carrier Command 2,
-its executable, official SDK resources, third-party mods and CC2X native binaries
-are not included in the ModLoader distribution or relicensed by this notice.
+its executable, official SDK resources and third-party gameplay mods are not
+included in the ModLoader executable or relicensed by this notice.
+
+The 0.4.0b2 client candidate embeds one exact reviewed CC2X 0.6 development runtime
+under its own GPL-3.0-or-later license. Its binary, clean build provenance, source
+reference and original GPL/Lua MIT/MinGW/Zig notices are in cc2_mce/runtime_data.
+Corresponding SDK source is available at
+https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/2eecbd93c3555fed9a2b3f25e5b9c91abb55196f.
+No aircraft assets or gameplay plugins are linked into this common SDK binary.
+Linked libc++, libc++abi and libunwind notices (Apache-2.0 WITH LLVM-exception)
+are preserved alongside the runtime. Release assets include matching SDK sources
+and Zig provider library sources, in addition to the separate Git/Lua sources.
 
 The Windows distribution embeds unmodified Git for Windows binaries (a separate
 process), Lua 5.3's syntax validator, CPython/Tcl/Tk, PyInstaller's bootloader and

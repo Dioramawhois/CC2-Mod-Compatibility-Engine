@@ -1,5 +1,18 @@
 # 17. SDK: моды и библиотеки в Steam Workshop
 
+Dependency cc2x.runtime может удовлетворяться exact reviewed installed/bundled runtime, если source provider отсутствует; source wrappers и их hashes сохраняются. Подробности и rollback: [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
+
+Для native consumers opt-in metadata не разрешает произвольную запись настроек.
+Только engine profile точного reviewed DLL hash может задать missing INI defaults
+в SDK config namespace. Existing user preferences сохраняются; все изменения
+участвуют в recovery/Undo. [ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
+Новый development publisher сохраняет самостоятельные Bridge VM в отдельных
+контейнерах одного output, без merge их manifests/entry Lua. Приоритеты manifest
+и обязательный runtime capability описаны в [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+Обычные game Lua overlays продолжают прежний pipeline; метка library не
+заменяет проверку runtime/DLL и не добавляет сетевой транспорт.
+
 **Распространение:** [полный аудит Steam](19-STEAM-DISTRIBUTION-AUDIT.md) и [metadata для авторов](../distribution/workshop/README.md). Steam Required Items — soft relation по PublishedFileId; requires — локальная зависимость по package ID. Для первого запуска bootstrap нужен отдельно, подписка его не устанавливает автоматически. DLL остаются отдельными plugin файлами под общим runtime; компиляции всех библиотек в один injector нет.
 
 Это контракт для авторов пакетов. Игрок выбирает готовый пакет в GUI и не редактирует XML/JSON.

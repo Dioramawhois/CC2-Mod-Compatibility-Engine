@@ -619,3 +619,31 @@ def test_undo_refreshes_checkboxes_without_reapplying(auto_pair, monkeypatch):
     assert window._auto_timer is None
     assert not (user / "cc2-mce/activation.json").exists()
     assert (user / "mods/CC2-MCE/content/a.txt").read_bytes() == b"a=2\n\n\nb=1\n"
+
+
+@pytest.mark.parametrize("rejected", [False, True])
+def test_checkbox_switches_one_package_version_and_restores_old_on_rejection(
+    auto_pair, tmp_path, rejected
+):
+    window, user = auto_pair
+    window.vars["a"].set(True)
+    window.selection_changed()
+    pump_until(window, lambda: not window.selection_dirty)
+    (tmp_path / "workshop/b/mod.xml").write_text(
+        '<data name="Local next version"><cc2mce schema="1" type="mod" id="a"/></data>'
+    )
+    if rejected:
+        (tmp_path / "workshop/b/content/unknown.dll").write_bytes(b"unreviewed DLL")
+    window.scan_sources(preserve_selection=True)
+    pump_until(window, lambda: not window.busy)
+    window.vars["b"].set(True)
+    window.selection_changed()
+    assert window._desired_ids == {"b"}
+    assert not window.vars["a"].get()
+    pump_until(window, lambda: not window.selection_dirty)
+    if rejected:
+        assert window.vars["a"].get() and not window.vars["b"].get()
+        assert (user / "mods/CC2-MCE/content/a.txt").read_bytes() == b"a=2\n\n\nb=1\n"
+    else:
+        assert not window.vars["a"].get() and window.vars["b"].get()
+        assert (user / "mods/CC2-MCE/content/a.txt").read_bytes() == b"a=1\n\n\nb=2\n"

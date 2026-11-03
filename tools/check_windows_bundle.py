@@ -29,6 +29,7 @@ names = {name.replace("\\", "/"): name for name in archive.toc}
 sources = [*sorted((root / "cc2_mce").glob("*.py"))]
 sources += list((root / "cc2_mce/schemas").glob("*.json"))
 sources += list((root / "cc2_mce/profiles").glob("*.json"))
+sources += [p for p in (root / "cc2_mce/runtime_data").rglob("*") if p.is_file()]
 sources += [root / "cc2_mce/tools_data/manifest.json"]
 hashes = {}
 for source in sources:
@@ -100,6 +101,12 @@ startup = subprocess.STARTUPINFO()
 startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 startup.wShowWindow = 0
 with tempfile.TemporaryDirectory(prefix="cc2-exe-smoke-") as cwd:
+    # A user's saved launch-on-start preference must never turn a packaging
+    # smoke check into a game launch or an activation against real user data.
+    for variable, folder in (("APPDATA", "Roaming"), ("LOCALAPPDATA", "Local")):
+        isolated = Path(cwd) / folder
+        isolated.mkdir()
+        env[variable] = str(isolated)
     tool_result = Path(cwd) / "tools.json"
     tool_smoke = subprocess.run(
         [str(exe), "--verify-bundle", str(tool_result)],
@@ -190,6 +197,7 @@ report = {
     "pyinstaller": importlib.metadata.version("pyinstaller"),
     "host": platform.platform(),
     "checks": {
+        "isolated_user_preferences": True,
         "packaged_schema_and_sources_match": True,
         "gui_opened_from_unrelated_directory_without_dev_tools_on_path": opened,
         "gui_closed_cleanly": True,

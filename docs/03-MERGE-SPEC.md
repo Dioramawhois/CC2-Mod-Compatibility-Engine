@@ -1,5 +1,10 @@
 # 03. Спецификация движка слияния
 
+Независимые SDK manifest/code paths не участвуют в file merge: для каждого
+выбранного модуля сохраняются отдельные bytes и code root. Общие game resources
+следуют обычным правилам; ordered patches не разрешают duplicate owner IDs
+или потерю VM. [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+
 **0.3.3:** `.glsl` проходит text validation и настоящий Git three-way с сохранением CC2 directives; GPU compilation не выполняется. `.txtr` распознаётся как binary только по TXTR magic и никогда не объединяется побайтно. Strict collision блокируется, ordered collision даёт whole-file override. Unknown header в любом участнике блокирует оба режима. Полная декодировка texture не реализована. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
 
 **0.3.2:** overridden не означает игровую совместимость. Успех ordered-patches показывает постоянное предупреждение с ресурсом и порядком участников. Clean/identical не получают его. Details различают hunk merge/whole-file replacement; N-way не приписывает каждую перезаписанную строку последнему участнику без такого доказательства. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).

@@ -11,14 +11,14 @@ import unicodedata
 import uuid
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree as ET
 
 from jsonschema import Draft202012Validator
 
-from cc2_mce import APP_NAME
+from cc2_mce import APP_NAME, sdk_runtime, sdk_settings
 from cc2_mce.discovery import ModRef, Scan, fingerprint, snapshot_unchanged
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import (
@@ -34,10 +34,12 @@ from cc2_mce.filesystem import (
 from cc2_mce.installation import Installation
 from cc2_mce.locking import activation_lock
 from cc2_mce.merge import GitMergeAdapter, MergeInput, merge_file
+from cc2_mce.module_bundles import prepare_modules
 from cc2_mce.reports import engine_hash
 from cc2_mce.toolchain import Toolchain
 
 OUTPUT_FOLDER = "CC2-MCE"
+RUNTIME_DATA = Path(__file__).parent / "runtime_data"
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,7 @@ class PackagePlan:
     payload: dict[str, bytes]
     report: dict[str, Any]
     runtime_source: Path | None
+    config_defaults: dict[str, bytes] = field(default_factory=dict)
 
     @property
     def blockers(self) -> list[dict[str, str]]:
@@ -83,20 +86,54 @@ def review_profile(game: Installation) -> dict[str, Any]:
     }
 
 
-def resolve_selection(scan: Scan, selected: list[str]) -> tuple[ModRef, ...]:
+def resolve_selection(
+    scan: Scan, selected: list[str], *, provided_dependencies: frozenset[str] = frozenset()
+) -> tuple[ModRef, ...]:
     by_id: dict[str, ModRef] = {}
+    versions: dict[str, list[ModRef]] = {}
+    ambiguous = "Выберите одну версию мода: Workshop или локальную."
     for mod in scan.mods:
-        for key in {mod.id, mod.package_id or mod.id}:
-            if key in by_id and by_id[key] != mod:
-                raise InputError("Неоднозначный идентификатор мода или библиотеки")
-            by_id[key] = mod
+        if mod.id in by_id:
+            raise InputError("Неоднозначный идентификатор мода или библиотеки")
+        by_id[mod.id] = mod
+        versions.setdefault(mod.package_id or mod.id, []).append(mod)
+    for identity in versions:
+        source = by_id.get(identity)
+        if source is not None and (source.package_id or source.id) != identity:
+            raise InputError("Неоднозначный идентификатор мода или библиотеки")
+    preferred: dict[str, ModRef] = {}
+    explicit: dict[str, ModRef] = {}
+    for key in selected:
+        requested = by_id.get(key)
+        candidates = versions.get(key, [])
+        if requested is None and candidates:
+            if len(candidates) != 1:
+                raise InputError(ambiguous)
+            requested = candidates[0]
+        if requested is not None:
+            identity = requested.package_id or requested.id
+            if identity in preferred and preferred[identity] != requested:
+                raise InputError(ambiguous)
+            preferred[identity] = requested
+            explicit[key] = requested
     result: list[ModRef] = []
     visiting: set[str] = set()
 
-    def visit(key: str) -> None:
-        mod = by_id.get(key)
+    def visit(key: str, *, dependency: bool = False) -> None:
+        mod = explicit.get(key) if not dependency else preferred.get(key)
+        if dependency and mod is None:
+            candidates = versions.get(key, [])
+            if len(candidates) > 1:
+                raise InputError(ambiguous)
+            mod = candidates[0] if candidates else by_id.get(key)
         if mod is None:
+            if dependency and key in provided_dependencies:
+                return
             raise InputError(f"Не найдена зависимость: {key}")
+        identity = mod.package_id or mod.id
+        if identity in preferred and preferred[identity] != mod:
+            raise InputError(ambiguous)
+        preferred[identity] = mod
         if mod.id in visiting:
             raise InputError("Циклическая зависимость библиотек")
         if mod in result:
@@ -104,8 +141,8 @@ def resolve_selection(scan: Scan, selected: list[str]) -> tuple[ModRef, ...]:
         if len(visiting) + len(result) >= 32:
             raise InputError("Набор с зависимостями превышает 32 пакета")
         visiting.add(mod.id)
-        for dependency in mod.dependencies:
-            visit(dependency)
+        for required in mod.dependencies:
+            visit(required, dependency=True)
         visiting.remove(mod.id)
         result.append(mod)
 
@@ -116,12 +153,19 @@ def resolve_selection(scan: Scan, selected: list[str]) -> tuple[ModRef, ...]:
     return tuple(result)
 
 
-def _runtime(game: Installation, expected: str) -> Path | None:
+def _runtime(game: Installation, expected: str, previous: list[str] | None = None) -> Path | None:
     installed = game.root / "dinput8.dll"
     if installed.exists() or installed.is_symlink():
-        if digest(_read(installed, game.root)) != expected:
+        installed_hash = digest(_read(installed, game.root))
+        if installed_hash == expected:
+            return installed
+        if installed_hash not in (previous or []):
             raise InputError("В игре другой dinput8.dll. Он не будет перезаписан.")
-        return installed
+    bundled = RUNTIME_DATA / expected / "dinput8.dll"
+    if bundled.exists():
+        if digest(_read(bundled, input_root(bundled.parent))) != expected:
+            raise InputError("Bundled SDK runtime failed integrity verification")
+        return bundled
     libraries = game.libraries_dir
     if not libraries.exists():
         return None
@@ -147,7 +191,13 @@ def _package_metadata(selected: tuple[ModRef, ...]) -> bytes:
     return bytes(ET.tostring(root, encoding="utf-8", xml_declaration=True))
 
 
-def _original_path(root: Path, folder: str, logical: str, budget: Budget) -> Path | None:
+def _original_path(
+    root: Path,
+    folder: str,
+    logical: str,
+    budget: Budget,
+    directory_cache: dict[Path, tuple[Path, ...]],
+) -> Path | None:
     directory = root / folder
     if not directory.exists() and not directory.is_symlink():
         return None
@@ -159,9 +209,12 @@ def _original_path(root: Path, folder: str, logical: str, budget: Budget) -> Pat
     cursor = directory
     for component in logical.split("/"):
         key = unicodedata.normalize("NFC", component).casefold()
+        cursor = input_root(cursor)
+        if cursor not in directory_cache:
+            directory_cache[cursor] = tuple(bounded_children(cursor, budget))
         matches = [
             path
-            for path in bounded_children(input_root(cursor), budget)
+            for path in directory_cache[cursor]
             if unicodedata.normalize("NFC", path.name).casefold() == key
         ]
         if not matches:
@@ -185,25 +238,41 @@ def analyze(
     actual_game_hash = digest(_read(game.executable, input_root(game.executable.parent)))
     if actual_game_hash != profile["game_sha256"]:
         raise InputError("Сборка игры изменилась")
-    chosen = resolve_selection(scan, selected)
+    provided: frozenset[str] = frozenset()
+    if profile.get("runtime_sha256") and any("cc2x.runtime" in m.dependencies for m in scan.mods):
+        try:
+            if _runtime(game, profile["runtime_sha256"], profile.get("previous_runtime_sha256")):
+                provided = frozenset({"cc2x.runtime"})
+        except InputError:
+            pass  # Never satisfy a missing dependency using an unknown installed DLL.
+    chosen = resolve_selection(scan, selected, provided_dependencies=provided)
     groups: dict[str, list[tuple[ModRef, Any]]] = defaultdict(list)
-    blockers: list[dict[str, str]] = []
-    files: list[dict[str, Any]] = []
-    payload: dict[str, bytes] = {}
-    needs_runtime = any(mod.sdk == "cc2x" for mod in chosen)
+    bundle = prepare_modules(chosen, profile, luac=str(tools.luac) if tools else None)
+    blockers: list[dict[str, str]] = list(bundle.blockers)
+    files: list[dict[str, Any]] = list(bundle.files)
+    payload: dict[str, bytes] = dict(bundle.payload)
+    needs_runtime = bool(bundle.modules) or any(mod.sdk == "cc2x" for mod in chosen)
     for mod in chosen:
         if mod.api > profile.get("runtime_api", 0):
             blockers.append({"code": "sdk_api", "message": f"{mod.name}: нужна новая версия SDK"})
         for item in mod.files:
+            if (mod.id, item.key) in bundle.handled:
+                continue
             groups[item.key].append((mod, item))
     native_names: dict[str, str] = {}
+    config_defaults: dict[str, bytes] = {}
+    config_providers: dict[str, set[str]] = defaultdict(set)
+    runtime_inputs: dict[str, str] = {}
     baseline_budget = Budget(Limits())
+    baseline_directories: dict[Path, tuple[Path, ...]] = {}
     for key, variants in sorted(groups.items()):
         logical = variants[0][1].logical_path
         source_hashes = {mod.id: item.sha256 for mod, item in variants}
         if logical.casefold() == "dinput8.dll":
             needs_runtime = True
-            if set(source_hashes.values()) != {profile.get("runtime_sha256")}:
+            runtime_inputs.update(source_hashes)
+            allowed = {profile.get("runtime_sha256"), *profile.get("previous_runtime_sha256", [])}
+            if not set(source_hashes.values()).issubset(allowed):
                 blockers.append(
                     {
                         "code": "runtime_conflict",
@@ -215,7 +284,9 @@ def analyze(
         base: bytes | None = None
         baseline_source = None
         for folder in ("rom_0", "mod_dev_kit/source"):
-            candidate = _original_path(game.root, folder, logical, baseline_budget)
+            candidate = _original_path(
+                game.root, folder, logical, baseline_budget, baseline_directories
+            )
             if candidate is not None:
                 base = read_regular(candidate, game.root, baseline_budget)
                 baseline_source = folder + "/" + logical
@@ -235,6 +306,19 @@ def analyze(
             else:
                 status, strategy, content = "copied", "reviewed-native-copy", variants[0][1].content
                 native_names[name] = key
+                native_hash = next(iter(hashes))
+                for filename, data in sdk_settings.reviewed_defaults(approved[native_hash]).items():
+                    if filename in config_defaults and config_defaults[filename] != data:
+                        blockers.append(
+                            {
+                                "code": "native_plugin_review_required",
+                                "file": logical,
+                                "message": "Conflicting reviewed SDK defaults: " + filename,
+                            }
+                        )
+                    else:
+                        config_defaults[filename] = data
+                    config_providers[filename].add(native_hash)
             diagnostics: list[str] = []
         else:
             outcome = merge_file(
@@ -276,7 +360,7 @@ def analyze(
         expected = profile.get("runtime_sha256")
         if expected:
             try:
-                runtime = _runtime(game, expected)
+                runtime = _runtime(game, expected, profile.get("previous_runtime_sha256"))
             except InputError as exc:
                 blockers.append({"code": "runtime_conflict", "message": str(exc)})
         if runtime is None:
@@ -286,6 +370,20 @@ def analyze(
                     "message": "Проверенный dinput8.dll не найден в игре или libraries.",
                 }
             )
+    output_budget = Budget(Limits())
+    try:
+        output_paths = {"mod.xml", "mce-manifest.json", "content"}
+        for logical, data in payload.items():
+            parts = logical.split("/")
+            if len(parts) > output_budget.limits.max_depth:
+                raise InputError("Output depth limit exceeded")
+            for index in range(1, len(parts) + 1):
+                output_paths.add("content/" + "/".join(parts[:index]))
+            output_budget.consume(len(data))
+        for _ in output_paths:
+            output_budget.entry()
+    except InputError as exc:
+        blockers.append({"code": "input_error", "message": str(exc)})
     report: dict[str, Any] = {
         "schema_version": 2,
         "owner": "cc2-mce",
@@ -304,11 +402,29 @@ def analyze(
         "gameplay_verified": False,
         "package_metadata_sha256": digest(_package_metadata(chosen)),
     }
+    if bundle.modules:
+        report["modules"] = bundle.modules
+    if runtime_inputs:
+        report["runtime_inputs"] = runtime_inputs
+    if needs_runtime and profile.get("runtime_review"):
+        report["runtime_review"] = profile["runtime_review"]
+    if config_defaults:
+        report["config_defaults"] = [
+            {
+                "filename": name,
+                "sha256": digest(data),
+                "providers": sorted(config_providers[name]),
+                "policy": "create-missing-preserve-user",
+            }
+            for name, data in sorted(config_defaults.items())
+        ]
     report["build_id"] = fingerprint(report)
     schema = json.loads((Path(__file__).parent / "schemas/package.schema.json").read_text())
     if not Draft202012Validator(schema).is_valid(report):
         raise InputError("Internal package report contract violation")
-    return PackagePlan(game, scan, chosen, profile, tools, payload, report, runtime)
+    return PackagePlan(
+        game, scan, chosen, profile, tools, payload, report, runtime, config_defaults
+    )
 
 
 def _parse_activation(raw: bytes) -> ET.Element:
@@ -494,6 +610,10 @@ def _recover_pending(user: Path) -> None:
             _write_new(state_file, previous)
     elif state_file.exists():
         state_file.unlink()
+    sdk_settings.cleanup(user, state_dir, journal.get("config_created", []), remove_targets=True)
+    # Restore our resources/settings even if a separate writer replaced the DLL.
+    # Preserve the pending journal and runtime backup if native rollback refuses.
+    sdk_runtime.rollback(journal.get("runtime_change"), state_dir, _replace_checked)
     pending.unlink()
 
 
@@ -557,7 +677,6 @@ def _apply_plan_locked(
         raise
     if game_running() or not snapshot_unchanged(plan.scan):
         raise InputError("Игра запущена или входы изменились; пакет не активирован")
-    installed_runtime = False
     runtime_target = plan.game.root / "dinput8.dll"
     active = xml.find("active_mod_folders")
     assert active is not None
@@ -603,10 +722,22 @@ def _apply_plan_locked(
         and state.get("build_id") == plan.report["build_id"]
         and old_manifest_hash == digest(_read(stage / "mce-manifest.json", stage))
         and not legacy_moves
+        and not sdk_settings.missing(user, plan.config_defaults)
+        and (
+            plan.runtime_source is None
+            or (
+                runtime_target.exists()
+                and digest(_read(runtime_target, plan.game.root)) == plan.report["runtime_sha256"]
+            )
+        )
     ):
         shutil.rmtree(input_root(stage))
         return destination
     backup_name = f"mods-{uuid.uuid4().hex}.xml"
+    config_created = sdk_settings.stage(user, state_dir, plan.config_defaults, token, _write_new)
+    runtime_change = sdk_runtime.stage(
+        plan.game, plan.runtime_source, plan.profile, state_dir, token, _write_new
+    )
     _write_new(state_dir / backup_name, old)
     updated = {
         "owner": "cc2-mce",
@@ -614,7 +745,8 @@ def _apply_plan_locked(
         "backup_sha256": digest(old),
         "applied_sha256": digest(new),
         "package": str(destination),
-        "runtime_created": installed_runtime,
+        "runtime_created": runtime_change is not None and runtime_change["backup"] is None,
+        "runtime_change": runtime_change,
         "runtime_target": str(runtime_target),
         "runtime_sha256": plan.report["runtime_sha256"],
         "engine_sha256": plan.report["engine_sha256"],
@@ -624,6 +756,7 @@ def _apply_plan_locked(
         "old_manifest_sha256": old_manifest_hash,
         "new_manifest_sha256": digest(_read(stage / "mce-manifest.json", stage)),
         "legacy_moves": legacy_moves,
+        "config_created": config_created,
     }
     prior_name = "previous-state-" + token + ".json" if previous_state else None
     if previous_state is not None:
@@ -647,18 +780,12 @@ def _apply_plan_locked(
             _replace_checked(state_file, encoded, previous_state)
         else:
             _write_new(state_file, encoded)
-        if plan.runtime_source is not None:
-            if runtime_target.exists():
-                if digest(_read(runtime_target, plan.game.root)) != plan.report["runtime_sha256"]:
-                    raise InputError("Установленный загрузчик изменился")
-            else:
-                source_root = input_root(plan.runtime_source.parent)
-                data = _read(plan.runtime_source, source_root)
-                if digest(data) != plan.report["runtime_sha256"]:
-                    raise InputError("Загрузчик изменился после проверки")
-                _write_new(runtime_target, data)
-                installed_runtime = True
-                updated["runtime_created"] = True
+        sdk_settings.install(user, state_dir, config_created)
+        sdk_runtime.install(runtime_change)
+        if plan.runtime_source is not None and (
+            digest(_read(runtime_target, plan.game.root)) != plan.report["runtime_sha256"]
+        ):
+            raise InputError("Установленный загрузчик изменился")
         if game_running():
             raise InputError("Игра запущена; применение остановлено")
         if (
@@ -670,14 +797,9 @@ def _apply_plan_locked(
         _replace_checked(user / "mods.xml", new, old)
         pending.unlink()
     except (OSError, InputError):
-        if (
-            installed_runtime
-            and runtime_target.exists()
-            and digest(_read(runtime_target, plan.game.root)) == plan.report["runtime_sha256"]
-        ):
-            runtime_target.unlink()
         _recover_pending(user)
         raise
+    sdk_settings.cleanup(user, state_dir, config_created, remove_targets=False)
     # Keep only the current undo payload; never prune source or unrecognized directories.
     obsolete = [state.get("package_backup", "")]
     obsolete += [move["cache"] for move in state.get("legacy_moves", [])]

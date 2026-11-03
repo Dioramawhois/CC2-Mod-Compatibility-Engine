@@ -4,6 +4,9 @@
 
 PACKS: dict[str, dict[str, str]] = {
     "de": {
+        "Выберите одну версию мода: Workshop или локальную.": "Wähle eine Mod-Version: Workshop oder lokal.",
+        "Тестовая версия SDK": "SDK-Testversion",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "Das SDK wurde im Einzelspielermodus getestet. Mehrspieler und dedizierte Server wurden nicht überprüft.",
         " · Выключен": " · Deaktiviert",
         " и ещё {p0}": " und {p0} mehr",
         " — не найден, снимите галочку": " – fehlt; Deaktivieren Sie das Kontrollkästchen, um es zu entfernen",
@@ -193,6 +196,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "Ressourcen",
     },
     "es": {
+        "Выберите одну версию мода: Workshop или локальную.": "Elige una versión del mod: Workshop o local.",
+        "Тестовая версия SDK": "Versión de prueba del SDK",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "El SDK se ha probado en modo individual. El multijugador y los servidores dedicados no se han verificado.",
         " · Выключен": " · Deshabilitado",
         " и ещё {p0}": " y {p0} más",
         " — не найден, снимите галочку": " — faltante; desmarque para eliminar",
@@ -382,6 +388,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "recursos",
     },
     "fr": {
+        "Выберите одну версию мода: Workshop или локальную.": "Choisissez une version du mod : Workshop ou locale.",
+        "Тестовая версия SDK": "Version de test du SDK",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "Le SDK a été testé en solo. Le multijoueur et les serveurs dédiés n'ont pas été vérifiés.",
         " · Выключен": " · Désactivé",
         " и ещё {p0}": " et {p0} plus",
         " — не найден, снимите галочку": " — manquant ; décocher pour supprimer",
@@ -571,6 +580,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "ressources",
     },
     "it": {
+        "Выберите одну версию мода: Workshop или локальную.": "Scegli una versione della mod: Workshop o locale.",
+        "Тестовая версия SDK": "Versione di prova dell'SDK",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "L'SDK è stato testato in giocatore singolo. Il multigiocatore e i server dedicati non sono stati verificati.",
         " · Выключен": " · Disabilitato",
         " и ещё {p0}": " e {p0} altro",
         " — не найден, снимите галочку": " — mancante; deseleziona per rimuovere",
@@ -760,6 +772,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "risorse",
     },
     "ja": {
+        "Выберите одну версию мода: Workshop или локальную.": "MODのバージョンを1つ選択してください：Workshopまたはローカル。",
+        "Тестовая версия SDK": "SDK テスト版",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "SDK はシングルプレイでテスト済みです。マルチプレイと専用サーバーは未検証です。",
         " · Выключен": " · 無効",
         " и ещё {p0}": " および {p0} その他",
         " — не найден, снимите галочку": " — 欠落しています。削除するにはチェックを外します",
@@ -949,6 +964,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "リソース",
     },
     "ko": {
+        "Выберите одну версию мода: Workshop или локальную.": "모드 버전을 하나 선택하세요: Workshop 또는 로컬.",
+        "Тестовая версия SDK": "SDK 테스트 버전",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "SDK는 싱글 플레이에서 테스트되었습니다. 멀티플레이와 전용 서버는 아직 검증되지 않았습니다.",
         " · Выключен": " · 장애가 있는",
         " и ещё {p0}": " 외 {p0}개",
         " — не найден, снимите галочку": " - 없어진; 제거하려면 선택을 취소하세요.",
@@ -1138,6 +1156,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "자원",
     },
     "pl": {
+        "Выберите одну версию мода: Workshop или локальную.": "Wybierz jedną wersję moda: Workshop lub lokalną.",
+        "Тестовая версия SDK": "Testowa wersja SDK",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "SDK przetestowano w trybie jednoosobowym. Tryb wieloosobowy i serwery dedykowane nie zostały zweryfikowane.",
         " · Выключен": " · Wyłączone",
         " и ещё {p0}": " i {p0} więcej",
         " — не найден, снимите галочку": " — brak; odznacz, aby usunąć",
@@ -1327,6 +1348,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "zasoby",
     },
     "pt": {
+        "Выберите одну версию мода: Workshop или локальную.": "Escolha uma versão do mod: Workshop ou local.",
+        "Тестовая версия SDK": "Versão de teste do SDK",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "O SDK foi testado no modo de um jogador. O multijogador e os servidores dedicados não foram verificados.",
         " · Выключен": " · Desativado",
         " и ещё {p0}": " e {p0} mais",
         " — не найден, снимите галочку": " — ausente; desmarque para remover",
@@ -1516,6 +1540,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "recursos",
     },
     "tr": {
+        "Выберите одну версию мода: Workshop или локальную.": "Bir mod sürümü seçin: Workshop veya yerel.",
+        "Тестовая версия SDK": "SDK test sürümü",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "SDK tek oyunculu modda test edildi. Çok oyunculu mod ve özel sunucular doğrulanmadı.",
         " · Выключен": " · Devre Dışı",
         " и ещё {p0}": " ve {p0} tane daha",
         " — не найден, снимите галочку": " - eksik; kaldırmak için işareti kaldırın",
@@ -1705,6 +1732,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "kaynak",
     },
     "uk": {
+        "Выберите одну версию мода: Workshop или локальную.": "Виберіть одну версію мода: Workshop або локальну.",
+        "Тестовая версия SDK": "Тестова версія SDK",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "SDK перевірено в одиночній грі. Мультиплеєр і виділений сервер не перевірені.",
         " · Выключен": " · Вимкнено",
         " и ещё {p0}": " і ще {p0}",
         " — не найден, снимите галочку": " — відсутній; зніміть прапорець, щоб видалити",
@@ -1894,6 +1924,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "ресурси",
     },
     "zh": {
+        "Выберите одну версию мода: Workshop или локальную.": "请选择一个模组版本：创意工坊或本地。",
+        "Тестовая версия SDK": "SDK 测试版",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "SDK 已通过单人游戏测试。多人游戏和专用服务器尚未验证。",
         " · Выключен": " · 已禁用",
         " и ещё {p0}": " 和 {p0} 更多",
         " — не найден, снимите галочку": " ——失踪;取消选中即可删除",
@@ -2083,6 +2116,9 @@ PACKS: dict[str, dict[str, str]] = {
         "ресурсы": "资源",
     },
     "zh-TW": {
+        "Выберите одну версию мода: Workshop или локальную.": "請選擇一個模組版本：工作坊或本機。",
+        "Тестовая версия SDK": "SDK 測試版",
+        "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "SDK 已通過單人遊戲測試。多人遊戲和專用伺服器尚未驗證。",
         " · Выключен": " · 已停用",
         " и ещё {p0}": " 和 {p0} 更多",
         " — не найден, снимите галочку": " -失蹤;取消勾選即可刪除",

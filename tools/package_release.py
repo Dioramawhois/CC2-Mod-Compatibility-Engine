@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import importlib.metadata
 import json
 import re
@@ -80,8 +81,134 @@ def write_zip(path: Path, contents: dict[str, bytes]) -> None:
             archive.writestr(info, data)
 
 
+def native_runtime_assets(
+    root: Path, sdk: Path | None
+) -> tuple[dict[str, bytes], list[dict], bytes | None]:
+    """Package the reviewed dependency separately from source; never execute it."""
+    profile = json.loads((root / "cc2_mce/profiles/windows-1.5.18-r2.json").read_text())
+    review = profile.get("runtime_review")
+    if not review:
+        return {}, [], None
+    expected = profile["runtime_sha256"]
+    relative = "cc2_mce/runtime_data/" + expected
+    folder = root / relative
+    runtime = (folder / "dinput8.dll").read_bytes()
+    if sha(runtime) != expected:
+        raise ValueError("Reviewed runtime checksum mismatch")
+    provenance = json.loads((folder / "dinput8.build.json").read_text())
+    if provenance["source_dirty"] or provenance["source_commit"] != review["source_commit"]:
+        raise ValueError("Runtime provenance mismatch")
+    if sdk is None:
+        raise ValueError("The reviewed SDK source checkout is required: --sdk PATH")
+    sdk = sdk.resolve(strict=True)
+    source = subprocess.check_output(
+        ["git", "archive", "--format=zip", "--prefix=CC2X-source/", review["source_commit"]],
+        cwd=sdk,
+    )
+    with zipfile.ZipFile(io.BytesIO(source)) as archive:
+        source_files = {
+            item.filename: archive.read(item) for item in archive.infolist() if not item.is_dir()
+        }
+        generated = {
+            "build/unified/generated/sdk_data.h",
+            "build/unified/generated/ui_library_shim_source.h",
+            "build/unified/generated/world_constants.inc",
+        }
+        for name, digest in provenance["source_sha256"].items():
+            normalize_logical_path(name)
+            key = "CC2X-source/" + name
+            if name in generated:
+                data = (sdk / name).read_bytes()
+            else:
+                data = source_files[key]
+                if sha(data) != digest:
+                    # Git may normalize tracked source EOL while the certified
+                    # Windows build used CRLF. Only that reversible conversion
+                    # is allowed; never substitute arbitrary working-tree code.
+                    data = data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+            if sha(data) != digest:
+                raise ValueError("Corresponding SDK source mismatch: " + name)
+            source_files[key] = data
+    encoded = io.BytesIO()
+    with zipfile.ZipFile(encoded, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+        for name, data in sorted(source_files.items()):
+            info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o100644 << 16
+            archive.writestr(info, data)
+    source = encoded.getvalue()
+    contents = {relative + "/" + p.name: p.read_bytes() for p in folder.iterdir() if p.is_file()}
+    components = [
+        {
+            "type": "library",
+            "name": "CC2X",
+            "version": review["runtime_version"],
+            "licenses": [{"license": {"id": "GPL-3.0-or-later"}}],
+            "hashes": [{"alg": "SHA-256", "content": expected}],
+            "externalReferences": [{"type": "vcs", "url": review["source_url"]}],
+            "properties": [{"name": "review-stage", "value": review["stage"]}],
+        },
+        {
+            "type": "library",
+            "name": "Lua (CC2X runtime)",
+            "version": "5.3.6",
+            "licenses": [{"license": {"id": "MIT"}}],
+        },
+    ]
+    for name in ("libcxx", "libcxxabi", "libunwind"):
+        if not (folder / (name + "-LICENSE.txt")).is_file():
+            raise ValueError("Missing native runtime notice: " + name)
+        components.append(
+            {
+                "type": "library",
+                "name": name,
+                "version": "20.1.0 (Zig 0.15.2)",
+                "licenses": [{"expression": "Apache-2.0 WITH LLVM-exception"}],
+            }
+        )
+    return contents, components, source
+
+
+def native_toolchain_sources(root: Path, zig: Path | None) -> dict[str, bytes]:
+    """Keep linked compiler runtime/standard library sources with the candidate."""
+    profile = json.loads((root / "cc2_mce/profiles/windows-1.5.18-r2.json").read_text())
+    if "runtime_review" not in profile:
+        return {}
+    if zig is None:
+        raise ValueError("The matching SDK toolchain is required: --zig PATH")
+    folder = root / "cc2_mce/runtime_data" / profile["runtime_sha256"]
+    report = json.loads((folder / "dinput8.build.json").read_text())
+    zig = zig.resolve(strict=True)
+    if sha(zig.read_bytes()) != report["compiler_sha256"]:
+        raise ValueError("Native toolchain checksum mismatch")
+    provider = zig.parent
+    contents = {}
+    for path in sorted((provider / "lib").rglob("*")):
+        if path.is_file():
+            name = path.relative_to(provider).as_posix()
+            normalize_logical_path(name)
+            contents["Zig-0.15.2/" + name] = path.read_bytes()
+    if not contents:
+        raise ValueError("Missing compiler runtime sources")
+    contents["Zig-0.15.2/LICENSE"] = (provider / "LICENSE").read_bytes()
+    contents["SOURCE-MANIFEST.json"] = (
+        json.dumps(
+            {
+                "provider": "Zig 0.15.2",
+                "compiler_sha256": report["compiler_sha256"],
+                "source": "https://ziglang.org/download/0.15.2/zig-x86_64-windows-0.15.2.zip",
+                "archive_sha256": "3a0ed1e8799a2f8ce2a6e6290a9ff22e6906f8227865911fb7ddedc3cc14cb0c",
+                "files": {name: sha(data) for name, data in sorted(contents.items())},
+            },
+            indent=2,
+        )
+        + "\n"
+    ).encode()
+    return contents
+
+
 def finalize_release(staging: Path, destination: Path) -> None:
-    for attempt in range(10):
+    for attempt in range(40):
         if destination.exists():
             raise ValueError("A previous release is never overwritten")
         try:
@@ -90,9 +217,9 @@ def finalize_release(staging: Path, destination: Path) -> None:
         except PermissionError:
             # Windows scanners can briefly retain a newly written asset handle.
             # Keep the complete staging directory and preserve atomic promotion.
-            if attempt == 9:
+            if attempt == 39:
                 raise
-            time.sleep(0.2)
+            time.sleep(0.5)
 
 
 def runtime_notices(root: Path) -> tuple[dict[str, bytes], list[dict]]:
@@ -152,6 +279,14 @@ def runtime_notices(root: Path) -> tuple[dict[str, bytes], list[dict]]:
 
 
 def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--sdk", type=Path, help="matching CC2X source checkout for corresponding sources"
+    )
+    parser.add_argument("--zig", type=Path, help="matching SDK compiler for linked runtime sources")
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     if subprocess.check_output(["git", "status", "--porcelain"], cwd=root).strip():
         raise ValueError("Commit the reviewed release sources before packaging")
@@ -188,6 +323,11 @@ def main() -> None:
         }
     )
     notices, components = runtime_notices(root)
+    native_files, native_components, sdk_source = native_runtime_assets(root, args.sdk)
+    components += native_components
+    for name, data in native_files.items():
+        if not name.endswith("/dinput8.dll"):
+            notices["LICENSES/CC2X/" + Path(name).name] = data
     manifest = json.loads((root / "cc2_mce/tools_data/manifest.json").read_text())
     components += [
         {"type": "application", "name": "Git for Windows", "version": manifest["git_version"]},
@@ -229,8 +369,18 @@ def main() -> None:
         **notices,
     }
     write_zip(output / (prefix + "-windows-x64.zip"), contents)
+    if native_files:
+        write_zip(output / (prefix + "-sdk-runtime.zip"), native_files)
+        assert sdk_source is not None
+        (output / (prefix + "-sdk-source.zip")).write_bytes(sdk_source)
+        write_zip(
+            output / (prefix + "-sdk-toolchain-sources.zip"),
+            native_toolchain_sources(root, args.zig),
+        )
     names = subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\0")[:-1]
-    validate_source_names(names)
+    # The pinned binary dependency is export-ignored and ships separately above.
+    omitted = {name for name in native_files if name.endswith("/dinput8.dll")}
+    validate_source_names([name for name in names if name not in omitted])
     with (output / (prefix + "-source.zip")).open("xb") as stream:
         subprocess.run(
             ["git", "archive", "--format=zip", "--prefix=" + prefix + "-source/", revision],

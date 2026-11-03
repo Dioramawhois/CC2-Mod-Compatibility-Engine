@@ -1,0 +1,49 @@
+"""Check curated runtime bytes/provenance without loading executable code."""
+
+import json
+import struct
+from pathlib import Path
+
+from cc2_mce.filesystem import digest
+
+ROOT = Path(__file__).parents[1] / "cc2_mce"
+
+
+def test_client_candidate_runtime_matches_reviewed_profile_and_pe_architecture():
+    profile = json.loads((ROOT / "profiles/windows-1.5.18-r2.json").read_text())
+    assert profile["runtime_api"] == 8
+    assert "ordered-module-bundles-v1" in profile["runtime_capabilities"]
+    assert profile["runtime_review"]["stage"] == "client-candidate"
+    assert not profile["runtime_review"]["multiplayer_verified"]
+    folder = ROOT / "runtime_data" / profile["runtime_sha256"]
+    data = (folder / "dinput8.dll").read_bytes()
+    assert digest(data) == profile["runtime_sha256"]
+    pe = struct.unpack_from("<I", data, 0x3C)[0]
+    assert data[:2] == b"MZ" and data[pe : pe + 4] == b"PE\0\0"
+    assert struct.unpack_from("<H", data, pe + 4)[0] == 0x14C
+    assert struct.unpack_from("<H", data, pe + 22)[0] & 0x2000
+    assert struct.unpack_from("<H", data, pe + 24)[0] == 0x10B
+    provenance = json.loads((folder / "dinput8.build.json").read_text())
+    assert provenance["artifact_sha256"] == profile["runtime_sha256"]
+    assert not provenance["source_dirty"] and provenance["api"] == 8
+    assert provenance["source_commit"] == profile["runtime_review"]["source_commit"]
+    assert b"GNU GENERAL PUBLIC LICENSE" in (folder / "LICENSE").read_bytes()
+    assert b"Lua" in (folder / "Lua-LICENSE.txt").read_bytes()
+    assert (folder / "NOTICE.md").is_file()
+
+
+def test_only_tested_native_bytes_receive_client_settings_defaults():
+    profile = json.loads((ROOT / "profiles/windows-1.5.18-r2.json").read_text())
+    expected = {
+        "16666efca5b156b86fdeb4dede8fa3ed4c6989d1a67529b1a875dc4cd9a43de4": "modes.ini",
+        "abda60ece8cdf595166ec63f9710719077168ae24b5790c4333059d0f6cd80f8": "frein.ini",
+    }
+    actual = {
+        key: next(iter(value["config_defaults"]))
+        for key, value in profile["native_plugins"].items()
+        if value.get("config_defaults")
+    }
+    assert actual == expected
+    assert profile["previous_runtime_sha256"] == [
+        "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba"
+    ]

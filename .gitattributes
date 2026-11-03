@@ -5,4 +5,6 @@
 *.toml text eol=lf
 *.yml text eol=lf
 tests/fixtures/** -text
+cc2_mce/runtime_data/** -text
+cc2_mce/runtime_data/*/dinput8.dll export-ignore
 *.bat text eol=crlf

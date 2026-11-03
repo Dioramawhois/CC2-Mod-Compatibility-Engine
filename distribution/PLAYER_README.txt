@@ -1,4 +1,4 @@
-CC2 ModLoader 0.4.0 beta 1
+CC2 ModLoader 0.4.0 beta 2 - client candidate
 
 English
 1. Extract this archive. Put CC2ModLoader.exe next to carrier_command.exe
@@ -12,6 +12,9 @@ English
 No Python, Git, Lua or terminal is required. Workshop downloads remain intact.
 The selected packages are combined locally; they are not uploaded anywhere.
 Unsupported native DLLs remain blocked. Existing unknown loaders are not replaced.
+This candidate includes the reviewed common CC2X SDK. Selecting supported native
+mods installs it automatically; known previous SDK upgrades are reversible.
+The SDK warning records single-player testing; multiplayer/dedicated are unverified.
 Close the game before changing the active set. Undo is available in the menu.
 
 This Windows beta includes source provenance, licenses and checksums.
@@ -35,5 +38,9 @@ Exact Git/Lua sources and toolchain are separate assets on the same release page
 
 Ничего устанавливать через терминал не нужно. Во время изменения набора
 игра должна быть закрыта. Предыдущий набор возвращается через меню.
+Проверенный общий SDK входит в приложение и устанавливается по выбору мода.
+Известная предыдущая версия обновляется обратимо; неизвестная DLL сохраняется.
+SDK проверен в одиночной игре, включая создание самолётов и save/reload того же
+каталога. Предупреждение в окне напоминает о непроверенных multiplayer/dedicated.
 Это Windows-бета существующего ModLoader. Мультиплеер аэродромов,
 интерфейс внутри игры, чистая ОС и готовая macOS-сборка здесь не подтверждены.

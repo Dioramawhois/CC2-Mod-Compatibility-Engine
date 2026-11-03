@@ -1,5 +1,27 @@
 # 02. Архитектура
 
+`sdk_runtime` отделяет runtime stage/install/recovery от resource merge; journal фиксирует backup, EXE и inode до atomic publication. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
+
+Client-candidate содержит hash-addressed runtime_data с точными DLL/provenance/
+notices и scope review. Profile разрешает только прошедшие проверку native bytes;
+optional report.runtime_review восстанавливает предупреждение GUI при reopening.
+Release publisher отдельно сохраняет соответствующие SDK/toolchain sources.
+[ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
+
+Resolver различает уникальный source id и canonical package_id нескольких версий.
+Explicit selection задаёт единственную версию для dependency resolution; GUI
+переключает source checkbox до транзакции. [ADR-0021](adr/0021-explicit-package-version-selection.md).
+
+`sdk_settings` отделяет approved defaults от исходных модов, публикует missing
+INI атомарно без overwrite и участвует в общем journal/rollback по hash/inode.
+Profile входит в engine hash, пользовательские значения — нет.
+[ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
+`module_bundles` валидирует metadata и сохраняет самостоятельные VM contexts
+внутри одного game package. Discovery фиксирует mod.xml bytes и legacy root
+inputs; workflow объединяет private records с обычным merge report и использует
+существующий transactional publisher. [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+
 **0.3.3:** classifier включает `.glsl` text и TXTR-magic `.txtr` binary; merge проверяет kinds всех вариантов перед copy/priority. UI использует исходный diagnostic needs_review и первый logical_path вместо общей заглушки. Схема не меняется. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
 
 **0.3.2:** чистый ui_feedback строит OverrideWarning из существующих report.files/status/strategy/source_sha256/mod_order. GUI хранит предупреждение активного набора отдельно от отказа нового запроса, восстанавливает из manifest и отображает после apply. Merge/JSON schema не меняются. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).

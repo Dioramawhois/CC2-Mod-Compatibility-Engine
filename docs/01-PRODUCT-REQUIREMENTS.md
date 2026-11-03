@@ -1,5 +1,26 @@
 # 01. Product Requirements (PRD)
 
+0.4.0b2 client-candidate поставляет точный проверенный SDK API 8 для выбранных
+native consumers без ручной установки. GUI постоянно сообщает границы одиночной
+приёмки; multiplayer/dedicated не заявляются. Unknown native остаётся запрещён.
+[ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
+
+Выбор новой локальной версии сохраняет identity существующего Workshop-мода:
+галочка переключает версию, отказ восстанавливает прежнюю. Две версии одного
+package не активируются вместе. [ADR-0021](adr/0021-explicit-package-version-selection.md).
+
+Обновление общего SDK допускается только с exact reviewed previous runtime; backup и Undo обязательны. Built-in reviewed runtime удовлетворяет отсутствующую cc2x.runtime dependency. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
+
+Reviewed native profiles могут автоматически создавать отсутствующие SDK INI,
+чтобы выбор мода давал эффект без ручного редактирования. Пользовательские
+settings сохраняются; неизвестный DLL не получает этого разрешения.
+[ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
+**Independent Lua modules:** один output сохраняет отдельные code roots и owner
+IDs Bridge-модулей, выбранный порядок и зависимости. Manifest/code не сливаются
+как overlays; shared game resources проходят обычный Git pipeline. Требуется
+точный reviewed runtime с bundle capability. [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+
 **0.3.3:** распознаются игровые `.glsl` как UTF-8 text/Git resources и `.txtr` с TXTR magic как binary byte copy/whole-file replacement. Неизвестные типы не разрешаются молча; отказ показывает конкретный файл/причину. Shader compiler/TXTR decoder acceptance не заявлены. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
 
 **0.3.2:** status=overridden оставляет предупреждение об участниках/ресурсе и неизвестном результате в игре, включая повторное открытие. Запуск не блокируется. Steam Required Items не считаются auto-installer. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md), [аудит Steam](19-STEAM-DISTRIBUTION-AUDIT.md).

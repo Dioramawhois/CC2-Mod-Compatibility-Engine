@@ -1,5 +1,26 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Exact previous-runtime whitelist разрешает обратимое обновление общего SDK; неизвестный dinput8.dll сохраняется. Bundled runtime проверяется по hash до dependency fallback. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
+
+Кандидат 0.4.0b2 содержит SDK API 8 и точные review-профили Hold/Modes/Brake/v46,
+проверенные вместе на Windows client 1.5.18. Warning обозначает client-only scope;
+dedicated/client offsets не смешиваются. [ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
+
+Локальная новая версия может соседствовать в списке с подписанной Workshop-
+версией того же package. Выбор переключается явно, подписка не переписывается.
+[ADR-0021](adr/0021-explicit-package-version-selection.md).
+
+SDK API config_dir соответствует `<user-data>/cc2x`; только reviewed defaults
+точного native hash могут автоматически создать отсутствующий INI. Существующие
+settings не заменяются. Это часть transactional GUI apply, не инструкция игроку
+редактировать конфиг. [ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
+Известный SDK bundle index внутри content — целевой контракт общего runtime,
+а не произвольный JSON asset. Publisher сохраняет module containers и требует
+API 8, точный reviewed runtime SHA и capability ordered-module-bundles-v1.
+Native plugins остаются в reviewed content/cc2x. Старый выпущенный runtime не
+объявляется совместимым автоматически. [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+
 **0.3.3:** read-only проверка Combined Fleet3783006839 нашла два GLSL shader и две TXTR texture по тем же logical paths в установленном rom_0. Поддержка этих resource types устранила четыре Unknown resource type blockers; текущий набор + Fleet дал plan252 resources/5 overrides/0 blockers. Пакет с Fleet не активировался нами; игровая совместимость не проверена. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
 
 **0.3.2:** [Steam-аудит](19-STEAM-DISTRIBUTION-AUDIT.md) сверяет официальный UGC контракт и текущий CC2X0.5.1: plugins из активных Workshop папок уже обнаруживаются, первоначальный game-root bootstrap всё ещё нужен. Подготовлены авторские metadata templates; публикация/саморазмещающийся installer не сделаны. Required Items и XML requires — разные уровни.

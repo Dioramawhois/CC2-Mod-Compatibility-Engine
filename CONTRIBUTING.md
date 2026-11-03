@@ -35,6 +35,17 @@ Windows package/activation/rollback и bounded game startup проверены �
 
 ## Сборка Windows exe для разработчиков
 
+Актуальный результат 0.4.0b2 — `dist/CC2ModLoader.exe`. Ниже сохранена история
+первых packaging spikes. Source checkout содержит точную reviewed SDK dependency;
+`-source.zip` исключает её DLL. При сборке из release source archive разработчик
+распаковывает matching `-sdk-runtime.zip` в корень исходников. Игроку это не нужно.
+Release publisher: `python tools/package_release.py --sdk PATH --zig PATH`.
+SDK checkout должен содержать pinned commit из runtime review и generated headers
+точного build; Zig executable должен совпадать с compiler SHA. Изменённые источники
+не подставляются: отдельный `-sdk-source.zip` соответствует всем входным build hashes,
+`-sdk-toolchain-sources.zip` содержит provider lib sources (C++/MinGW/compiler runtimes).
+Полные Git/Lua sources и toolchain также остаются в release assets.
+
 **0.2.0:** результат называется `dist/CC2Engine.exe`; приведённые ниже записи о 0.1.0 — история первого packaging spike. Bat при необходимости запускает `tools/prepare_windows_tools.py` (developer Git + Zig), затем regression suite, PyInstaller и frozen tool/GUI smoke. В exe входят hash-verified Git/Lua; пользователю устанавливать инструменты не нужно. Исходник Lua скачивается только при developer build и проверяется по официальному фиксированному SHA до extraction/compilation. Binary dependencies/notices/source references Git и Lua хранятся в сгенерированном tools_data; их integrity manifest включён в engine hash. Существующий `uv.lock` фиксирует Python dependencies; exact native tool hashes находятся в manifest.
 
 Новый сервис `workflow.py` и schema v2 публикуют игровой пакет и выполняют явную обратимую активацию; raw developer CLI output не заменяет этот путь. SDK XML: [17](docs/17-LIBRARY-SDK.md). `tools/exercise_real_pair.py` / `launch_real_pair.py` — отдельный **изменяющий игру** локальный harness конкретно разрешённого пользователем теста AI Bridge + Island Airfields, не CI и не команда для игрока. `install_local_build.py` устанавливает только этот собственный exe с backup предыдущей известной сборки. Никогда не запускать эти harness на чужой установке без соответствующего запроса.

@@ -6,6 +6,10 @@ for installation, self-build and support information.
 
 ## 0.4.0b4 - Windows beta 4 (2026-11-04)
 
+- Distribution addendum: publish the byte-identical standalone executable and
+  checksum, plus a permanent `latest-beta` EXE download that follows published
+  beta releases. Complete sources/notices and numbered archives remain available.
+
 - Automatically discover custom mods in the standard game user-data mods
   folder, including `%APPDATA%\Carrier Command 2\mods` on Windows.
 - Refresh the user-mod root on every scan, so creating it after startup

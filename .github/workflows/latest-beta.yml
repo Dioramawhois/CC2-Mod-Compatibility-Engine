@@ -1,0 +1,40 @@
+name: Publish latest Windows beta
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published numbered beta tag (for example v0.4.0b4)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cc2-modloader-latest-beta
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.repository == 'Dioramawhois/CC2-ModLoader' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.release.prerelease && github.event.release.tag_name != 'latest-beta'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify release and refresh the managed beta channel
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: python tools/publish_latest_beta.py --tag "$SOURCE_TAG"

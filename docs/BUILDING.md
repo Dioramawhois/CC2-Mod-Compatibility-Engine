@@ -55,7 +55,7 @@ for the same self-build route.
 ### Clone the release tag
 
 ```powershell
-git clone --branch v0.4.0b4 --depth 1 https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine.git
+git clone --branch v0.4.0b4 --depth 1 https://github.com/Dioramawhois/CC2-ModLoader.git
 Set-Location CC2-Mod-Compatibility-Engine
 ```
 
@@ -65,7 +65,7 @@ require initializing Git submodules.
 
 ### Download the release source ZIP
 
-From the [same release page](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b4),
+From the [same release page](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b4),
 download **CC2ModLoader-0.4.0b4-source.zip**. Extract it, open its extracted root
 folder, and open PowerShell there. The root contains `pyproject.toml`,
 `build_windows.bat`, `cc2_mce`, `tests` and `tools`.
@@ -221,12 +221,18 @@ verified executable, passing regression metadata, exact dependency sources and
 the pinned SDK/compiler inputs. A successful personal build does not grant
 permission to bypass branch protection or replace an official release.
 
+The asset set includes the standalone `CC2ModLoader.exe` and its `.sha256` as
+well as the complete Windows ZIP. Publishing a numbered beta runs the serialized
+latest-beta workflow, which verifies the versioned ZIP and mirrors the complete
+release into the permanent download channel. A manual workflow dispatch accepts
+an existing numbered beta. See [ADR-0027](adr/0027-standalone-exe-and-rolling-beta-download.md).
+
 ## Rebuilding native dependencies
 
 The normal application build packages the reviewed SDK DLL; it does not compile
 that C/C++ dependency from its source. If you also want to rebuild the SDK, use
 the corresponding `-sdk-source.zip` and `-sdk-toolchain-sources.zip` assets and
-the [SDK project's build instructions](https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/2eecbd93c3555fed9a2b3f25e5b9c91abb55196f).
+the [SDK project's build instructions](https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/8bafe71a9d43d8ed31e9eab1955d90d85f91b157).
 The exact native source revision, compiler hash and input hashes are recorded
 in its `dinput8.build.json`.
 

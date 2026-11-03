@@ -1,5 +1,7 @@
 # 17. SDK: моды и библиотеки в Steam Workshop
 
+Dependency cc2x.runtime может удовлетворяться exact reviewed installed/bundled runtime, если source provider отсутствует; source wrappers и их hashes сохраняются. Подробности и rollback: [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
+
 Для native consumers opt-in metadata не разрешает произвольную запись настроек.
 Только engine profile точного reviewed DLL hash может задать missing INI defaults
 в SDK config namespace. Existing user preferences сохраняются; все изменения

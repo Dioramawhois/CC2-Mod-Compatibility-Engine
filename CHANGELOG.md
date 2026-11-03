@@ -1,5 +1,7 @@
 ## Unreleased — общий SDK и независимые Lua-модули
 
+- Journaled exact-runtime upgrade and Undo, approved previous-runtime inputs and built-in SDK dependency fallback; unknown loaders remain protected (ADR-0019).
+
 - Отсутствующие INI approved native consumers создаются автоматически по точному
   hash-профилю; существующие настройки сохраняются. Creation, interruption и Undo
   используют inode/hash journal без overwrite. Исправлен повторный apply, который

@@ -18,7 +18,7 @@ from xml.etree import ElementTree as ET
 
 from jsonschema import Draft202012Validator
 
-from cc2_mce import APP_NAME, sdk_settings
+from cc2_mce import APP_NAME, sdk_runtime, sdk_settings
 from cc2_mce.discovery import ModRef, Scan, fingerprint, snapshot_unchanged
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import (
@@ -39,6 +39,7 @@ from cc2_mce.reports import engine_hash
 from cc2_mce.toolchain import Toolchain
 
 OUTPUT_FOLDER = "CC2-MCE"
+RUNTIME_DATA = Path(__file__).parent / "runtime_data"
 
 
 @dataclass(frozen=True)
@@ -85,7 +86,9 @@ def review_profile(game: Installation) -> dict[str, Any]:
     }
 
 
-def resolve_selection(scan: Scan, selected: list[str]) -> tuple[ModRef, ...]:
+def resolve_selection(
+    scan: Scan, selected: list[str], *, provided_dependencies: frozenset[str] = frozenset()
+) -> tuple[ModRef, ...]:
     by_id: dict[str, ModRef] = {}
     for mod in scan.mods:
         for key in {mod.id, mod.package_id or mod.id}:
@@ -95,9 +98,11 @@ def resolve_selection(scan: Scan, selected: list[str]) -> tuple[ModRef, ...]:
     result: list[ModRef] = []
     visiting: set[str] = set()
 
-    def visit(key: str) -> None:
+    def visit(key: str, *, dependency: bool = False) -> None:
         mod = by_id.get(key)
         if mod is None:
+            if dependency and key in provided_dependencies:
+                return
             raise InputError(f"Не найдена зависимость: {key}")
         if mod.id in visiting:
             raise InputError("Циклическая зависимость библиотек")
@@ -106,8 +111,8 @@ def resolve_selection(scan: Scan, selected: list[str]) -> tuple[ModRef, ...]:
         if len(visiting) + len(result) >= 32:
             raise InputError("Набор с зависимостями превышает 32 пакета")
         visiting.add(mod.id)
-        for dependency in mod.dependencies:
-            visit(dependency)
+        for required in mod.dependencies:
+            visit(required, dependency=True)
         visiting.remove(mod.id)
         result.append(mod)
 
@@ -118,12 +123,19 @@ def resolve_selection(scan: Scan, selected: list[str]) -> tuple[ModRef, ...]:
     return tuple(result)
 
 
-def _runtime(game: Installation, expected: str) -> Path | None:
+def _runtime(game: Installation, expected: str, previous: list[str] | None = None) -> Path | None:
     installed = game.root / "dinput8.dll"
     if installed.exists() or installed.is_symlink():
-        if digest(_read(installed, game.root)) != expected:
+        installed_hash = digest(_read(installed, game.root))
+        if installed_hash == expected:
+            return installed
+        if installed_hash not in (previous or []):
             raise InputError("В игре другой dinput8.dll. Он не будет перезаписан.")
-        return installed
+    bundled = RUNTIME_DATA / expected / "dinput8.dll"
+    if bundled.exists():
+        if digest(_read(bundled, input_root(bundled.parent))) != expected:
+            raise InputError("Bundled SDK runtime failed integrity verification")
+        return bundled
     libraries = game.libraries_dir
     if not libraries.exists():
         return None
@@ -187,7 +199,14 @@ def analyze(
     actual_game_hash = digest(_read(game.executable, input_root(game.executable.parent)))
     if actual_game_hash != profile["game_sha256"]:
         raise InputError("Сборка игры изменилась")
-    chosen = resolve_selection(scan, selected)
+    provided: frozenset[str] = frozenset()
+    if profile.get("runtime_sha256") and any("cc2x.runtime" in m.dependencies for m in scan.mods):
+        try:
+            if _runtime(game, profile["runtime_sha256"], profile.get("previous_runtime_sha256")):
+                provided = frozenset({"cc2x.runtime"})
+        except InputError:
+            pass  # Never satisfy a missing dependency using an unknown installed DLL.
+    chosen = resolve_selection(scan, selected, provided_dependencies=provided)
     groups: dict[str, list[tuple[ModRef, Any]]] = defaultdict(list)
     bundle = prepare_modules(chosen, profile, luac=str(tools.luac) if tools else None)
     blockers: list[dict[str, str]] = list(bundle.blockers)
@@ -204,13 +223,16 @@ def analyze(
     native_names: dict[str, str] = {}
     config_defaults: dict[str, bytes] = {}
     config_providers: dict[str, set[str]] = defaultdict(set)
+    runtime_inputs: dict[str, str] = {}
     baseline_budget = Budget(Limits())
     for key, variants in sorted(groups.items()):
         logical = variants[0][1].logical_path
         source_hashes = {mod.id: item.sha256 for mod, item in variants}
         if logical.casefold() == "dinput8.dll":
             needs_runtime = True
-            if set(source_hashes.values()) != {profile.get("runtime_sha256")}:
+            runtime_inputs.update(source_hashes)
+            allowed = {profile.get("runtime_sha256"), *profile.get("previous_runtime_sha256", [])}
+            if not set(source_hashes.values()).issubset(allowed):
                 blockers.append(
                     {
                         "code": "runtime_conflict",
@@ -296,7 +318,7 @@ def analyze(
         expected = profile.get("runtime_sha256")
         if expected:
             try:
-                runtime = _runtime(game, expected)
+                runtime = _runtime(game, expected, profile.get("previous_runtime_sha256"))
             except InputError as exc:
                 blockers.append({"code": "runtime_conflict", "message": str(exc)})
         if runtime is None:
@@ -340,6 +362,8 @@ def analyze(
     }
     if bundle.modules:
         report["modules"] = bundle.modules
+    if runtime_inputs:
+        report["runtime_inputs"] = runtime_inputs
     if config_defaults:
         report["config_defaults"] = [
             {
@@ -506,6 +530,7 @@ def _recover_pending(user: Path) -> None:
         raise InputError(
             "Настройки изменились после сбоя; автоматическое восстановление остановлено"
         )
+    sdk_runtime.rollback(journal.get("runtime_change"), state_dir, _replace_checked)
     if destination.exists():
         _verified_package(destination)
         current_hash = digest(_read(destination / "mce-manifest.json", destination))
@@ -606,7 +631,6 @@ def _apply_plan_locked(
         raise
     if game_running() or not snapshot_unchanged(plan.scan):
         raise InputError("Игра запущена или входы изменились; пакет не активирован")
-    installed_runtime = False
     runtime_target = plan.game.root / "dinput8.dll"
     active = xml.find("active_mod_folders")
     assert active is not None
@@ -665,6 +689,9 @@ def _apply_plan_locked(
         return destination
     backup_name = f"mods-{uuid.uuid4().hex}.xml"
     config_created = sdk_settings.stage(user, state_dir, plan.config_defaults, token, _write_new)
+    runtime_change = sdk_runtime.stage(
+        plan.game, plan.runtime_source, plan.profile, state_dir, token, _write_new
+    )
     _write_new(state_dir / backup_name, old)
     updated = {
         "owner": "cc2-mce",
@@ -672,7 +699,8 @@ def _apply_plan_locked(
         "backup_sha256": digest(old),
         "applied_sha256": digest(new),
         "package": str(destination),
-        "runtime_created": installed_runtime,
+        "runtime_created": runtime_change is not None and runtime_change["backup"] is None,
+        "runtime_change": runtime_change,
         "runtime_target": str(runtime_target),
         "runtime_sha256": plan.report["runtime_sha256"],
         "engine_sha256": plan.report["engine_sha256"],
@@ -707,18 +735,11 @@ def _apply_plan_locked(
         else:
             _write_new(state_file, encoded)
         sdk_settings.install(user, state_dir, config_created)
-        if plan.runtime_source is not None:
-            if runtime_target.exists():
-                if digest(_read(runtime_target, plan.game.root)) != plan.report["runtime_sha256"]:
-                    raise InputError("Установленный загрузчик изменился")
-            else:
-                source_root = input_root(plan.runtime_source.parent)
-                data = _read(plan.runtime_source, source_root)
-                if digest(data) != plan.report["runtime_sha256"]:
-                    raise InputError("Загрузчик изменился после проверки")
-                _write_new(runtime_target, data)
-                installed_runtime = True
-                updated["runtime_created"] = True
+        sdk_runtime.install(runtime_change)
+        if plan.runtime_source is not None and (
+            digest(_read(runtime_target, plan.game.root)) != plan.report["runtime_sha256"]
+        ):
+            raise InputError("Установленный загрузчик изменился")
         if game_running():
             raise InputError("Игра запущена; применение остановлено")
         if (
@@ -730,12 +751,6 @@ def _apply_plan_locked(
         _replace_checked(user / "mods.xml", new, old)
         pending.unlink()
     except (OSError, InputError):
-        if (
-            installed_runtime
-            and runtime_target.exists()
-            and digest(_read(runtime_target, plan.game.root)) == plan.report["runtime_sha256"]
-        ):
-            runtime_target.unlink()
         _recover_pending(user)
         raise
     sdk_settings.cleanup(user, state_dir, config_created, remove_targets=False)

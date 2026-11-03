@@ -1,5 +1,7 @@
 # 02. Архитектура
 
+`sdk_runtime` отделяет runtime stage/install/recovery от resource merge; journal фиксирует backup, EXE и inode до atomic publication. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
+
 `sdk_settings` отделяет approved defaults от исходных модов, публикует missing
 INI атомарно без overwrite и участвует в общем journal/rollback по hash/inode.
 Profile входит в engine hash, пользовательские значения — нет.

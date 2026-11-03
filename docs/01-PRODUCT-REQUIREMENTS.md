@@ -1,5 +1,7 @@
 # 01. Product Requirements (PRD)
 
+Обновление общего SDK допускается только с exact reviewed previous runtime; backup и Undo обязательны. Built-in reviewed runtime удовлетворяет отсутствующую cc2x.runtime dependency. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
+
 Reviewed native profiles могут автоматически создавать отсутствующие SDK INI,
 чтобы выбор мода давал эффект без ручного редактирования. Пользовательские
 settings сохраняются; неизвестный DLL не получает этого разрешения.

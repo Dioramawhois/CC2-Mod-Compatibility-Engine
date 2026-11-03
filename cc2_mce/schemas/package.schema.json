@@ -181,6 +181,10 @@
         }
       ]
     },
+    "runtime_inputs": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/hash"}
+    },
     "runtime_sha256": {
       "anyOf": [
         {

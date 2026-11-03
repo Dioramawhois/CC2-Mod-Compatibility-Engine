@@ -1,5 +1,7 @@
 # 06. Стратегия тестирования и Definition of Done
 
+Runtime upgrade fixtures проверяют initial install/upgrade/Undo, failure/crash recovery, unknown/external writers, old wrappers и corrupt bundle; native bytes не исполняются. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
+
 SDK settings: fixtures покрывают create/undo/preserve, ordinary failure и
 interruption/recovery, writer race с одинаковыми bytes, path scope, удалённые
 settings/runtime и conflicting approved defaults. Проверяется реальная файловая

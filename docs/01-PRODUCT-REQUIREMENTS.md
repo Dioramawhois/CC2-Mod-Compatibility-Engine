@@ -1,5 +1,11 @@
 # 01. Product Requirements (PRD)
 
+User feedback 2026-11-04: discover custom packages in the game's standard
+user-data `mods` folder automatically, alongside Workshop and game-folder
+collections. Refresh this root on every scan, including creation after startup.
+Keep newly discovered mods unchecked and exclude owned generated output.
+See ADR-0026; package/report schemas and merge rules are unchanged.
+
 Owner update 2026-11-03: launch the local game executable directly, reanalyze
 the saved set on every startup, and activate only its generated package. The
 generated menu makes mod rows gray/read-only; changes stay in ModLoader.

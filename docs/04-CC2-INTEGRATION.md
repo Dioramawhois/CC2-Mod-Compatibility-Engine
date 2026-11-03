@@ -1,5 +1,11 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Current GUI discovery includes `%APPDATA%\Carrier Command 2\mods` on Windows
+and `~/Library/Application Support/Carrier Command 2/mods` on macOS, alongside
+Workshop, game-folder collections and user-added roots. This is read-in-place
+discovery, with no author-file copies or automatic selection. The owned
+`CC2-MCE` output is excluded. See ADR-0026.
+
 ADR-0025 replaces Steam URL launch with the local executable and game working
 directory. Startup refresh restores only the verified remembered selection.
 Its activation enables exactly the generated package; its menu resource

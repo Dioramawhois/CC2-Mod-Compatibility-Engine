@@ -19,8 +19,8 @@ this Windows release. See [the current scope](../README.md#support-and-validatio
 
 ## 1. Download the application
 
-Open the [0.4.0 beta 3 release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b3)
-and download **CC2ModLoader-0.4.0b3-windows-x64.zip** from Assets.
+Open the [0.4.0 beta 4 release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b4)
+and download **CC2ModLoader-0.4.0b4-windows-x64.zip** from Assets.
 
 Choose the Windows ZIP for this route. GitHub's automatic **Source code** links
 and the separate `-source.zip` are for developers; they are not the application.
@@ -60,7 +60,27 @@ Subscribed Workshop packages are discovered in the Steam libraries. ModLoader
 reads them in place; you do not copy subscribed mods into a second folder.
 Finish Steam downloads before selecting the packages.
 
-For local packages, use this layout:
+On Windows, custom mods in the game's standard user-data folder are discovered
+automatically:
+
+```text
+%APPDATA%\Carrier Command 2\mods\my-mod\
+  mod.xml
+  content\
+    ...
+```
+
+Paste `%APPDATA%\Carrier Command 2\mods` into Windows Explorer's address bar to
+open it. Keep each mod in its own folder with the layout above. No manual folder
+selection is needed for this location. The next scan also detects it if you
+create the `mods` folder after opening ModLoader. New mods appear unchecked;
+select the ones you want to include.
+
+On macOS the equivalent scanned user location is
+`~/Library/Application Support/Carrier Command 2/mods`. This discovery support
+does not certify a packaged macOS app or native SDK integration.
+
+Game-folder packages remain supported with this layout:
 
 ```text
 Carrier Command 2/

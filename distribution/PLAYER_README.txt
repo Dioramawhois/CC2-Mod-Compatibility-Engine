@@ -1,9 +1,9 @@
-CC2 ModLoader 0.4.0 beta 3 - Windows x64
+CC2 ModLoader 0.4.0 beta 4 - Windows x64
 ======================================
 
 INSTALL THE READY APPLICATION
 
-1. Extract CC2ModLoader-0.4.0b3-windows-x64.zip.
+1. Extract CC2ModLoader-0.4.0b4-windows-x64.zip.
 2. In Steam, right-click Carrier Command 2 > Manage > Browse local files.
 3. Put CC2ModLoader.exe beside carrier_command.exe and open it.
 4. Select your mods and libraries. Each checkbox change checks, merges and
@@ -16,10 +16,10 @@ The build creates no new Workshop subscription or separate gameplay mod release.
 
 BUILD IT YOURSELF INSTEAD
 
-Application source is a separate asset: CC2ModLoader-0.4.0b3-source.zip.
-You can also clone release tag v0.4.0b3. The complete Windows source-build guide,
+Application source is a separate asset: CC2ModLoader-0.4.0b4-source.zip.
+You can also clone release tag v0.4.0b4. The complete Windows source-build guide,
 prerequisites, dependency downloads and offline options are here:
-https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/blob/v0.4.0b3/docs/BUILDING.md
+https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/blob/v0.4.0b4/docs/BUILDING.md
 
 Both routes produce the same graphical application. The source archive itself
 is not the executable. SDK and third-party tool source archives are separate
@@ -89,7 +89,7 @@ machine acceptance are not certified by this release.
 Documentation and issues:
 https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine
 Installation guide:
-https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/blob/v0.4.0b3/docs/INSTALLATION.md
+https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/blob/v0.4.0b4/docs/INSTALLATION.md
 
 When reporting a problem include app/game versions, selected mods, load order,
 reproduction steps and an exported GUI report. Review reports before sharing.

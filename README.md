@@ -4,8 +4,8 @@ Combine selected Carrier Command 2 mods into one local game mod, using a desktop
 interface and real Git three-way merging. Choose mods with checkboxes, arrange
 patches in **Load order**, and launch the prepared set from the same window.
 
-**Current release: 0.4.0 beta 3 for Windows x64.**
-[Download the release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b3)
+**Current release: 0.4.0 beta 4 for Windows x64.**
+[Download the release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b4)
 | [Installation and use](docs/INSTALLATION.md)
 | [Build from source](docs/BUILDING.md)
 | [Documentation](docs/README.md)
@@ -18,8 +18,8 @@ native code, invalid syntax and unsafe paths.
 
 | Route | What to download | What you need |
 | --- | --- | --- |
-| **1. Use the ready executable** - recommended for players | [CC2ModLoader-0.4.0b3-windows-x64.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b3/CC2ModLoader-0.4.0b3-windows-x64.zip) | Windows x64 and an installed copy of Carrier Command 2. No Python, Git, Lua or terminal setup. |
-| **2. Build the application yourself** | [CC2ModLoader-0.4.0b3-source.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b3/CC2ModLoader-0.4.0b3-source.zip), or clone tag `v0.4.0b3` | A Windows developer environment with Python 3.12+ and Git. The build prepares its pinned dependencies. Follow the [complete build guide](docs/BUILDING.md). |
+| **1. Use the ready executable** - recommended for players | [CC2ModLoader-0.4.0b4-windows-x64.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b4/CC2ModLoader-0.4.0b4-windows-x64.zip) | Windows x64 and an installed copy of Carrier Command 2. No Python, Git, Lua or terminal setup. |
+| **2. Build the application yourself** | [CC2ModLoader-0.4.0b4-source.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b4/CC2ModLoader-0.4.0b4-source.zip), or clone tag `v0.4.0b4` | A Windows developer environment with Python 3.12+ and Git. The build prepares its pinned dependencies. Follow the [complete build guide](docs/BUILDING.md). |
 
 Both routes produce **CC2ModLoader.exe** and lead to the same GUI workflow.
 GitHub's automatic Source code ZIP is not the ready application. Application
@@ -44,7 +44,9 @@ undo and troubleshooting, read [Installation and use](docs/INSTALLATION.md).
 ## What ModLoader does
 
 - Discovers Workshop subscriptions across Steam libraries and reads them in
-  place, alongside local `mods` and `libraries` folders.
+  place, alongside custom mods in `%APPDATA%\Carrier Command 2\mods` on Windows
+  and the game's local `mods` and `libraries` folders. Newly created user-mod
+  folders are picked up by the next scan without manual folder selection.
 - Rebuilds one fixed generated mod after checkbox or load-order changes and
   refreshes the saved selection on every startup, including Workshop updates.
 - Starts the local game executable with the generated build already enabled.

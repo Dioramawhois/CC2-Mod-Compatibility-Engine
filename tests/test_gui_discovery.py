@@ -57,10 +57,15 @@ def test_detected_game_shows_paths_without_inventing_baseline(window, tmp_path: 
 
 
 def test_workshop_and_local_mod_names_show_without_moving_inputs(window, tmp_path: Path) -> None:
+    from cc2_mce.gui import game_user_dir
+
     root = game(tmp_path / "CC2")
     workshop = tmp_path / "workshop/1489630"
     make_mod(workshop, "12345", {"a.txt": b"workshop"})
     make_mod(root / "mods", "local", {"b.txt": b"local"})
+    user_mod = make_mod(game_user_dir() / "mods", "custom", {"c.txt": b"user local"})
+    generated = make_mod(game_user_dir() / "mods", "CC2-MCE", {"result.txt": b"generated"})
+    (generated / "mce-manifest.json").write_text('{"owner":"cc2-mce"}', encoding="utf-8")
     installation = inspect_game(root)
     assert installation is not None
     window.apply_installations(Installations((installation,), (workshop,), ()))
@@ -68,11 +73,41 @@ def test_workshop_and_local_mod_names_show_without_moving_inputs(window, tmp_pat
     from cc2_mce.discovery import discover
 
     window.display_scan(discover(window.mod_roots))
-    assert set(window.vars) == {"12345", "local"}
+    assert set(window.vars) == {"12345", "local", "custom"}
     labels = [str(child.cget("text")) for child in window.checks.values()]
     assert any("Synthetic" in label for label in labels)
     assert any("Workshop" in value.get() for value in window.row_status.values())
     assert (workshop / "12345/content/a.txt").read_bytes() == b"workshop"
+    assert (user_mod / "content/c.txt").read_bytes() == b"user local"
+    assert (generated / "content/result.txt").read_bytes() == b"generated"
+
+
+def test_passive_scan_finds_new_user_mod_without_changing_selection(window, tmp_path: Path) -> None:
+    from cc2_mce.gui import game_user_dir
+
+    root = game(tmp_path / "CC2")
+    workshop = tmp_path / "workshop/1489630"
+    selected = make_mod(workshop, "12345", {"a.txt": b"selected workshop"})
+    user = game_user_dir()
+    (user / "mods.xml").write_text(
+        f'<data><active_mod_folders><path value="{selected}"/></active_mod_folders></data>',
+        encoding="utf-8",
+    )
+    installation = inspect_game(root)
+    assert installation is not None
+    window.apply_installations(Installations((installation,), (workshop,), ()))
+    window.scan_sources(rebuild_after_scan=False)
+    pump_until(window, lambda: window.scan is not None and not window.busy)
+    assert window.vars["12345"].get()
+    make_mod(user / "mods", "new-custom", {"b.txt": b"new user mod"})
+
+    window.scan_sources(preserve_selection=True)
+    pump_until(window, lambda: "new-custom" in window.vars and not window.busy)
+
+    assert window.vars["12345"].get()
+    assert not window.vars["new-custom"].get()
+    assert window._auto_timer is None
+    assert (selected / "content/a.txt").read_bytes() == b"selected workshop"
 
 
 def test_windows_portable_requires_exe_beside_game(window, tmp_path: Path) -> None:

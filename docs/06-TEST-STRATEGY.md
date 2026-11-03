@@ -1,5 +1,10 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0026 GUI fixtures cover Workshop/game-folder/user-data mods together,
+exclusion of the owned generated output, and a user-data `mods` folder created
+after startup. Passive discovery preserves the active selection, leaves new
+mods unchecked and does not queue a rebuild merely for an unselected mod.
+
 ADR-0025 regressions cover direct executable spawning, changed activation/game/
 payload refusal, forced startup analysis, new/removed Workshop files, remembered
 selection recovery, and generated-menu hashing/syntax/rollback. The owned Lua

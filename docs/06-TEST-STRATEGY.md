@@ -6,6 +6,12 @@ selection recovery, and generated-menu hashing/syntax/rollback. The owned Lua
 UI fixture checks disabled rows/buttons and stale keyboard/dialog actions;
 no user mod Lua is executed by it. Real game-menu checks remain separate.
 
+CI builds the official Lua 5.3.6 source archive with its published size/SHA-256
+using the runner's C compiler. All Windows/macOS jobs execute the owned Lua UI
+contract and syntax fixtures with this interpreter/validator. A source checkout
+without a validator skips those optional local fixtures explicitly; the frozen
+Windows build has its separately pinned shipped validator.
+
 Version-selection fixtures: source choice, duplicate selection refusal,
 dependency preference/ambiguity, ID shadow, fixed-output switch/Undo и реальные
 Tk checkbox success/rejection. Не требуется менять Workshop для теста обновления.

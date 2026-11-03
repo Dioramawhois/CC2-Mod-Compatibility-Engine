@@ -46,9 +46,12 @@ def test_owned_menu_adapter_is_hashed_validated_and_reversible(tmp_path: Path, e
     original.write_bytes(source)
     luac = (
         shutil.which("luac5.3")
+        or shutil.which("luac53")
         or shutil.which("luac")
         or str(Path(__file__).parents[1] / "cc2_mce/tools_data/lua/luac.exe")
     )
+    if not Path(luac).is_file():
+        pytest.skip("Lua 5.3 validator unavailable; CI builds the pinned interpreter and validator")
     tools = Toolchain(Path(shutil.which("git") or "git"), Path(luac), digest(b"fixture"))
     scan = discover([tmp_path / "workshop"])
     plan = analyze(game, scan, ["a"], profile=profile, tools=tools)

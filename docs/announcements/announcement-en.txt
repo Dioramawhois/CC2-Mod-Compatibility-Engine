@@ -1,0 +1,17 @@
+I'm sharing CC2 ModLoader, a tool we've been building to use Carrier Command 2 mods together when they edit the same game files.
+
+You choose the mods with checkboxes, and the loader builds one combined mod from them. Separate edits can be kept together. If changes overlap, the later patch takes priority by default and the loader shows a warning. A prepared build still needs checking in game; it can't make every combination compatible.
+
+To try it:
+1. Download CC2ModLoader.exe and put it beside carrier_command.exe.
+2. Open it with the game closed, tick your mods and adjust Load order if needed.
+3. Wait for Ready, read any warnings and click Launch game.
+
+It finds Workshop subscriptions and local AppData mods automatically, and rebuilds the selected set after mod updates when the game is closed. The screenshots show selection, patch order, libraries and an intentional conflict example.
+
+It's a Windows x64 beta, and the code is open under GPL-3.0-or-later.
+
+EXE: https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe
+Screenshots, instructions and source: https://github.com/Dioramawhois/CC2-ModLoader
+
+If you try it with your usual mods, I'd be interested in how it goes. For a problem, the versions, mod order and an exported report help us reproduce it.

@@ -1,105 +1,175 @@
-# CC2 ModLoader — CC2 Mod Compatibility Engine
+# CC2 ModLoader
 
-[Русский](#русский) · [English](#english)
+Combine selected Carrier Command 2 mods into one local game mod, using a desktop
+interface and real Git three-way merging. Choose mods with checkboxes, arrange
+patches in **Load order**, and launch the prepared set from the same window.
 
-Ветка разработки готовит **0.4.0b2**: независимые Lua-модули в одной сборке,
-автоматические настройки проверенных native-модов и обратимое обновление SDK.
-Это кандидат следующей версии; опубликованная beta ниже остаётся 0.4.0b1.
-Кандидат включает точный SDK API 8 и профили прошедших одиночную проверку
-Hold/Modes/Brake/Island Airfields v46. Мультиплеер и dedicated ещё не проверены;
-GUI показывает это предупреждение у такого набора. См. ADR-0020.
-[Объединение SDK и текущие проверки](docs/22-UNIFIED-SDK-AND-MOD-SPLIT.md).
+**Current release: 0.4.0 beta 2 for Windows x64.**
+[Download the release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b2)
+| [Installation and use](docs/INSTALLATION.md)
+| [Build from source](docs/BUILDING.md)
+| [Documentation](docs/README.md)
 
-## Русский
+A successful file merge does not guarantee that arbitrary gameplay mods work
+together. The application reports overwritten changes and refuses unsupported
+native code, invalid syntax and unsafe paths.
 
-**0.4.0b1 — открытая Windows beta: CC2 ModLoader с порядком патчей, предупреждением о перезаписи и офлайн-паком 14 языков.** По умолчанию используется язык системы. Пересекающиеся изменения получают приоритет по выбранному порядку, независимые правки сохраняются через настоящий Git. Пакеты собираются в одну постоянную папку; имя в игре содержит ModLoader и названия выбранных модов. Поддержаны игровые `.glsl` shaders и `.txtr` textures; неизвестный формат теперь объясняется с конкретным путём. Полная игровая совместимость произвольных модов не гарантируется.
+## Choose your installation route
 
-### Как пользоваться
+| Route | What to download | What you need |
+| --- | --- | --- |
+| **1. Use the ready executable** - recommended for players | [CC2ModLoader-0.4.0b2-windows-x64.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b2/CC2ModLoader-0.4.0b2-windows-x64.zip) | Windows x64 and an installed copy of Carrier Command 2. No Python, Git, Lua or terminal setup. |
+| **2. Build the application yourself** | [CC2ModLoader-0.4.0b2-source.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b2/CC2ModLoader-0.4.0b2-source.zip), or clone tag `v0.4.0b2` | A Windows developer environment with Python 3.12+ and Git. The build prepares its pinned dependencies. Follow the [complete build guide](docs/BUILDING.md). |
 
-1. Откройте `CC2ModLoader.exe`. Программа найдёт игру через Steam; Windows portable попросит поместить exe рядом с `carrier_command.exe`, если он запущен из другой папки.
-2. Отметьте нужные моды. Workshop читается на месте, локальные пакеты — из `mods` и `libraries` рядом с игрой. Эти папки создаются автоматически при первом запуске. Дополнительные папки, выбор игры и расположение файлов доступны через **«Меню»**.
-3. Проверка, разрешение зависимостей, слияние и включение происходят **сразу по галочке**, без дополнительных кнопок и подтверждений. Дождитесь строки **«Готово. Можно запускать игру»**. Верхняя строка показывает фактически включённые моды.
-   Если в списке есть локальная и Workshop-версия одного мода, галочка переключает
-   версию: вместе они не включаются. При отказе возвращается прежняя версия.
-4. Во вкладке **«Порядок загрузки»** перетащите моды или используйте **Alt+↑ / Alt+↓**. Поздние патчи размещаются ниже. Любое изменение порядка автоматически пересобирает файлы и сохраняется. При известном оригинале Git сохраняет независимые правки и отдаёт спорные участки позднему патчу. Без оригинала или для разных binary ресурсов поздний файл заменяет ранний целиком. Оранжевое предупреждение называет участников/ресурс и остаётся у активного набора: результат в игре неизвестен. Все файлы и тип замены — в подробностях меню. Строгую проверку можно вернуть, отключив **«Приоритет поздних патчей»** в меню.
-5. Нажмите **«Запустить игру»**. Для следующих открытий включите **«Меню → Запускать игру при открытии»**: приложение сначала подготовит выбранный набор и затем запустит игру. Если изменения отклонены, автозапуск отменяется. Предупреждение о перезаписи остаётся в открытом окне. Для возврата предыдущего набора используйте **«Меню → Вернуть предыдущий набор»** при закрытой игре; восстанавливаются и содержимое сборки, и активация. Диагностика и экспорт отчёта также доступны в меню.
+Both routes produce **CC2ModLoader.exe** and lead to the same GUI workflow.
+GitHub's automatic Source code ZIP is not the ready application. Application
+source, SDK source and third-party tool source are separate release assets;
+choose the application source ZIP when building ModLoader.
 
-Python, Git, Lua, терминал и ручные manifests игроку не нужны. Проверенные Git и Lua 5.3 входят в exe. Reports экспортируются только по вашему действию.
+## Quick start with the executable
 
-Если игра открыта, изменения применятся после её закрытия. При ошибке синтаксиса/неподдержанном DLL/другом окончательном отказе галочки и порядок возвращаются к рабочему набору, который можно запустить. Обязательные зависимости объясняют повторное включение. Путь проблемного файла доступен через меню подробностей.
+1. Download and extract the Windows ZIP from the release page.
+2. In Steam, right-click **Carrier Command 2 > Manage > Browse local files**.
+3. Put **CC2ModLoader.exe** beside **carrier_command.exe** and open it.
+4. Select your mods and libraries. The app checks, merges and activates the
+   selection automatically; there are no separate Check or Apply buttons.
+5. Wait for **Ready**, review any override warning, then select **Launch game**.
 
-**Язык:** по умолчанию язык системы. Включены русский, английский, немецкий, французский, испанский, португальский (Бразилия), итальянский, польский, турецкий, украинский, упрощённый/традиционный китайский, японский и корейский. Неподдержанная локаль использует English. Изменить выбор можно через **«Меню → Язык»**. Переводы входят в exe и работают без интернета; базовые названия элементов выверены, остальные сообщения имеют машинный перевод с проверкой параметров. Настройка сохраняется; смена языка переносит ожидающий выбор/порядок. Выбранная вкладка крупнее соседних и выделена жирным.
+The game must be closed while the active set changes. If it is running, the
+application waits and applies the pending selection after it closes.
 
-### Каталоги и загрузчик
+For local mod layouts, Steam discovery, multiple game installations, updates,
+undo and troubleshooting, read [Installation and use](docs/INSTALLATION.md).
+
+## What ModLoader does
+
+- Discovers Workshop subscriptions across Steam libraries and reads them in
+  place, alongside local `mods` and `libraries` folders.
+- Rebuilds one fixed generated mod after checkbox or load-order changes.
+- Uses installed originals as the common base for real Git three-way text
+  merging, followed by the applicable syntax/format checks.
+- Preserves independent Lua modules when supported by the reviewed runtime,
+  instead of concatenating unrelated scripts into one Lua context.
+- Resolves declared dependencies and lets you select one Workshop/local version
+  of the same package without rewriting the subscribed copy.
+- Installs or upgrades the exact supported shared runtime when a selected mod
+  needs it, using recorded backups and recovery. Unknown loaders are preserved.
+- Keeps the previous applied set when a new selection is rejected and restores
+  the actual working checkboxes/order.
+- Offers **Menu > Restore previous selection...** for the recorded previous set.
+
+The result is a separate local mod named **CC2 ModLoader: <selected mod names>**.
+Source mods, Workshop downloads, vanilla game resources and the game executable
+are not rewritten. ModLoader manages its own generated output, activation
+configuration and supported runtime/settings through its recorded workflow.
+
+## Load order and conflicts
+
+**Load order** is the merge/patch order. Drag selected packages, or use
+**Alt+Up/Down**; every change rebuilds automatically and is remembered.
+
+**Menu > Later patches take priority** is enabled by default:
+
+- Independent text edits are merged when possible.
+- Overlapping text portions favor the later patch. Earlier unrelated edits are
+  retained where the merge permits it.
+- If an original data file is unavailable, the later file replaces the previous
+  one as a reported whole-file replacement; no baseline is invented.
+- Supported binary-resource collisions use explicit whole-file replacement.
+  DLLs are never merged.
+
+An orange override notice names the participants and affected file and states
+that the in-game result is unknown. It remains available after reopening the
+app. Read **Menu > Problem details...** before relying on the result.
+
+Turn off **Later patches take priority** to reject unresolved conflicts instead.
+Native compatibility, path, syntax and transaction checks apply in both modes.
+
+## Folders and local packages
 
 ```text
-Carrier Command 2/
+Carrier Command 2 installation/
   carrier_command.exe
   CC2ModLoader.exe
-  dinput8.dll                 # установленный проверенный runtime, если нужен
-  mods/<mod-id>/content/...
-  libraries/<package>/mod.xml
-  libraries/<package>/content/...
+  mods/<mod-package>/mod.xml
+  mods/<mod-package>/content/...
+  libraries/<library-package>/mod.xml
+  libraries/<library-package>/content/...
+
+Carrier Command 2 user data/
+  mods/CC2-MCE/               # the one generated game mod
+  cc2-mce/                   # app preferences, backups and recovery data
 ```
 
-В кандидате 0.4.0b2 проверенный общий SDK входит в приложение: отдельная ручная
-установка DLL не нужна. Он устанавливается при выборе требующего его мода;
-известная предыдущая версия обновляется обратимо. Предоставленный dinput8.dll
-также может находиться в `libraries/SDK/content/dinput8.dll`: поддержанный источник
-сохраняется. Неизвестный уже установленный dinput8.dll не перезаписывается.
+The app prepares its `mods` and `libraries` input folders automatically for the
+selected game. Use **Menu > Add mod folder...** for another collection and
+**Menu > File locations...** to inspect the actual paths.
 
-Результат всегда находится в одной папке пользовательского каталога CC2: `mods/CC2-MCE`, с `mod.xml`, `content` и manifest вне `content`. Название в игре — **«CC2 ModLoader: Island Airfields + AI Bridge + …»**, с фактически выбранными именами и ограничением длины. Эта папка полностью заменяется после успешной проверки, старые файлы снятых модов не остаются. Хеши хранятся внутри manifest. Резервная сборка и журнал находятся отдельно в служебной папке `cc2-mce`. Исходники Workshop, vanilla/SDK и executable игры остаются неизменны. При восстановлении SDK loader может оставаться установленным; это отдельный компонент. [ADR-0010](docs/adr/0010-checkbox-auto-apply-and-stable-output.md).
+A valid library declaration in `mod.xml` distinguishes a library from an
+ordinary mod; the folder name alone does not. An unmarked package remains an
+ordinary mod. Shared native plugins remain separate DLLs loaded by one reviewed
+runtime, not binary code merged into an injector.
 
-### Библиотеки через Workshop
+## Language and startup
 
-Автор добавляет секцию `cc2mce` в обычный `mod.xml`:
+The interface follows the system language by default. **Menu > Language**
+provides English, Russian, German, French, Spanish, Brazilian Portuguese,
+Italian, Polish, Turkish, Ukrainian, Simplified Chinese, Traditional Chinese,
+Japanese and Korean. All 14 catalogs are included offline; an explicit choice
+is saved. Mod names, paths and contents are not sent to translation services.
 
-```xml
-<cc2mce schema="1" type="library" id="author.library" sdk="cc2x" api="4">
-  <requires id="author.base"/>
-</cc2mce>
-```
+**Menu > Launch game when opening ModLoader** optionally prepares the selected
+set and starts the game on later launches. A rejected change cancels automatic
+launch. The normal GUI remains available when that option is disabled.
 
-**Нет секции — обычный мод**, независимо от папки. Есть корректная секция — библиотека в отдельной вкладке; зависимости включаются в план. Lua сохраняет настоящие игровые пути, DLL остаются отдельными плагинами одного runtime. Никакой склейки бинарников или автоматического доверия DLL по одной метке. [SDK contract](docs/17-LIBRARY-SDK.md) · [пример](examples/library-mod.xml).
+## Support and validation
 
-### Проверки и границы
+| Area | Current scope |
+| --- | --- |
+| Ready desktop download | Windows x64 graphical executable with bundled merge/validation tools. |
+| Shared code | Windows/macOS CI on Python 3.12 and 3.13, including real Git fixtures and the synthetic golden corpus. |
+| Native game integration | Exact reviewed Windows CC2 1.5.18-r2 game/runtime/plugin profiles; unreviewed binaries stay blocked. |
+| Recorded single-player checks | Combined native/Lua loading with AI Bridge, Island Airfields v46, Hold, Modes, Brake and separate aircraft; custom aircraft registration/hangar creation and unchanged-catalog save/reload. |
+| Remaining gates | Remote multiplayer, dedicated-server profile/bootstrap, full custom flight/island landing, changed-catalog save migration, clean-machine acceptance, packaged macOS app and native macOS runtime. |
 
-- AI Bridge + Island Airfields: общая база сверена с SDK/runtime, настоящий Git объединил правки после явной LF normalization, настоящий Lua 5.3 validator проверил результат; DLL скопирована побайтно. Свежий game log называет combined mod и Island Airfields v45, пользователь подтвердил меню.
-- Проверены реальные создание/активация/откат, game XML reformat/duplicate path, source-change/running-game gates и посторонние файлы в output; frozen exe выполняет Git/Lua smoke без developer tools в PATH.
-- Кандидат API 8: все шесть источников AI Bridge + Island Airfields v46 + Hold +
-  Modes + Brake + F-16/F-15 проверены вместе в новом игровом мире. Четыре native
-  plugins загрузились, Lua module работал без ошибок, оба самолёта созданы в
-  ангаре. Новый тестовый save загружен с прежними aircraft IDs; повторное создание
-  самолёта после reload успешно. Старые файлы/сохранения восстановлены.
-- Не проверены полноценный полёт/посадка, multiplayer/dedicated, изменение
-  каталога определений между сохранениями, внешний AI command client,
-  clean-machine certification и macOS execution. У установленного AI Bridge есть
-  авторский command path другого Windows-профиля; Engine не переписывает его.
-- Поддержка новых game/runtime/native versions требует проверенного профиля. Общий Windows/macOS MVP, доступность и публичная лицензированная поставка имеют отдельные release gates.
+These are distinct validation levels. Shared-core CI and a successful synthetic
+merge do not prove game compatibility or a certified macOS application. See the
+release notes and attached build metadata for the evidence for a particular
+binary. The SDK's own source and distribution are maintained in the separate
+[CC2X SDK project](https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/tag/0.6.0-client-beta.1).
 
-[Проверка](TESTING.md) · [Для разработчиков](CONTRIBUTING.md) · [CHANGELOG](CHANGELOG.md) · [ADR-0009](docs/adr/0009-package-activation-and-library-sdk.md) · [M0 evidence](docs/12-M0-VALIDATION.md)
+## Release contents and source transparency
 
-**Внешний полигон:** [carrier-command-2-mods](https://github.com/totolerigolo118/carrier-command-2-mods) — [границы](docs/16-EXTERNAL-TEST-CORPUS.md); полная совместимость не заявляется.
+The release page separates:
 
-## English
+- the ready Windows application ZIP;
+- the exact ModLoader application source ZIP;
+- matching SDK runtime, SDK source and linked compiler-library sources;
+- the pinned Git/Lua build-tools archive and corresponding dependency sources;
+- release/build metadata, component notices, SBOM and SHA-256 checksums.
 
-**0.4.0b1 Windows beta ships CC2ModLoader.exe, persistent override warnings and an offline 14-language pack.** Drag selected packages in **Load order**, or use Alt+Up/Down; every change rebuilds automatically. Later patches win overlapping Git hunks while unrelated edits survive. Installed originals are used without a file-hash allowlist; missing-base data and binary collisions use an explicit, reported later-file replacement. An orange warning names the sources/file, survives reopening and states that the in-game result is unknown; full details are in the menu. Game `.glsl` shaders use text merging; `.txtr` with TXTR magic use binary copy/whole-file replacement. Unknown types identify the file and reason. **Menu → Later patches take priority** can restore strict mode. Unsupported native code, unsafe paths and invalid syntax remain blocked.
+The Windows ZIP includes its player README and notices. The build guide explains
+which additional archives are useful for an offline source build. Normal use of
+the completed app does not download development dependencies.
 
-The UI follows the system language. **Menu → Language** offers RU, EN, DE, FR, ES, PT-BR, IT, PL, TR, UK, simplified/traditional Chinese, JA and KO. Primary labels are reviewed; remaining translations are machine-assisted with complete key/parameter checks. All catalogs ship offline. Preferences persist. Checkbox changes update one `mods/CC2-MCE` folder, wait for a running game to close, and revert to the working selection/order on failure. The generated game mod name contains CC2 ModLoader and the selected mod names. Git and Lua 5.3 are bundled; players need no terminal or manual tool installation.
+## Contribute and report problems
 
-Workshop stays in place. Local inputs use `mods/<id>/content` and `libraries/<id>/content`. A valid `cc2mce` section in mod.xml declares a library and dependencies; unmarked packages remain ordinary mods. Native DLLs remain separate reviewed plugins of one loader. A hash-matched user-provided dinput8.dll can be installed from libraries; existing unknown loaders and unsupported game/plugin versions block application.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before making a change and
+[SECURITY.md](SECURITY.md) for vulnerability reporting and repository policy.
+Work in a topic branch or fork and submit a pull request; `main` is not the
+contribution branch for direct pushes.
 
-AI Bridge + Island Airfields were merged with real Git, syntax-checked with real Lua 5.3, packaged and activated. Fresh CC2X logs identify the combined mod and its airfields plugin; the user confirmed the game menu. Full gameplay, the external AI command client, clean-machine distribution and macOS execution remain unverified. See [SDK](docs/17-LIBRARY-SDK.md), [architecture decision](docs/adr/0009-package-activation-and-library-sdk.md) and [tests](TESTING.md).
+For ordinary bugs, include the app/game versions, selected mods and load order,
+steps to reproduce the problem, and a report exported through the GUI. Review
+that report before sharing it and use synthetic examples where possible.
 
-**Steam distribution:** [audited delivery options](docs/19-STEAM-DISTRIBUTION-AUDIT.md) and [author metadata templates](distribution/workshop/README.md). Required Items are soft dependencies; an initial GUI bootstrap is still needed. No Steam publication or automatic Workshop-only installation is claimed.
+The [documentation index](docs/README.md) links the current English guides and
+the original, mostly Russian engineering specifications and ADR history. Those
+historical records are not alternate player installation instructions.
 
-## Open source / Открытый код
+## License
 
-GPL-3.0-or-later ([LICENSE](LICENSE)); third-party terms: [NOTICE](NOTICE.md).
-This is an update of the existing ModLoader, not a separate mod or new Workshop item.
-**Menu → Launch game when opening ModLoader** prepares the selected set before launch;
-a rejected change cancels automatic launch. A persistent override warning keeps the
-window open. A full in-game UI and multiplayer are separate, unverified runtime work.
-The public Windows beta does not certify a packaged macOS application or a clean OS.
-Release assets include the application's source, matching Git/Lua tool sources and
-build recipes, notices, SBOM and SHA256SUMS. [Release process](docs/20-RELEASE.md).
+CC2 ModLoader is **GPL-3.0-or-later**; see [LICENSE](LICENSE). Third-party
+components retain their own licenses and notices in [NOTICE.md](NOTICE.md) and
+the release's `LICENSES` directory. Carrier Command 2 and other authors' mods
+retain their respective ownership and licenses.

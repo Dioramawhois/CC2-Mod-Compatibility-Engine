@@ -1,69 +1,140 @@
-# CONTRIBUTING
+# Contributing to CC2 ModLoader
 
-## Принципы работы
+Players installing the application should start with
+[Installation and use](docs/INSTALLATION.md). This document is for contributors;
+[Building from source](docs/BUILDING.md) gives the complete self-build route.
 
-ТЗ и ADR — часть кода: изменение алгоритма/правил безопасности без обновления документов и тестов не принимается.
+## Before making a change
 
-## Branch / PR convention
+Read [AGENTS.md](AGENTS.md), the applicable specifications and later architecture
+decisions. The numbered documents are the original engineering record, mostly
+in Russian. Later accepted decisions and explicit owner requirements supersede
+older prototype limitations; do not treat a historical read-only design as the
+current application.
 
-- Ветки: `feat/<topic>`, `fix/<topic>`, `docs/<topic>`, `spike/<topic>`.
-- PR описывает: проблему, ссылку на PRD requirement (FR-XX), решение, альтернативы, риски, тесты, затронутые форматы модов, обновлённые документы.
-- При изменении публичного контракта (JSON schema, CLI, status) добавить/изменить ADR, миграцию или release note.
-- Для security issues не прикладывать опасные архивы/исполняемые DLL и не публиковать личные пути.
+Keep the user workflow graphical: a player using the ready executable must not
+need commands, hand-edited manifests, developer tools or PATH setup. Commands
+in this contributor guide are development/CI tools, not player instructions.
 
-## Технический запуск (только разработчикам и CI)
+## Branches and pull requests
 
-Пользовательская версия обязана работать через GUI без команд и ручной установки инструментов; эти инструкции не являются способом установки для игроков. Есть тестовый GUI поиска/анализа; готовая пользовательская поставка ещё требует [UX/UI gates](docs/13-UX-UI.md).
+Use a fork or a topic branch, for example:
 
-Для разработки нужны Python 3.12+ и Git; для строгого Lua syntax smoke — `luac` именно 5.3. Подготовка окружения и проверки:
+- `feat/<topic>` for a feature;
+- `fix/<topic>` for a bug fix;
+- `docs/<topic>` for documentation;
+- `spike/<topic>` for an explicitly experimental investigation.
+
+Submit a pull request to `main`. Follow the enforced branch rules and required
+checks; do not use direct or force pushes to work around the review workflow.
+When only the owner has write access, a PR may be merged by that owner after
+checks pass without a second approval. Do not confuse this with independent
+review. See [Security policy](SECURITY.md) for the access-control limits.
+
+Describe the concrete problem, resulting behavior, validation and material
+limitations. Link the relevant requirement or decision when it explains a
+tradeoff. For a public contract change, update the schema/API documentation,
+regressions, applicable ADR and changelog together. Keep the PR focused.
+
+## Prepare a development environment
+
+Use Python 3.12 or 3.13 and Git. Install `uv` on the developer machine, then run
+from the repository root:
 
 ```text
 uv sync --frozen --extra dev
-uv run cc2-mce --version
-uv run cc2-mce --config examples/mce.synthetic.toml build --dry-run
-uv run pytest -q
-uv run ruff check cc2_mce tests
-uv run ruff format --check cc2_mce tests
-uv run mypy cc2_mce
+uv run --frozen cc2-mce --version
+uv run --frozen pytest -q
+uv run --frozen ruff check cc2_mce tests
+uv run --frozen ruff format --check cc2_mce tests
+uv run --frozen mypy cc2_mce
 ```
 
-Альтернатива без uv: `python -m venv .venv`, активировать окружение средствами ОС и выполнить `python -m pip install -e ".[dev]"`. [uv.lock](uv.lock) фиксирует версии; CLI при scan/build ничего не скачивает.
+`uv.lock` fixes the development dependency set. The standard Windows batch
+builder uses its own `.build-venv` and pip; see the build guide for that route,
+its bundled native dependencies and the difference between a clone and a source
+export.
 
-[Синтетический пример](examples/mce.synthetic.toml) не содержит игровых assets: ожидаемый payload SHA-256 `40aaab939321f1fd22699ac0d8edd75cb7a219e73705e511f1027aa484617929`. Payload не записывается на диск, `installable` всегда false. Для реального developer-анализа нужен явный hash-bound baseline manifest и проверка executable; формат/аргументы — в [внутреннем CLI-контракте](docs/05-CLI-AND-DATA-CONTRACTS.md). Игрока нельзя просить составлять этот manifest: пользовательский GUI обязан проверять mapping сам и блокировать неподтверждённую базу.
+For a synthetic merge smoke check:
 
-Windows package/activation/rollback и bounded game startup проверены в 0.2.0. Replay plan, manual resolution, полноценный gameplay, macOS и clean-machine/accessibility gates ещё не подтверждены. Настроенный Windows/macOS workflow не заменяет эту приёмку; факты — в [M0 validation](docs/12-M0-VALIDATION.md).
+```text
+uv run --frozen cc2-mce --config examples/mce.synthetic.toml build --dry-run
+```
 
-## Сборка Windows exe для разработчиков
+This command uses synthetic fixtures and does not activate a game mod. A
+passing CLI/golden result is not gameplay acceptance.
 
-Актуальный результат 0.4.0b2 — `dist/CC2ModLoader.exe`. Ниже сохранена история
-первых packaging spikes. Source checkout содержит точную reviewed SDK dependency;
-`-source.zip` исключает её DLL. При сборке из release source archive разработчик
-распаковывает matching `-sdk-runtime.zip` в корень исходников. Игроку это не нужно.
-Release publisher: `python tools/package_release.py --sdk PATH --zig PATH`.
-SDK checkout должен содержать pinned commit из runtime review и generated headers
-точного build; Zig executable должен совпадать с compiler SHA. Изменённые источники
-не подставляются: отдельный `-sdk-source.zip` соответствует всем входным build hashes,
-`-sdk-toolchain-sources.zip` содержит provider lib sources (C++/MinGW/compiler runtimes).
-Полные Git/Lua sources и toolchain также остаются в release assets.
+## Tests and evidence
 
-**0.2.0:** результат называется `dist/CC2Engine.exe`; приведённые ниже записи о 0.1.0 — история первого packaging spike. Bat при необходимости запускает `tools/prepare_windows_tools.py` (developer Git + Zig), затем regression suite, PyInstaller и frozen tool/GUI smoke. В exe входят hash-verified Git/Lua; пользователю устанавливать инструменты не нужно. Исходник Lua скачивается только при developer build и проверяется по официальному фиксированному SHA до extraction/compilation. Binary dependencies/notices/source references Git и Lua хранятся в сгенерированном tools_data; их integrity manifest включён в engine hash. Существующий `uv.lock` фиксирует Python dependencies; exact native tool hashes находятся в manifest.
+Write a meaningful regression fixture before fixing a behavioral defect. Use
+small synthetic Lua/XML/data inputs rather than proprietary game files. Preserve
+fixture bytes and test path, encoding, no-base, native/binary and failure cases
+when the change affects those boundaries.
 
-Новый сервис `workflow.py` и schema v2 публикуют игровой пакет и выполняют явную обратимую активацию; raw developer CLI output не заменяет этот путь. SDK XML: [17](docs/17-LIBRARY-SDK.md). `tools/exercise_real_pair.py` / `launch_real_pair.py` — отдельный **изменяющий игру** локальный harness конкретно разрешённого пользователем теста AI Bridge + Island Airfields, не CI и не команда для игрока. `install_local_build.py` устанавливает только этот собственный exe с backup предыдущей известной сборки. Никогда не запускать эти harness на чужой установке без соответствующего запроса.
+Use real Git three-way merging for integration fixtures. A mocked subprocess
+can test its boundary, but it is not evidence that the actual bundled tool or
+game integration works. Lua validation checks syntax; it does not prove gameplay
+logic, engine API compatibility or networking.
 
-Текущий portable workflow и пакеты `mods`/`libraries`: [ADR-0008](docs/adr/0008-portable-discovery-and-library-collections.md). Для запуска исходников остаётся `python -m cc2_mce.gui` (только разработчикам). Тесты реального Tk display помечают недоступную среду как skip; это не macOS GUI acceptance. Автопоиск ничего не создаёт, два собственных каталога создаются только явным действием в окне.
+GUI fixtures use actual Tk widgets where a display is available. A display-based
+skip must remain visible in the results. Core tests on macOS do not certify a
+packaged macOS GUI or native CC2X runtime.
 
-После упаковки bat запускает `tools/check_windows_bundle.py`: проверка packaged source/schema, открытие и закрытие GUI без developer tools в PATH и запись `dist/CC2ModLoader-0.1.0.build.json` с artifact/engine/source/build-input hashes, `base_sha256: null`, `mod_order: []`. По умолчанию helper не сканирует настоящие моды. Необязательный developer-флаг `--inventory` добавляет read-only обнаружение реальной игры/Workshop и входные хеши; игра и плагины не запускаются. Наличие exe/build.json не закрывает игровые gates.
+Run the required checks once after the relevant changes and record their
+results. Broaden verification when a new failure or unresolved concern warrants
+it. Distinguish local unit/integration checks, frozen binary smoke checks,
+clean-machine usability and fresh in-game acceptance.
 
-`build_windows.bat` использует Python 3.12+ из PATH или Windows launcher `py -3`, создаёт/переиспользует `.build-venv`, устанавливает проект и PyInstaller 6.22.3, запускает регрессии и собирает `CC2ModLoader-0.1.0.spec`. Скрипт переходит в каталог репозитория независимо от исходного рабочего каталога. Без аргументов оставляет результат/ошибку на экране; для автоматизации есть `build_windows.bat --no-pause` с сохранением кода завершения. Это подготовка developer-машины, не шаги для игрока.
+## Source and native safety
 
-Результат — `dist/CC2ModLoader-0.1.0.exe`, one-file GUI без консоли. Spec включает локальную JSON-схему и исходники пакета: `engine_hash()` должен совпадать в исходниках и распакованной поставке. Тест `tests/test_windows_bundle.py` проверяет это в build-окружении; без PyInstaller он явно пропускается. Контракт отчёта v1 не изменён. Проверка 2026-10-29: Windows 10 x64, Python 3.14.0, 93 passed / 2 skipped (создание symlink недоступно), Ruff и mypy проходят.
+- Treat mod paths, filenames, metadata and contents as untrusted input.
+- Do not modify vanilla game resources, the game executable, Workshop downloads
+  or other authors' source mods.
+- Do not execute mod Lua or load mod DLLs in discovery/development utilities.
+- Keep native review keyed to exact game/runtime/plugin bytes. A name, folder,
+  library declaration or team origin is not a trust decision.
+- Do not bypass syntax, path, native or transaction checks for convenience.
+- Keep source/base/engine/output hashes and deterministic mod order in generated
+  reports and manifests.
+- Preserve the previous working set on rejection or failed publication; retain
+  recovery data when a third party changes a managed file.
+- Retain upstream licenses/notices and verify dependency license compatibility.
 
-Локально проверены открытие и штатное закрытие окна из отдельного временного каталога с PATH только системных каталогов Windows; байты packaged schema/source сверены с исходниками. Рядом с текущим артефактом сохранён локальный `*.build.json` с SHA-256 exe/движка/источников и пределами проверки. Это не чистая ОС, не игровой тест и не подтверждение macOS. Git и Lua validator не включены, пользовательские release gates остаются открытыми; Python runtime и tkinter включены PyInstaller. Версии остальных build/runtime зависимостей пока не закреплены отдельным distribution lock.
+User-authorized later-patch priority is explicit and reported, not silent data
+loss. It does not permit binary DLL merging or unreviewed native installation.
 
-## Требования к тестам
+## Real-game and installation tests
 
-Начинать с synthetic fixture и ожидаемого результата; не добавлять чужие Lua/XML файлы из платной игры в публичный репозиторий без прав. Golden корпус отдельно от unit тестов, с фиксацией sha256 и версии merge backend.
+The normal build and CI must not modify the user's actual game configuration,
+activate a test set or launch the game. Real-installation harnesses and
+`tools/install_local_build.py` are maintainer tools for a specifically authorized
+local task, not commands to add to the default contributor checks.
 
-## Документация
+For an authorized game test, preserve the original activation, runtime, managed
+output, recovery data and saves; use a disposable test session and record exact
+versions and hashes. Restore user state afterwards. A menu startup, a single
+feature test and a multiplayer test are different acceptance levels.
 
-Добавление новых форматов сопровождается точной спецификацией ключей/взаимодействий; XML generic merge по любому id без schema review запрещён. Всё, что не подтверждено на игре, помечать `hypothesis`/`pending validation`.
+## Preparing an official release
+
+Use a clean reviewed commit and the matching verified executable. The release
+publisher rejects mismatched binary/source hashes, failing regression metadata,
+unsafe/private archive paths and incomplete corresponding dependency sources.
+It prepares a new release directory; it must not silently replace an existing
+release.
+
+For the current native dependency, `tools/package_release.py` additionally
+requires the exact SDK source checkout and compiler provider needed to export
+its corresponding sources. These are maintainer release inputs, not requirements
+for a normal ModLoader self-build. Preserve the source/runtime separation and
+all redistribution notices. Never include game executables, personal saves,
+research dumps, credentials or private user paths in public release assets.
+
+Do not label unverified multiplayer, dedicated-server, flight/landing,
+clean-machine or packaged macOS behavior as complete. The release must name its
+actual validation level and link its matching sources.
+
+## Security reports
+
+Follow [SECURITY.md](SECURITY.md). Do not publish a dangerous executable fixture,
+exploit details or private data in an ordinary public issue.

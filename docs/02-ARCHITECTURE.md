@@ -4,9 +4,11 @@
 
 Client-candidate содержит hash-addressed runtime_data с точными DLL/provenance/
 notices и scope review. Profile разрешает только прошедшие проверку native bytes;
-optional report.runtime_review восстанавливает предупреждение GUI при reopening.
+optional report.runtime_review сохраняет технический scope review и не создаёт
+предупреждение GUI о тестовой сборке SDK, в том числе при reopening.
 Release publisher отдельно сохраняет соответствующие SDK/toolchain sources.
-[ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
+[ADR-0020](adr/0020-scoped-client-sdk-candidate.md),
+[ADR-0022](adr/0022-sdk-release-status-outside-modloader-ui.md).
 
 Resolver различает уникальный source id и canonical package_id нескольких версий.
 Explicit selection задаёт единственную версию для dependency resolution; GUI

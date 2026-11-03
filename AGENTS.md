@@ -1,5 +1,13 @@
 # AGENTS.md — CC2-MCE coding agent guide
 
+Release documentation update (2026-11-03): public instructions are in English.
+Start with README, docs/INSTALLATION.md and docs/BUILDING.md. Players use the
+ready Windows GUI; people explicitly choosing the self-build route may use the
+documented developer commands. Source archives restore only hash-pinned build
+dependencies, including the export-ignored SDK DLL. Historical numbered specs
+remain engineering references; current release guidance and ADR-0023 describe
+the two supported distribution routes. Preserve the app's 14 offline languages.
+
 > Version 0.2.0 has a Windows GUI, verified Git/Lua packaging and reversible activation for reviewed game/runtime/native profiles. AI Bridge + Island Airfields reached the game menu with a fresh plugin-load log; full gameplay, clean-machine and macOS release gates remain unverified. Do not disable the working GUI as if the historical read-only slice were current. Source of truth: README, docs, ADR-0009 and tests; specifications are in Russian.
 
 ## Goal

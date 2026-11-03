@@ -5,8 +5,10 @@ dependency preference/ambiguity, ID shadow, fixed-output switch/Undo и реал
 Tk checkbox success/rejection. Не требуется менять Workshop для теста обновления.
 
 Client-candidate regressions проверяют shipped PE32/hash/source provenance,
-approved defaults, полные offline переводы предупреждения и его сочетание с
-override notice. Release fixtures отклоняют изменённые DLL/source/generated
+approved defaults и отсутствие SDK test-build notice при наличии runtime_review,
+в том числе в восстановленном manifest. При пересечении модов сохраняется обычный
+override notice с участниками/ресурсом. [ADR-0022](adr/0022-sdk-release-status-outside-modloader-ui.md).
+Release fixtures отклоняют изменённые DLL/source/generated
 headers/notices и dirty/mismatched source commit; pinned Git source приводится
 только к подтверждённым build report line endings. Реальная одиночная приёмка
 spawn/save/reload описана отдельно в docs/22; это не network/flight acceptance.

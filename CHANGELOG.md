@@ -1,190 +1,187 @@
 # Changelog
 
-## 0.4.0b2 — кандидат: общий SDK и независимые Lua-модули
+This file records project history. Historical validation and limitations describe
+that entry's date; use the [README](README.md) and [current guides](docs/README.md)
+for installation, self-build and support information.
 
-- Workshop и локальная новая версия одного package могут быть видны вместе.
-  Галочка новой версии снимает старую и применяет одну транзакцию; отказ возвращает
-  прежнюю. Dependencies следуют явно выбранной версии. Одновременный выбор двух
-  версий и неоднозначные зависимости блокируются. ADR-0021, 9 regressions.
+## 0.4.0b2 - Windows beta 2 (2026-11-03)
 
-- В локальный client-candidate включён точный CC2X API 8 runtime, clean build
-  report, исходная ревизия и сторонние notices. Профиль Windows 1.5.18 принимает
-  только проверенные DLL Hold/Modes/Brake/Island Airfields v46; прежний v45 сохранён.
-  Отдельная ручная установка SDK не нужна. Неизвестные DLL остаются блокированы.
-- GUI сохраняет предупреждение об одиночной приёмке SDK и непроверенных multiplayer/
-  dedicated, в том числе вместе с предупреждением о перезаписи. Переведено на все
-  14 offline языков; schema v2 содержит optional runtime_review. ADR-0020.
-- Реальный общий набор: F-16/F-15 созданы в ангаре, сохранены в новом пустом slot,
-  загружены с прежними ID; повторный spawn после reload успешен. Это не полная
-  flight/landing/network приёмка. Прежние runtime/output/Undo/saves восстановлены.
-- Release assets содержат отдельные SDK runtime/corresponding-source/toolchain-source
-  архивы и notices C++ runtimes. Source archive сверяется со всеми входами точного
-  native build, включая generated headers и исходные Windows line endings.
+- Publish two documented distribution routes: the ready-to-use Windows executable
+  and a clean application-source archive that can build the same GUI. English
+  installation, build, contribution, troubleshooting and security guides replace
+  the previous mixed-language public entry points.
+- Restore a missing SDK dependency during a source-archive build from an exact,
+  pinned release, checking its size and SHA-256. Existing unknown files and links
+  remain protected; developers can supply a verified local file for offline use.
+- Release packaging checks the actual archived application source against the
+  frozen build inputs. Export-ignored native binaries and pinned Git/Lua tools
+  have explicit, verified restoration paths rather than private sibling paths.
+- Workshop and local versions of the same package can coexist in the list.
+  Selecting a version replaces the selected version of that identity in one
+  transaction; rejection restores the previous selection. Dependencies follow the
+  explicit choice, while ambiguous or duplicate selections are rejected.
+- Bundle the exact reviewed CC2X API 8 runtime, clean-build provenance and component
+  notices. Reviewed native profiles cover Hold, Modes, Brake and Island Airfields
+  v46; the previous v45 profile remains available. Unknown DLLs remain blocked.
+- Install or upgrade a known SDK runtime transactionally with backup, recovery and
+  Undo. The built-in reviewed dependency can satisfy cc2x.runtime without requiring
+  a separate manual SDK installation. Unknown installed loaders are preserved.
+- Create missing INI defaults only for exact reviewed native hashes. Existing user
+  settings survive; ordinary failures and interrupted writes are recoverable.
+- Keep independent Bridge Lua owners/code roots inside one generated CC2-MCE mod.
+  Ordered module bundles preserve dependencies and private code contexts. Shared
+  resources still use Git merging. Duplicate owners, stock-script entries, unsafe
+  manifests and unreviewed native code remain blocked.
+- Remove SDK test-build notices from the ModLoader interface and all 14 offline
+  catalogs. Runtime review metadata stays in reports; warnings about actual mod
+  overwrites continue to show participants, resources, order and uncertainty.
+- Count each original-resource directory once per analysis, avoiding false scan
+  budget failures. Recovery preserves complete relative executable paths,
+  including macOS application layouts.
+- Recorded Windows single-player checks with the combined SDK/mod set covered
+  F-16/F-15 registration and hangar creation, a new temporary save, reloading the
+  same catalog with unchanged IDs, and creation after reload. Previous user game
+  state, runtime, activation/Undo and saves were restored after testing.
+- Publish separate application, SDK and tool source assets, including generated
+  native inputs, compiler-library sources, licenses, SBOM and SHA-256 checksums.
+  Remote multiplayer, dedicated servers, full flight/island landing, changed-catalog
+  saves, clean-machine and packaged macOS acceptance remain incomplete or unverified.
 
-- Original-directory lookup accounts each directory once per analysis, preventing
-  false scan-budget failures for mods adding many resources. Runtime recovery
-  preserves the full relative executable path, including macOS app layouts.
+## Native Bridge and cc2mods integration audit (2026-11-02)
 
-- Journaled exact-runtime upgrade and Undo, approved previous-runtime inputs and built-in SDK dependency fallback; unknown loaders remain protected (ADR-0019).
+- Defined a common SDK with separate gameplay-mod projects, private Lua namespaces,
+  preserved identities/catalogs and explicit networking boundaries. Extractors use
+  SHA-locked sources without copying the SDK into every mod.
+- The project owner confirmed the team's integration/publication permissions.
+  Original GPL/MIT notices and provenance were retained. F-16/F-15 content was
+  separated with its original IDs and 57 source files.
+- Found an API-layout collision between the session prototype and Native Bridge.
+  A checked named session extension preserves the existing C API prefix.
+- Corrected waypoint update publication in the companion Island Airfields project
+  using the existing explicit replication model. Offline regressions were added;
+  this audit did not establish multiplayer acceptance.
 
-- Отсутствующие INI approved native consumers создаются автоматически по точному
-  hash-профилю; существующие настройки сохраняются. Creation, interruption и Undo
-  используют inode/hash journal без overwrite. Исправлен повторный apply, который
-  мог пропускать восстановление удалённого runtime/settings при прежнем payload.
-  Добавлены 14 regressions; source metadata не даёт неизвестной DLL прав на запись.
+## 0.4.0b1 - Open-source Windows beta and prepared launch (2026-11-02)
 
-- Development publisher сохраняет отдельные owner/code roots Bridge-модулей
-  внутри одной CC2-MCE папки; порядок, зависимости, обновление и Undo используют
-  тот же транзакционный workflow. Поддержаны три manifest layouts, включая
-  root-only legacy. Обычные game resources продолжают Git merge.
-- Manifests/private Lua не перезаписываются поздними патчами. Повторные owners,
-  unsafe/invalid metadata, stock-script entries и неизвестный native блокируются;
-  runtime требует API 8, bundle capability и точный reviewed hash. Добавлены
-  module provenance в schema v2 и 27 packaging/metadata/order regressions.
+- Adopted the owner's GPL-3.0-or-later license, LICENSE/NOTICE and project metadata.
+- Added the persistent Menu > Launch game when opening ModLoader option. Startup
+  prepares and activates the selected set before opening Steam. Rejected changes
+  cancel automatic launch; overwrite warnings remain available.
+- A clean developer checkout downloads SHA-pinned Git/Lua tools. Bounded archive
+  validation rejects unsafe, corrupt or unexpected payloads before writing files.
+- Added a release packager with provenance/JUnit checks, privacy-filtered build
+  reports, Windows/source/tool-source assets, component notices, SBOM and checksums.
+- Updated the existing ModLoader rather than creating another Workshop mod.
+  In-game UI, multiplayer, clean-machine and packaged macOS certification were
+  not completed by this beta.
 
-## Аудит Native Bridge и cc2mods (2026-11-02)
+## 0.3.3 - Game resource formats and actionable errors (2026-11-02)
 
-- По запросу владельца подготовлена карта общего CC2X SDK и отдельных модов:
-  учтены code namespaces в едином output, сохранение identity/catalog и сетевые
-  ограничения. GPL-моды cc2mods выделяются воспроизводимо из SHA-locked sources
-  через инструмент companion SDK, без его копирования в моды.
-  [Статус](docs/22-UNIFIED-SDK-AND-MOD-SPLIT.md). В companion SDK уже собирается
-  один runtime с независимым Lua host и registry/UI. Сторона SDK читает ordered
-  module bundles; publisher в выпущенной beta ModLoader ещё не подключён.
-- Владелец подтвердил все разрешения своей команды. Сохранены GPL/MIT notices
-  и provenance. F-16/F-15 выделен отдельно с исходными ID и 57 файлами.
-  Native/static проверки проходят; свежая игровая и multiplayer приёмка открыты.
+- Support .glsl text merging and TXTR-magic .txtr copy/ordered replacement using
+  real installed resource examples. Invalid headers and unknown types remain
+  blockers; DLL checks are unchanged.
+- Show the unsupported file or unavailable Lua-validator reason directly in the
+  notice, with detailed diagnostics and translations in all 14 languages.
+- Corrected a Windows-only synthetic-layout fixture exposed by macOS CI; added
+  explicit Windows/Darwin layout coverage without weakening production discovery.
 
-- Проверены переданные исходники, лицензии, lifecycle и границы multiplayer.
-  Обнаружен конфликт раскладки API 5 между SDK development и Native Bridge;
-  companion MR переходят на именованное сессионное расширение с проверкой ABI.
-- По примеру явной репликации Hold исправлена публикация изменённых waypoint
-  в companion Island Airfields MR, добавлена регрессия фактического обработчика.
-  Multiplayer acceptance не заявляется. [Аудит](docs/21-NATIVE-BRIDGE-AND-CC2MODS-AUDIT.md).
+## 0.3.2 - Persistent overwrite warnings and Steam audit (2026-11-02)
 
-## 0.4.0b1 — открытая Windows beta и подготовленный запуск (2026-11-02)
+- Ordered-patch application retains a warning naming the affected mods, merge
+  order and resource. Details distinguish conflicting hunks from whole-file
+  replacements and explain that the in-game result is unknown.
+- Warnings survive reopening/passive scans, update on reorder and disappear when
+  the overwrite disappears. Clean or identical overlap is not called incompatible.
+- Audited Workshop Required Items, real CC2X discovery, first-run bootstrap,
+  Player Tools/SteamPipe options and licenses. Prepared author templates without
+  inventing Workshop IDs or claiming that subscription installs the native loader.
 
-- GPL-3.0-or-later выбрана владельцем: добавлены LICENSE/NOTICE и metadata проекта.
-- «Меню → Запускать игру при открытии» сохраняет настройку; запуск происходит после
-  проверки и активации выбранного набора. Отказ отменяет автозапуск; предупреждение
-  о перезаписи остаётся доступным. Добавлены переводы в 14 offline-каталогах.
-- Чистая developer-сборка получает закреплённые Git/Lua по SHA без приватного SDK.
-  Добавлены bounded ZIP validation и регрессии повреждённых/опасных архивов.
-- Release packager проверяет provenance/JUnit, исключает личные данные из public report,
-  собирает Windows/source/tool-source assets, notices, SBOM и checksums.
-- Это обновление существующего ModLoader; новых Workshop items нет. In-game UI,
-  multiplayer аэродромов, clean-machine и packaged macOS certification не заявляются.
-  [ADR-0016](docs/adr/0016-open-source-beta-and-prepared-launch.md).
+## 0.3.1 - CC2 ModLoader branding and 14 languages (2026-11-02)
 
-## 0.2.0 — применение модов к игре и SDK библиотек (2026-11-01)
+- Restored CC2 ModLoader branding and CC2ModLoader.exe. Generated game-mod names
+  include selected author-supplied names; known previous executables are backed up.
+- Added 12 offline catalogs to Russian/English, locale mapping and native language
+  names. Catalog keys/placeholders are checked; some secondary text is machine
+  assisted. Runtime translation requires no network requests.
+- Moved CI from the retired macos-14 runner to macos-15.
 
-- Рабочий Windows GUI pipeline: проверенная база/игровой fingerprint, настоящий Git с явной LF policy, bundled luac 5.3.6, отдельный package, backup/journal-protected активация и rollback. Добавлены process/source/integrity gates, OS lock и запрет посторонних файлов в reused output.
-- Предоставленный reviewed dinput8.dll из libraries распознаётся и устанавливается рядом с игрой. Native DLL сохраняются как отдельные reviewed плагины; неизвестные DLL/сборки блокируются. Публичной бинарной склейки/компиляции DLL нет.
-- Добавлена opt-in cc2mce секция mod.xml для library/mod, package ID, SDK/API и зависимостей. Без секции это обычный мод независимо от каталога. Новый package manifest/schema v2; read-only report v1 расширен compatible optional source metadata.
-- Реально применены AI Bridge + Island Airfields: clean Git merge после LF normalization, настоящий syntax-only checker, свежая загрузка v45 DLL из combined mod и подтверждённое пользователем меню. Реальный rollback учёл game XML reformat/duplicate path. Full gameplay и macOS/clean-machine certification не заявляются.
-- Новый exe: CC2Engine.exe. Проверяется выполнение встроенных Git/Lua внутри frozen приложения без developer PATH. [ADR-0009](docs/adr/0009-package-activation-and-library-sdk.md), [SDK](docs/17-LIBRARY-SDK.md).
+## 0.3.0 - Merge order and system language (2026-11-02)
 
-## Unreleased — автопоиск игры, Workshop и библиотеки
+- Added persistent drag/drop and Alt+Up/Down load order with automatic rebuilding.
+  Later patches take conflicting hunks while independent edits are preserved.
+  Missing-base data replacement is explicit and reported; strict mode is optional.
+- Use installed rom_0/SDK originals without a per-file hash allowlist, retaining
+  hashes and provenance. Native, path and syntax gates remain mandatory.
+- Follow the system language by default and preserve explicit choices/pending
+  selection across language changes. Selected tabs are larger than inactive tabs.
+- Save preferences atomically; record baseline source, policy and JUnit counts.
 
-- Добавлен безопасный read-only adapter Steam VDF/ACF: registry, дополнительные библиотеки, соседняя игра, проверка appid/executable, лимиты, path/link safeguards. CLI Workshop discovery использует тот же adapter; JSON v1 не изменён.
-- Windows portable требует exe рядом с carrier_command.exe и показывает найденный путь; GUI отдельно отображает Workshop/local mods и Lua/DLL-пакеты libraries. Добавлены фоновый scan/анализ, invalidation, подготовка только двух собственных каталогов по кнопке и regression/UI fixtures.
-- Удалён GUI fallback, создававший synthetic baseline из непроверенных игровых скриптов. Создание игрового пакета отключено до verified baseline/staging gates; DLL не исполняются. Runtime/профильная загрузка libraries и зависимости ещё не реализованы.
-- На локальной Windows автоматически найдена установленная CC2 и показаны 9 Workshop пакетов без записи в них; это не игровой тест или macOS acceptance. [ADR-0008](docs/adr/0008-portable-discovery-and-library-collections.md).
+## 0.2.2 - Clear checkbox state and simpler UI (2026-11-02)
 
-## Unreleased — локальная Windows exe-сборка (2026-10-29)
+- Rejected changes restore the actual working selection and keep it launchable.
+  Inline errors name the rejected mod, participants and resource, and survive scans.
+- Explain dependencies that remain selected because another selected mod needs them.
+- Prepare local mods/libraries folders automatically. Keep primary actions to the
+  list, result and Launch; move secondary operations into one menu.
 
-- Исправлена упаковка: spec включает JSON-схему отчёта и Python-исходники для корректного `engine_sha256`; добавлен regression fixture с совпадением хеша исходного и распакованного движка и валидацией схемы. JSON v1 не изменён.
-- `build_windows.bat` работает из другого каталога, поддерживает Python launcher, переиспользует build-venv и сохраняет ошибку на экране; `--no-pause` предназначен для автоматизации. PyInstaller закреплён на 6.22.3, сборка использует общий spec.
-- Собран локальный exe на Windows 10 x64 / Python 3.14.0; проверены открытие/закрытие GUI без developer tools в PATH, целостность packaged data; 93 теста проходят, 2 symlink-теста пропущены. Исправлены lint/typecheck замечания GUI без изменения его поведения.
-- Git/Lua не встроены; чистая ОС, полноценный GUI workflow, macOS и игра не проверены. Это тестовая упаковка окна, не пользовательский релиз или установочный пакет мода.
+## 0.2.1 - One output and automatic checkbox application (2026-11-02)
 
-## Unreleased — Windows merged-mod build (2026-10-31)
+- Each checkbox change authorizes validation, merging and activation without
+  additional Check/Apply buttons. Maintain one transactional mods/CC2-MCE output.
+- Replace the complete generated folder, preserving backup/config rollback and
+  source hashes. Defer application while the game runs; preserve author inputs.
 
-- `cc2-mce build --mods-dir DIR --mods A B --baseline DIR --output OUT` теперь записывает объединённые файлы, если весь план чистый (статусы clean/copied/identical). Конфликт, блокировка или отсутствие `--output` ничего не записывают и возвращают ненулевой код.
-- Отчёт остаётся read-only схемой v1 (`installable` = false): запись файлов не меняет схему отчёта.
-- Внешний `git` по-прежнему используется для трёхстороннего слияния; встроенного слияния для Windows без git ещё нет.
-- Тесты: 91 проходят, включая реальную запись разных правок и отказ записи при конфликте.
+## 0.2.0 - Game activation and SDK libraries (2026-11-01)
 
-## 0.3.3 — игровые форматы и конкретная причина отказа (2026-11-02)
+- Added the Windows GUI packaging/activation pipeline, real Git merging with
+  explicit LF policy, bundled Lua 5.3 checking, backup/journal rollback, process
+  locks, source-integrity checks and refusal of foreign output files.
+- Recognize a provided reviewed dinput8.dll and keep native plugins as separate
+  byte-identical copies. No DLL merging or trust by filename/location.
+- Added opt-in cc2mce mod.xml library/dependency metadata and package schema v2.
+- AI Bridge + Island Airfields reached the menu with a fresh combined-plugin log.
+  At that stage full gameplay and macOS/clean-machine acceptance remained open.
+  The earlier application executable was named CC2Engine.exe.
 
-- Исправлен отказ Combined Fleet на двух `.glsl` shaders и двух `.txtr` textures, подтверждённых в установленном rom_0: шейдеры обрабатываются настоящим text merge, TXTR-magic ресурсы копируются/заменяются целиком по прежней policy. Unknown header в любом варианте остаётся blocker; неизвестные типы/DLL не разрешены молча.
-- Общая needs_review заглушка заменена объяснением неподдержанного типа или неисправного встроенного Lua validator, путь виден прямо в banner, diagnostics — в подробностях. Все 14 языков обновлены.
-- Исправлена Windows-only фабрика synthetic game layout, обнаруженная реальным CI macos-15. Added Windows/Darwin layout regression; production discovery не ослаблен. [ADR-0015](docs/adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
+## Earlier engineering milestones (2026-10-26 to 2026-10-31)
 
-## 0.3.2 — предупреждение о перезаписи и аудит Steam (2026-11-02)
+- Read-only Steam discovery added secondary libraries, adjacent-game checks,
+  bounded metadata parsing and traversal/link protection. The early GUI used an
+  explicit preparation button, later replaced by automatic setup in 0.2.2.
+- Initial Windows freezing included JSON schemas and Python source for engine
+  hashes; the batch script handled Python discovery, external working folders,
+  a reusable virtual environment and --no-pause error propagation. PyInstaller
+  was pinned to 6.22.3. Early builds did not yet bundle Git/Lua.
+- The developer CLI gained clean merged-file output with real Git; schema v1
+  remained non-installable, and conflicts/absent output paths wrote nothing.
+- Native installation required explicit reviewed version/architecture/hash gates.
+  A manifest alone did not authorize runtime injection or unknown plugin code.
+- A separate macOS runtime spike exercised limited Lua initialization on two
+  inspected builds. It did not establish Windows CC2X ABI compatibility, a player
+  installer, a full gameplay session, third-party mods, saves or native plugins.
+- GUI-only player workflows became a release requirement. CLI commands moved to
+  contributor documentation; synthetic checks did not become game acceptance.
 
-- Успешный ordered-patches apply оставляет заметное предупреждение с именами/порядком модов, файлом и неопределённостью результата в игре. Подробности различают конфликтующие hunks и замену целого файла; все 14 языков обновлены. Clean/identical overlap не называется несовместимостью.
-- Предупреждение восстанавливается из активного manifest, переживает passive scan, обновляется при reorder и исчезает после удаления пересечения. Галочки остаются включёнными, запуск доступен; дополнительных кнопок/подтверждений нет.
-- Проведён аудит Workshop Required Items, фактического CC2X0.5.1 loader, first-run bootstrap, собственного Player Tools приложения, SteamPipe и лицензий. Добавлены metadata/описание для автора без DLL, game assets и выдуманного item ID. Публикация/новый installer не выполнялись. [ADR-0014](docs/adr/0014-persistent-override-warning-and-workshop-delivery.md).
+## 0.1.0.dev1 - Read-only prototype (2026-10-26)
 
-## 0.3.1 — CC2 ModLoader и 14 языков (2026-11-02)
+### Added
 
-- Возвращено название CC2 ModLoader в exe/заголовок; generated mod снова содержит названия выбранных модов. Неизвестные executables не перезаписываются, прежний собственный Engine сохраняется в backup.
-- Добавлены 12 офлайн-каталогов к RU/EN: 14 основных языков, system locale mapping и native names в меню. Проверены полные message IDs/parameters; основные labels выверены, остальные переводы машинные. Никаких запросов сети в runtime.
-- CI переведён с retired macos-14 на macos-15. [ADR-0013](docs/adr/0013-modloader-brand-and-offline-language-pack.md).
+- Developer doctor, scan, plan, build --dry-run and report commands with strict TOML.
+- Bounded discovery, content-relative paths, case/Unicode collision checks,
+  link rejection and SHA-256 input snapshot rechecks.
+- Explicit baseline mapping, source provenance and game executable fingerprints.
+- Real Git three-way merging with pairwise N-way preflight, copy/deduplication,
+  fail-closed binary/native/encoding policies, Lua 5.3 syntax and safe XML parsing.
+- Schema v1 reports containing source/base/engine/output hashes, order, tool
+  versions and policy metadata; reports are written outside input sources.
+- A synthetic golden corpus, regression tests, dependency lock, lint/type checks
+  and a Windows/macOS CI definition.
 
-## 0.3.0 — порядок патчей и системный язык (2026-11-02)
+### Historical limitations
 
-- Добавлена вкладка порядка с drag/drop и Alt+↑/↓, автоматической пересборкой и сохранением. Git сохраняет независимые правки и отдаёт спорные hunks позднему патчу; без оригинала data-файл заменяется по порядку с отдельным статусом/strategy. Приоритет можно отключить для strict проверки.
-- Убрана per-file baseline allowlist для data: используются реальные rom_0/SDK originals с hash/source provenance, либо явно отмеченная replacement strategy. Native/path/syntax gates сохранены.
-- RU/EN с системным языком по умолчанию, сохранением выбора и переносом ожидающего выбора/порядка при смене окна. Исправлен меньший размер выбранной вкладки.
-- Preferences пишутся атомарно; JSON v2 дополнен policy/baseline source. JUnit counts попадают в build sidecar. [ADR-0012](docs/adr/0012-user-ordered-patches-and-system-language.md).
-
-## 0.2.2 — UX-аудит и честные галочки (2026-11-02)
-
-- При конфликте/ошибке применения галочки возвращаются к реально работающему составу; новый мод не остаётся ложно отмеченным, запуск прежнего набора доступен.
-- Ошибка называет отказанный мод, участников и ресурс; видна у строки и в banner, не стирается пассивным scan. Обязательная зависимость объясняет, кому нужна.
-- mods/libraries готовятся автоматически при первом запуске. Главный экран сокращён до списка/результата/запуска, служебные действия перенесены в одно меню; добавлены прогресс/состояния строк, сортировка и прокрутка.
-- Merge/schema/native/provenance gates сохранены. [Аудит](docs/18-UX-AUDIT.md), [ADR-0011](docs/adr/0011-truthful-checkboxes-and-minimal-interface.md).
-
-## 0.2.1 — одна папка, применение по галочке (2026-11-02)
-
-- Убраны обязательные кнопки проверки/применения и подтверждение набора: галочки автоматически проверяют, объединяют и включают моды; быстрые переключения используют последний выбор.
-- Постоянный output `mods/CC2-MCE`, игровое имя «CC2 Engine — мои моды». Полная замена убирает остатки снятых модов; пустой выбор отключает моды. Хеши сохраняются внутри manifest, не в именах папок.
-- Обновления выбранных sources пересобираются автоматически; при запущенной игре выбор ожидает её закрытия. Конфликт сохраняет прежний рабочий пакет.
-- Pending journal/backup восстанавливают папку и активацию после ошибки/прерывания; undo теперь возвращает payload. Прежний hash-output мигрирует в служебный cache. Generated outputs исключены из discovery, schema v2 допускает output_folder и empty set. [ADR-0010](docs/adr/0010-checkbox-auto-apply-and-stable-output.md).
-
-## Unreleased — native install safety gate (2026-10-31)
-
-- Независимое ревью не нашло blocking defect в rel32, но подтвердило HIGH blocker существующего MAP_FIXED: окно отсутствия RX-страницы и потеря конкурентных изменений. Constructor не доказывает quiescence. Установка hook теперь жёстко отключена для всех профилей, без env/CLI override; SHA allowlist не расширен.
-- Реальный constructor использует `hook_install.h`: staged validation, allocation, повторная проверка, patch и cleanup при отказе. Добавлены `test_hook_install.c` с mocked native ops, счётчиками remap/protect/cleanup и проверкой порядка. Это не устраняет системный page/thread риск и не даёт разрешения на injection.
-
-## Unreleased — native bridge guard (2026-10-31)
-
-- В существующий Mac C bridge добавлены проверка декодированной цели CALL и проверяемая rel32-арифметика до выделения stub/замены страницы; отклоняются overflow/underflow и выход за signed 32-bit displacement. Старые SHA и адреса профилей не менялись.
-- Добавлены нативные тесты `make test` с UBSan: границы displacement, неверный opcode, адресные переполнения, оба исторических профиля и ASLR. Это не доказательство игровой совместимости.
-- Текущий Mac executable `eb46a7accf45d1c0ddad725ac1f98f50f8baf32d89b1138800cd1f7606279520` остаётся неподдерживаемым: по старому hook-site отсутствует ожидаемый CALL. Выполнены только статическое чтение и сборка, без запуска игры/инъекции.
-
-## Unreleased — эксперимент Mac runtime (2026-10-28)
-
-- Добавлен developer-only `x86_64` Lua bridge для двух точных Mac-бинарников CC2 `v1.5.17` и `v1.5.18`: проверка SHA-256 и байтов hook-site для каждого, внедрение минимальной таблицы `cc2x` до выполнения скриптов. `api=0` означает отсутствие обещания совместимости с Windows CC2X.
-- Добавлен ограниченный прямой запуск игры с инъекцией только в дочерний процесс и проверками неподдерживаемой сборки/архитектуры; по умолчанию выбран вложенный `v1.5.18`. Пользовательского GUI и установщика ещё нет.
-- На каждой из двух сборок: 20 Lua-состояний, 20 успешных Lua self-test, 0 ошибок за ограниченный прямой запуск. Steam Play в этой установке открывает внешний `v1.5.17`; причины вложенной упаковки `v1.5.18` не установлены. Полноценный игровой сеанс, сторонние моды, save/reload и нативные плагины не проверены.
-- Эксперимент меняет только память запущенного процесса; файлы игры, Workshop и `mods.xml` не переписывались. Технические подробности: [Mac runtime spike](experiments/mac_runtime/README.md).
-
-## Unreleased — требования UX/UI (2026-10-26)
-
-- Графическое приложение Windows/macOS перенесено из отложенных возможностей в обязательный P0 первой пользовательской версии. Консоль/команды, ручные runtime-зависимости и технические конфиги исключены из всех пользовательских сценариев; CLI остаётся только для разработки/CI.
-- Добавлены [UX/UI сценарий](docs/13-UX-UI.md), [ADR-0007](docs/adr/0007-gui-first-user-experience.md), PRD FR-15..FR-20, GUI/clean-machine/usability gates и этап M1-UI. Согласованы архитектура, поставка/лицензии, риски и release checklist.
-- Команды для разработчиков перенесены из пользовательского README в CONTRIBUTING. Это обновление требований/документации: GUI, готовая пользовательская поставка и packaging пока не реализованы, runtime/JSON-контракты не изменялись.
-
-## 0.1.0.dev1 — 2026-10-26
-
-Первый read-only срез, **не полный MVP и не готовый загрузчик/упаковщик**.
-
-### Добавлено
-
-- Python CLI `doctor`, `scan`, `plan`, `build --dry-run`, `report`; строгая конфигурация TOML.
-- Безопасный discovery: content-relative logical paths, case/Unicode collision detection, запрет symlink/junction, ограниченные чтение/scan и SHA-256 snapshot recheck.
-- Явный baseline manifest с mapping/хешами; synthetic/game provenance разделены, для game проверяется executable hash.
-- Адаптер настоящего `git merge-file`, pairwise N-way preflight с общей базой, copy/dedup и fail-closed binary/native/encoding policies.
-- Lua 5.3 syntax-only boundary и XML well-formedness без DTD/entities; неизвестные форматы блокируются.
-- JSON schema v1 с source/base/engine/output hashes, mod order, tool versions и policy metadata. Отчёт только новым файлом вне источников.
-- Синтетический golden corpus и regression/unit/integration тесты; lock зависимостей, lint/typecheck, Windows/macOS CI workflow.
-
-### Ограничения
-
-- `installable` всегда false; build без dry-run и replay plan отклоняются. Нет atomic package staging/rollback, manual resolution/cache или game smoke.
-- Реальные Workshop-моды доступны для read-only inventory, но актуальный SDK mapping и executable build ещё не верифицированы.
-- Локально выполнены macOS тесты; Windows/удалённый CI и настоящая Lua 5.3 validation не подтверждены. Полный M0/M1 остаются открытыми.
-- Лицензия проекта ещё не выбрана; публичная публикация исходников/пакета требует решения владельца.
+- The prototype was not a complete MVP or a game-loadable publisher: installable
+  was always false, with no atomic package activation/rollback or game smoke.
+- Real Workshop content was only inventoried. Current game/SDK mapping, Windows
+  CI and real Lua validation were not established by that first slice.
+- The project license had not yet been selected at the time; GPL-3.0-or-later was
+  adopted later in 0.4.0b1.

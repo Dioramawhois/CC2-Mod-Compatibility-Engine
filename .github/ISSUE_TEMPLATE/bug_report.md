@@ -1,19 +1,27 @@
 ---
 name: Bug report
-description: Воспроизводимая ошибка CC2-MCE
+about: Report a reproducible problem in CC2 ModLoader
 labels: bug
 ---
 
-## Версия CC2 / CC2X / CC2-MCE
+## Versions and installation route
 
-## Входные моды (по возможности synthetic fixture, без чужих copyrighted assets)
+Game version, ModLoader version, Windows/macOS version, and downloaded EXE or self-build.
 
-## Ожидаемое поведение
+## Selected mods and merge order
 
-## Фактическое поведение
+List package names/versions and their order. A small synthetic example is useful.
 
-## Инструкция воспроизведения
+## Expected behavior
 
-## Report JSON / scrubbed logs
+## Actual behavior
 
-## Проверка безопасности / rollback
+## Steps to reproduce
+
+## Report or logs
+
+Attach the relevant exported report or error text. Remove private paths and personal data.
+
+## Recovery result
+
+Could you launch the previous working selection or use Restore previous mods?

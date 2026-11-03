@@ -1,9 +1,11 @@
 # 01. Product Requirements (PRD)
 
 0.4.0b2 client-candidate поставляет точный проверенный SDK API 8 для выбранных
-native consumers без ручной установки. GUI постоянно сообщает границы одиночной
-приёмки; multiplayer/dedicated не заявляются. Unknown native остаётся запрещён.
-[ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
+native consumers без ручной установки. Статус тестовой сборки SDK не показывается
+в GUI ModLoader; сведения о приёмке сохраняются в SDK documentation и runtime
+review metadata. Multiplayer/dedicated не заявляются, unknown native остаётся
+запрещён. [ADR-0020](adr/0020-scoped-client-sdk-candidate.md),
+[ADR-0022](adr/0022-sdk-release-status-outside-modloader-ui.md).
 
 Выбор новой локальной версии сохраняет identity существующего Workshop-мода:
 галочка переключает версию, отказ восстанавливает прежнюю. Две версии одного

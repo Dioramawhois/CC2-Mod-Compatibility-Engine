@@ -1,20 +1,19 @@
 ---
 name: Feature / task
-description: Работа из roadmap с критериями проверки
+about: Propose an improvement with a clear use case and validation
 labels: enhancement
 ---
 
-## Контекст / соответствие PRD
-Ссылка на `FR-XX`, milestone, ADR.
+## Use case
 
-## Предлагаемое изменение
+Describe who needs this and the problem it solves. Link an existing requirement or ADR if relevant.
 
-## Не входит в задачу
+## Proposed behavior
 
-## Acceptance criteria
-- [ ] Есть fixture и тест
-- [ ] Нет silent fallback
-- [ ] Отчёт и provenance корректны
-- [ ] Документация обновлена
+## Scope
 
-## Риски и варианты отката
+## Validation
+
+Explain how the behavior can be checked. Distinguish offline checks from real game acceptance.
+
+## Risks or alternatives

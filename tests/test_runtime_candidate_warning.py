@@ -1,4 +1,6 @@
-from cc2_mce.i18n import Translator
+import pytest
+
+from cc2_mce.i18n import LANGUAGES, Translator
 from cc2_mce.ui_feedback import explain_overrides
 
 
@@ -11,15 +13,15 @@ def report():
     }
 
 
-def test_runtime_candidate_notice_is_visible_without_a_resource_collision():
-    warning = explain_overrides(report(), Translator("en"))
-    assert warning is not None
-    assert "single-player" in warning.message
-    assert "dedicated" in warning.details
-    assert warning.rows == {}
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_runtime_review_does_not_create_a_gui_warning(language):
+    value = report()
+    assert explain_overrides(value, Translator(language)) is None
+    assert value["runtime_review"] == {"stage": "client-candidate"}
 
 
-def test_native_scope_notice_preserves_the_existing_override_participants():
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_runtime_review_does_not_change_existing_override_feedback(language):
     value = report()
     value.update(
         sources=[{"id": "a", "name": "First"}, {"id": "b", "name": "Patch"}],
@@ -33,11 +35,12 @@ def test_native_scope_notice_preserves_the_existing_override_participants():
             }
         ],
     )
-    warning = explain_overrides(value, Translator("en"))
+    warning = explain_overrides(value, Translator(language))
     assert warning is not None
     assert "First" in warning.message and "Patch" in warning.message
-    assert "single-player" in warning.message
     assert set(warning.rows) == {"a", "b"}
+    without_review = {key: item for key, item in value.items() if key != "runtime_review"}
+    assert warning == explain_overrides(without_review, Translator(language))
 
 
 def test_data_only_sets_do_not_receive_a_native_candidate_notice():

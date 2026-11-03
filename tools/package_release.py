@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-import io
 import importlib.metadata
+import io
 import json
 import re
 import shutil
@@ -20,6 +20,8 @@ from cc2_mce import APP_EXECUTABLE, __version__
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import normalize_logical_path
 from cc2_mce.reports import engine_hash
+
+ZIG_SOURCE_ARCHIVE_SHA256 = "3a0ed1e8799a2f8ce2a6e6290a9ff22e6906f8227865911fb7ddedc3cc14cb0c"
 
 
 def sha(data: bytes) -> str:
@@ -69,6 +71,75 @@ def validate_source_names(names: list[str]) -> None:
             or path.suffix.lower() in {".exe", ".dll", ".pdb"}
         ):
             raise ValueError("Private or compiled file in source release: " + name)
+
+
+def project_source_files(
+    payload: bytes, prefix: str, report: dict, deferred: dict[str, bytes]
+) -> dict[str, bytes]:
+    """Match actual archived inputs, allowing only explicit hash-verified build dependencies."""
+    normalize_logical_path(prefix.removesuffix("/"))
+    files = {}
+    seen = set()
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        for entry in archive.infolist():
+            if (entry.external_attr >> 16) & 0o170000 == 0o120000:
+                raise ValueError("Source archive link forbidden")
+            if not entry.filename.startswith(prefix):
+                raise ValueError("Unexpected source archive root")
+            name = entry.filename[len(prefix) :].removesuffix("/")
+            if not name and entry.is_dir():
+                continue
+            _, key = normalize_logical_path(name)
+            if key in seen:
+                raise ValueError("Source archive path collision")
+            seen.add(key)
+            if not entry.is_dir():
+                files[name] = archive.read(entry)
+    validate_source_names([name for name in files if name not in deferred])
+    required = {
+        "build_windows.bat",
+        "pyproject.toml",
+        "uv.lock",
+        "CC2ModLoader-0.1.0.spec",
+        "tools/check_windows_bundle.py",
+        "tools/prepare_windows_tools.py",
+        "tools/windows_tool_archive.py",
+        "tools/prepare_windows_runtime.py",
+        "distribution/windows-runtime.json",
+        "distribution/windows-build-tools.json",
+    }
+    if not required <= files.keys():
+        raise ValueError("Source archive omits a required self-build input")
+    expected: dict[str, str] = {}
+    for field in ("source_sha256", "build_input_sha256"):
+        for name, digest in report[field].items():
+            name = name.replace("\\", "/")
+            normalize_logical_path(name)
+            if name in expected and expected[name] != digest:
+                raise ValueError("Inconsistent source build provenance: " + name)
+            expected[name] = digest
+    for name, digest in expected.items():
+        data = files.get(name, deferred.get(name))
+        if data is None:
+            raise ValueError("Source archive omits a recorded build input: " + name)
+        if sha(data) != digest:
+            # Git archives normalize tracked EOL. Restore only a reversible
+            # line-ending representation whose hash is already certified.
+            if name not in files:
+                raise ValueError("Deferred build dependency checksum mismatch: " + name)
+            lf = data.replace(b"\r\n", b"\n")
+            data = next(
+                (
+                    candidate
+                    for candidate in (lf, lf.replace(b"\n", b"\r\n"))
+                    if sha(candidate) == digest
+                ),
+                None,
+            )
+            if data is None:
+                raise ValueError("Archived source does not match the frozen build: " + name)
+            files[name] = data
+    return {prefix + name: data for name, data in files.items()}
 
 
 def write_zip(path: Path, contents: dict[str, bytes]) -> None:
@@ -197,7 +268,7 @@ def native_toolchain_sources(root: Path, zig: Path | None) -> dict[str, bytes]:
                 "provider": "Zig 0.15.2",
                 "compiler_sha256": report["compiler_sha256"],
                 "source": "https://ziglang.org/download/0.15.2/zig-x86_64-windows-0.15.2.zip",
-                "archive_sha256": "3a0ed1e8799a2f8ce2a6e6290a9ff22e6906f8227865911fb7ddedc3cc14cb0c",
+                "archive_sha256": ZIG_SOURCE_ARCHIVE_SHA256,
                 "files": {name: sha(data) for name, data in sorted(contents.items())},
             },
             indent=2,
@@ -377,17 +448,24 @@ def main() -> None:
             output / (prefix + "-sdk-toolchain-sources.zip"),
             native_toolchain_sources(root, args.zig),
         )
-    names = subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\0")[:-1]
-    # The pinned binary dependency is export-ignored and ships separately above.
-    omitted = {name for name in native_files if name.endswith("/dinput8.dll")}
-    validate_source_names([name for name in names if name not in omitted])
-    with (output / (prefix + "-source.zip")).open("xb") as stream:
-        subprocess.run(
-            ["git", "archive", "--format=zip", "--prefix=" + prefix + "-source/", revision],
-            cwd=root,
-            stdout=stream,
-            check=True,
-        )
+    tools = json.loads((root / "distribution/windows-build-tools.json").read_text())
+    tool_archive = root / "build" / tools["file"]
+    tool_payload = tool_archive.read_bytes()
+    if sha(tool_payload) != tools["sha256"]:
+        raise ValueError("Build toolchain checksum mismatch")
+    with zipfile.ZipFile(io.BytesIO(tool_payload)) as archive:
+        deferred = {"cc2_mce/tools_data/manifest.json": archive.read("tools_data/manifest.json")}
+    deferred.update(
+        {name: data for name, data in native_files.items() if name.endswith("/dinput8.dll")}
+    )
+    source_prefix = prefix + "-source/"
+    source_archive = subprocess.check_output(
+        ["git", "archive", "--format=zip", "--prefix=" + source_prefix, revision], cwd=root
+    )
+    write_zip(
+        output / (prefix + "-source.zip"),
+        project_source_files(source_archive, source_prefix, report, deferred),
+    )
     lock = json.loads((root / "distribution/windows-source-lock.json").read_text())
     cache = root / "build/release-sources"
     sources = {"SOURCE-MANIFEST.json": (json.dumps(lock, indent=2) + "\n").encode()}
@@ -406,11 +484,7 @@ def main() -> None:
         raise ValueError("Lua source checksum mismatch")
     sources[lua.name] = lua.read_bytes()
     write_zip(output / (prefix + "-tool-sources.zip"), sources)
-    tools = json.loads((root / "distribution/windows-build-tools.json").read_text())
-    archive = root / "build" / tools["file"]
-    if sha(archive.read_bytes()) != tools["sha256"]:
-        raise ValueError("Build toolchain checksum mismatch")
-    shutil.copy2(archive, output / archive.name)
+    shutil.copy2(tool_archive, output / tool_archive.name)
     (output / "SHA256SUMS.txt").write_text(
         "".join(
             sha(p.read_bytes()) + "  " + p.name + "\n"

@@ -1,5 +1,10 @@
 # CC2 ModLoader 0.3.3 — игровые форматы, предупреждения и применение по галочке
 
+Актуализация 0.4.0b2: SDK test-build stage в runtime_review не создаёт GUI notice,
+включая повторное открытие активного manifest. Реальная перезапись по-прежнему
+показывает участников/ресурс; runtime review metadata и native gates сохраняются.
+[ADR-0022](docs/adr/0022-sdk-release-status-outside-modloader-ui.md).
+
 0.3.3: добавлены GLSL/TXTR fixtures и конкретная диагностика needs_review. Реальный read-only набор Autosave/Island Airfields/AI Bridge/QoL/SDK плюс Papa Bear's Combined Fleet3783006839 даёт 252 resources, 5 ordered overrides, 0 blockers. Все четыре ранее неподдержанных пути подтверждены в установленном rom_0; shaders также в SDK, textures имеют TXTR magic. Source byte identity сохраняется; GLSL GPU compiler/TXTR decoder не добавлены. Fleet не включается автоматически этим тестом. Все 185 IDs/parameters локализованы в 14 языках. Найденная настоящим macos-15 CI Windows-only fixture исправлена без ослабления production discovery; оба synthetic host layouts проверяются отдельно.
 
 Windows frozen 0.3.3: **193 passed, 3 symlink skips**, JUnit `build/test-results.xml`; Ruff/format и mypy Windows/darwin прошли. `dist/CC2ModLoader.exe` (20,062,200 bytes), SHA256 `4597c4e46f2444ea758ee0d76b8d324cd117bdc2ef7172615f83deeda5eddbbb`. Sidecar подтверждает packaged source hashes, реальные Git/Lua и открытие/закрытие GUI без developer tools в PATH. Установленная копия побайтно совпадает, обновила один собственный output с прежними пятью выбранными IDs/порядком и семью payload files. Evidence: `build/evidence/20261102T084103Z`; UI/file-level acceptance, `game_runtime_tested=false`. Старый exe сохранён в собственном backup; Fleet не добавлен в активный набор нашим тестом.

@@ -3,8 +3,10 @@
 Exact previous-runtime whitelist разрешает обратимое обновление общего SDK; неизвестный dinput8.dll сохраняется. Bundled runtime проверяется по hash до dependency fallback. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
 
 Кандидат 0.4.0b2 содержит SDK API 8 и точные review-профили Hold/Modes/Brake/v46,
-проверенные вместе на Windows client 1.5.18. Warning обозначает client-only scope;
-dedicated/client offsets не смешиваются. [ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
+проверенные вместе на Windows client 1.5.18. Client-only scope хранится в runtime
+review metadata и документации SDK, без отдельного предупреждения в ModLoader;
+dedicated/client offsets не смешиваются. [ADR-0020](adr/0020-scoped-client-sdk-candidate.md),
+[ADR-0022](adr/0022-sdk-release-status-outside-modloader-ui.md).
 
 Локальная новая версия может соседствовать в списке с подписанной Workshop-
 версией того же package. Выбор переключается явно, подписка не переписывается.

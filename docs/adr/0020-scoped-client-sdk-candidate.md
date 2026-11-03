@@ -2,6 +2,7 @@
 
 Статус: реализован для локальной клиентской приёмки, не объявлен полным релизом.
 Дата: 2026-11-03. Дополняет ADR-0017/0018/0019 и уточняет этапы docs/22.
+Требование SDK notice в GUI пересмотрено [ADR-0022](0022-sdk-release-status-outside-modloader-ui.md).
 
 Сам publisher без доступного API 8 runtime оставлял новый набор недоступным в GUI.
 После проверки реальной клиентской игры кандидат включает точные bytes общего
@@ -31,13 +32,12 @@ native plugins остаются самостоятельными approved copies
 
 Package schema v2 сохраняет optional `runtime_review`: stage, source/version,
 verified/unverified scopes, evidence hash и явные multiplayer/dedicated false.
-GUI использует существующий постоянный notice без новых кнопок: SDK проверен в
-одиночной игре; multiplayer/dedicated не проверены. Он виден и без перезаписи
-ресурсов, сочетается с existing override warning и восстанавливается при reopening.
-Все 14 offline catalogs содержат эти сообщения. Обычный data-only набор такого
-предупреждения не получает. Readiness в GUI означает применённый пакет, а не
-полную совместимость всех gameplay-механик.
+Первоначально эти сведения создавали постоянный notice в GUI. По уточнению
+владельца ADR-0022 удаляет SDK test-build notice и его сообщения из UI catalogs;
+runtime_review остаётся техническими metadata. Обычный override warning показывает
+только реальную перезапись выбранных модов. Readiness в GUI означает применённый
+пакет, а не полную совместимость всех gameplay-механик.
 
 Fixtures до реализации проверили binding profile/DLL/PE/provenance/licenses,
-ограниченный список INI defaults, native notice без collision, совместное
-предупреждение с именами участников и отсутствие native notice у data-only sets.
+ограниченный список INI defaults и прежний native notice. После ADR-0022 fixtures
+проверяют отсутствие SDK notice при сохранении предупреждения о реальной перезаписи.

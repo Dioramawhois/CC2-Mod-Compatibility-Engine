@@ -27,18 +27,8 @@ def explain_overrides(
     """Describe reported overrides, never infer incompatibility from file overlap alone."""
     files = [item for item in report["files"] if item["status"] == "overridden"]
     tr = translate or (lambda message, **values: message.format(**values) if values else message)
-    candidate = report.get("runtime_review", {}).get("stage") == "client-candidate"
-    native_notice = (
-        tr("SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.")
-        if candidate
-        else ""
-    )
     if not files:
-        return (
-            OverrideWarning(tr("Тестовая версия SDK"), native_notice, native_notice, {})
-            if candidate
-            else None
-        )
+        return None
     names = {source["id"]: source["name"] for source in report["sources"]}
     risk = tr(
         "Результат в игре неизвестен: часть изменений других модов заменена. "
@@ -78,9 +68,6 @@ def explain_overrides(
             rows[key] = tr("Включён · есть перезапись изменений")
     if len(files) > 1:
         summary += "\n" + tr("Ещё файлов с перезаписью: {p0}.", p0=len(files) - 1)
-    if native_notice:
-        details.append(native_notice)
-        risk += "\n" + native_notice
     return OverrideWarning(
         tr("Внимание: моды перезаписывают изменения"),
         summary + "\n" + risk,

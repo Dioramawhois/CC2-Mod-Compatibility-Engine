@@ -172,6 +172,93 @@ def test_release_sources_require_a_license_and_keep_test_fixtures():
     validate_source_names(["LICENSE", "cc2_mce/gui.py", "tests/fixtures/mod/content/test.xml"])
 
 
+@pytest.fixture
+def source_archive_inputs():
+    from tools.package_release import sha
+
+    files = {
+        "LICENSE": b"project license",
+        "build_windows.bat": b"build script\n",
+        "pyproject.toml": b"project metadata\n",
+        "uv.lock": b"dependency lock\n",
+        "CC2ModLoader-0.1.0.spec": b"freezer specification\n",
+        "cc2_mce/gui.py": b"application source\n",
+        "tools/check_windows_bundle.py": b"frozen verification\n",
+        "tools/prepare_windows_tools.py": b"toolchain preparation\n",
+        "tools/windows_tool_archive.py": b"toolchain verification\n",
+        "tools/prepare_windows_runtime.py": b"runtime preparation\n",
+        "distribution/windows-runtime.json": b"runtime lock\n",
+        "distribution/windows-build-tools.json": b"toolchain lock\n",
+    }
+    deferred = {
+        "cc2_mce/runtime_data/" + "a" * 64 + "/dinput8.dll": b"reviewed dependency",
+        "cc2_mce/tools_data/manifest.json": b"pinned tool manifest",
+    }
+    report = {
+        "source_sha256": {
+            "cc2_mce/gui.py": sha(files["cc2_mce/gui.py"]),
+            **{name: sha(data) for name, data in deferred.items()},
+        },
+        "build_input_sha256": {
+            "build_windows.bat": sha(b"build script\r\n"),
+            "tools\\check_windows_bundle.py": sha(files["tools/check_windows_bundle.py"]),
+        },
+    }
+    return files, deferred, report
+
+
+def source_zip(files):
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w") as archive:
+        for name, data in files.items():
+            archive.writestr("project/" + name, data)
+    return output.getvalue()
+
+
+def test_source_archive_matches_build_inputs_and_can_restore_approved_dependencies(
+    source_archive_inputs,
+):
+    from tools.package_release import project_source_files
+
+    files, deferred, report = source_archive_inputs
+    result = project_source_files(source_zip(files), "project/", report, deferred)
+    assert result["project/cc2_mce/gui.py"] == b"application source\n"
+    assert result["project/build_windows.bat"] == b"build script\r\n"
+    assert not any(name.endswith(".dll") for name in result)
+
+
+@pytest.mark.parametrize("corruption", ["source", "omitted", "hydrator", "dependency"])
+def test_source_archive_rejects_mismatched_or_missing_build_inputs(
+    source_archive_inputs, corruption
+):
+    from tools.package_release import project_source_files
+
+    files, deferred, report = source_archive_inputs
+    if corruption == "source":
+        files["cc2_mce/gui.py"] = b"different application source\n"
+    elif corruption == "omitted":
+        del files["cc2_mce/gui.py"]
+    elif corruption == "hydrator":
+        del files["tools/prepare_windows_runtime.py"]
+    else:
+        deferred["cc2_mce/tools_data/manifest.json"] = b"different manifest"
+    with pytest.raises(ValueError):
+        project_source_files(source_zip(files), "project/", report, deferred)
+
+
+def test_source_archive_rejects_a_link_without_extracting_it(source_archive_inputs):
+    from tools.package_release import project_source_files
+
+    files, deferred, report = source_archive_inputs
+    payload = io.BytesIO(source_zip(files))
+    with zipfile.ZipFile(payload, "a") as archive:
+        entry = zipfile.ZipInfo("project/linked-source")
+        entry.external_attr = 0o120777 << 16
+        archive.writestr(entry, "../private")
+    with pytest.raises(ValueError, match="link"):
+        project_source_files(payload.getvalue(), "project/", report, deferred)
+
+
 @pytest.mark.parametrize("locks", [2, 12])
 def test_release_finalize_retries_windows_scanner_lock_without_overwriting(
     tmp_path, monkeypatch, locks

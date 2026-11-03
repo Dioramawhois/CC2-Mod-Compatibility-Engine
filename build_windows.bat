@@ -30,6 +30,7 @@ if not exist .build-venv\Scripts\python.exe (
 if not exist cc2_mce\tools_data\manifest.json (
     .build-venv\Scripts\python.exe tools\prepare_windows_tools.py || exit /b 1
 )
+.build-venv\Scripts\python.exe tools\prepare_windows_runtime.py || exit /b 1
 .build-venv\Scripts\python.exe -m pytest -q --junitxml=build/test-results.xml || exit /b 1
 .build-venv\Scripts\python.exe -m PyInstaller --noconfirm --clean CC2ModLoader-0.1.0.spec || exit /b 1
 .build-venv\Scripts\python.exe tools\check_windows_bundle.py || exit /b 1

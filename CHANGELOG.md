@@ -1,4 +1,10 @@
-## Unreleased — общий SDK и независимые Lua-модули
+# Changelog
+
+## 0.4.0b2 — кандидат: общий SDK и независимые Lua-модули
+
+- Original-directory lookup accounts each directory once per analysis, preventing
+  false scan-budget failures for mods adding many resources. Runtime recovery
+  preserves the full relative executable path, including macOS app layouts.
 
 - Journaled exact-runtime upgrade and Undo, approved previous-runtime inputs and built-in SDK dependency fallback; unknown loaders remain protected (ADR-0019).
 
@@ -79,12 +85,6 @@
 - Отчёт остаётся read-only схемой v1 (`installable` = false): запись файлов не меняет схему отчёта.
 - Внешний `git` по-прежнему используется для трёхстороннего слияния; встроенного слияния для Windows без git ещё нет.
 - Тесты: 91 проходят, включая реальную запись разных правок и отказ записи при конфликте.
-
-# Changelog
-
-- Original-directory lookup accounts each directory once per analysis, preventing
-  false scan-budget failures for mods adding many resources. Runtime recovery
-  preserves the full relative executable path, including macOS app layouts.
 
 ## 0.3.3 — игровые форматы и конкретная причина отказа (2026-11-02)
 

@@ -542,7 +542,6 @@ def _recover_pending(user: Path) -> None:
         raise InputError(
             "Настройки изменились после сбоя; автоматическое восстановление остановлено"
         )
-    sdk_runtime.rollback(journal.get("runtime_change"), state_dir, _replace_checked)
     if destination.exists():
         _verified_package(destination)
         current_hash = digest(_read(destination / "mce-manifest.json", destination))
@@ -580,6 +579,9 @@ def _recover_pending(user: Path) -> None:
     elif state_file.exists():
         state_file.unlink()
     sdk_settings.cleanup(user, state_dir, journal.get("config_created", []), remove_targets=True)
+    # Restore our resources/settings even if a separate writer replaced the DLL.
+    # Preserve the pending journal and runtime backup if native rollback refuses.
+    sdk_runtime.rollback(journal.get("runtime_change"), state_dir, _replace_checked)
     pending.unlink()
 
 

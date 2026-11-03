@@ -29,8 +29,10 @@ hash-guarded atomic replace на том же volume. Ошибка/прерыва
 заменяет прежнее разрешение оставлять newly installed SDK после Undo.
 
 Внешняя замена DLL, включая такой же hash с иным inode, или обновление EXE
-останавливает runtime rollback и сохраняет journal/backup. Recovery повторяем;
-уже восстановленный исходный hash принимается. Неизвестные DLL не удаляются
+останавливает runtime rollback и сохраняет journal/backup.
+Собственные resource/settings изменения откатываются до проверки runtime, чтобы
+внешняя замена DLL не удерживала новый payload вместо прежней рабочей сборки.
+Recovery повторяем; уже восстановленный исходный hash принимается. Неизвестные DLL не удаляются
 и не перезаписываются. Игра должна быть закрыта перед apply/recovery/Undo.
 
 Fixtures до реализации: upgrade/Undo, initial install, обычный сбой и interruption

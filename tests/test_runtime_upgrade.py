@@ -189,3 +189,16 @@ def test_recovery_binds_the_full_relative_executable_path(setup):
     apply_plan(prepared, user, game_running=lambda: False)
     restore_previous(user, game_running=lambda: False)
     assert (game.root / "dinput8.dll").read_bytes() == OLD
+
+
+def test_external_runtime_does_not_prevent_resource_rollback(setup):
+    game, profile, user, source = setup
+    before = analyze(game, discover([source.parent / "workshop"]), ["a", "b"], profile=profile)
+    package = apply_plan(before, user, game_running=lambda: False)
+    original = (package / "content/a.txt").read_bytes()
+    apply_plan(plan(setup), user, game_running=lambda: False)
+    (game.root / "dinput8.dll").write_bytes(b"external replacement")
+    with pytest.raises(InputError):
+        restore_previous(user, game_running=lambda: False)
+    assert (package / "content/a.txt").read_bytes() == original
+    assert (user / "cc2-mce/pending.json").exists()

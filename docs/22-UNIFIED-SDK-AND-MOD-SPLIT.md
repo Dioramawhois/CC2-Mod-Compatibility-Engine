@@ -152,10 +152,11 @@ client offsets не переиспользуются. UI модули должн
    source lock/notices, ABI и native profile regressions. Native SEH сохранён
    через отдельный C boundary, Visual Studio не нужен. Исследовательские probes
    и обход предупреждений несовместимости исключены из production runtime.
-4. **SDK reader сделан; ModLoader publisher остаётся:** module bundle/index и
-   проверка нескольких модов. Регрессия:
-   два одинаковых entry filename и local ID не должны терять одну из реализаций;
-   disable/reorder/dependency cycle проверяются через публичный SDK.
+4. **SDK reader и ModLoader publisher реализованы:** module bundle/index сохраняет
+   независимые code roots в одной папке. 27 regressions покрывают одинаковые имена,
+   порядок, зависимости, disable/update, небезопасный input и rollback. Отдельный
+   roundtrip проверен с настоящими bundled luac и C++ SDK reader, без исполнения
+   авторского Lua. См. ADR-0017.
 5. **Generic vehicle/UI перенесены.** F-16/F-15 выделен отдельным consumer
    в `cc2mods-separated/cc2-aircraft`, 57 исходных файлов с прежними IDs и ресурсами.
    Hold/Modes/Brake и аэродромы собираются с общим заголовком; Brake адаптирован
@@ -165,22 +166,53 @@ client offsets не переиспользуются. UI модули должн
    одинаковый catalog, late join и save/reload. Только затем public native release
    и новые reviewed hashes в ModLoader.
 
-Исходная установленная игра, активные моды и публичная Windows beta в ходе
-этой подготовки не меняются. Подготовленные source projects не объявляются
-установленными модами или проверенным мультиплеером.
+Vanilla, EXE, Mod SDK и Workshop не меняются. Явно запрошенные игровые проверки
+используют обратимую замену только известного runtime и generated output/activation;
+публичная Windows beta не заменяется development сборкой. Source candidates не
+объявляются готовым multiplayer-релизом.
 
 ## Фактическая проверка объединённого SDK
 
 Обычный `build.py --test` собирает одну Windows x86 dinput8.dll и выполняет
-18 C/C++/Lua SDK regression executables. Используются настоящий SDK и его Lua
+19 C/C++/Lua SDK regression executables. Используются настоящий SDK и его Lua
 facade, fake game API и собственные synthetic modules; авторские игровые
-Lua/DLL в утилитах разработки не исполняются. Дополнительно пройдены 10 Python
-проверок source extraction/distribution. Контроль DLL исключает встроенные
+Lua/DLL в утилитах разработки не исполняются. Дополнительно пройдены 19 Python
+проверок extraction/distribution/packaging. Контроль DLL исключает встроенные
 сценарии F-16/F-15, research activation и marker обхода incompatibility policy.
 
 Read-only проверка установленного EXE SHA `461e1262…effe42a` подтвердила PE,
 lifecycle/throttle, Lua ABI, World API, 26 animation sites, hangar entries и UI
-injection helpers. Это static profile evidence; новый runtime ещё не проверен
-свежим запуском игры. Новые native hashes в trusted profiles не добавлены.
-Host/client, dedicated, каталог сохранений и полный ModLoader publisher остаются
-незакрытыми. Права команды больше не являются блокировкой.
+injection helpers. Это static profile evidence.
+
+Свежий baseline запуск общего SDK подтвердил attach, legacy Island Airfields v45,
+Lua integration и server ticks. Пользователь подтвердил обычное меню; runtime
+0.5.1 затем восстановлен с проверкой exact hash.
+
+Из чистых Git checkouts собраны SDK и четыре полных package-format candidates:
+Hold copies, Modes, Manual landing brake, F-16/F-15. SDK не вложен в моды;
+сохранены identities, лицензии, source/resource hashes и 57 исходных файлов aircraft.
+API-prefix adaptations Hold/Modes имеют собственные failing-before regressions.
+637/293/335 C checks относятся к fake game, а не к настоящей игре.
+
+Совместный реальный запуск AI Bridge + Island Airfields v46 + Hold + Modes +
+Brake + aircraft подтвердил загрузку четырёх plugins, два early vehicle definitions
+без diagnostics и публикацию шести atlas regions. Lua module lifecycle требует
+запущенной игровой сессии: меню не доказывает on_load/on_update, spawn, физику
+или сетевую синхронизацию. Промежуточный запуск с private output обнаружил, что
+игра возвращает прежний local output в activation; поэтому проверка повторяется
+через настоящий fixed-output workflow с сохранением прежнего payload/Undo state.
+
+ModLoader source также реализует reviewed config defaults (ADR-0018) и
+transactional known-runtime upgrade/dependency fallback (ADR-0019). Неизвестный
+runtime сохраняется; source settings не дают неизвестной DLL прав на запись.
+В production profiles новые native hashes пока не добавлены. Host/client,
+dedicated, catalog/save/reload, чистая ОС и macOS binary acceptance остаются
+отдельными незакрытыми gates. Права команды не являются блокировкой.
+
+Первая проверка нового мира выявила: module on_load/on_update работает без Lua
+errors, но vehicle definitions не готовы. Loader/reset и name-map expansion
+вызывались только из удалённого research probe. Два нужных generic hooks перенесены
+в production definition adapter с теми же exact-byte guards; regression использует
+сам production adapter, проверяет atomic install/abort, relocation и произвольный
+размер каталога. Никакой F-16/F-15 policy или research activation в SDK не возвращено.
+Исправленный runtime требует повторной проверки нового мира.

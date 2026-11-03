@@ -4,6 +4,16 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b4 - Windows beta 4 (2026-11-04)
+
+- Automatically discover custom mods in the standard game user-data mods
+  folder, including `%APPDATA%\Carrier Command 2\mods` on Windows.
+- Refresh the user-mod root on every scan, so creating it after startup
+  needs no manual folder selection. Keep new mods unchecked, preserve the
+  current selection and exclude owned generated output.
+- Document both local locations and retain existing path/native validation,
+  Workshop discovery and package/report schemas. See ADR-0026.
+
 ## 0.4.0b3 - Windows beta 3 (2026-11-03)
 
 - Pin the published CC2X SDK 0.7.0-client-beta.1 runtime, Lua API 2 and

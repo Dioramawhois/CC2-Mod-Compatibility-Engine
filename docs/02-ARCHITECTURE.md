@@ -1,5 +1,11 @@
 # 02. Архитектура
 
+GUI source-root refresh includes the existing game-user `mods` directory on
+every scan, using the same `game_user_dir()` location as activation. Optional
+absent user folders are omitted; existing files/links still reach the normal
+path validation. Scan/report identity and generated-output exclusion stay in
+the discovery adapter. ADR-0026.
+
 `game_launch` validates the applied package/activation and spawns the discovered
 executable directly. `managed_menu` supplies an owned post-merge Lua decorator
 inside the generated package, with provenance in schema v2. Initial discovery

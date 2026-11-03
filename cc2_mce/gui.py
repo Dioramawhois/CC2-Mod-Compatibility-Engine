@@ -712,13 +712,7 @@ class App(tk.Tk):
         self.mod_roots = list(self.installations.workshop_roots)
         self.mod_roots += self.extra_roots
         self.mod_roots.append(self.game.local_mods_dir)
-        self.mod_roots = list(dict.fromkeys(self.mod_roots))
-        sources = " | ".join(str(root) for root in self.mod_roots) or self.tr(
-            "Workshop пока не найден"
-        )
-        self.mods_path.set(
-            self.tr("Моды: {p0}\nЛокальные: {p1}", p0=sources, p1=self.game.local_mods_dir)
-        )
+        self._refresh_mod_roots()
         if self.needs_placement:
             self.game_summary.set(self.tr("Перенесите приложение в папку игры"))
             self.status.set(
@@ -733,11 +727,31 @@ class App(tk.Tk):
         if self.discover_on_start:
             self.scan_sources()
 
+    def _refresh_mod_roots(self) -> None:
+        if self.game is None:
+            return
+        user_mods = game_user_dir() / "mods"
+        roots = [root for root in self.mod_roots if root != user_mods]
+        if user_mods.exists() or user_mods.is_symlink():
+            roots.append(user_mods)
+        self.mod_roots = list(dict.fromkeys(roots))
+        sources = " | ".join(str(root) for root in self.mod_roots) or self.tr(
+            "Workshop пока не найден"
+        )
+        self.mods_path.set(
+            self.tr(
+                "Моды: {p0}\nЛокальные: {p1}",
+                p0=sources,
+                p1=f"{user_mods} | {self.game.local_mods_dir}",
+            )
+        )
+
     def scan_sources(
         self, *, preserve_selection: bool = False, rebuild_after_scan: bool = True
     ) -> None:
         if self.game is None or self.needs_placement:
             return
+        self._refresh_mod_roots()
         roots = list(self.mod_roots)
         selected_game = self.game
         library_roots = [selected_game.libraries_dir]

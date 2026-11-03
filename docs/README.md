@@ -43,6 +43,7 @@ ADRs together; they are not an alternative set of player installation steps.
 - [Library metadata contract](17-LIBRARY-SDK.md)
 - [Steam distribution audit](19-STEAM-DISTRIBUTION-AUDIT.md)
 - [Common SDK and separate gameplay mods](22-UNIFIED-SDK-AND-MOD-SPLIT.md)
+- [Disabled in-game Mods entry while ModLoader controls the set](adr/0028-disabled-managed-game-mods-entry.md)
 - [Architecture decisions](adr/)
 
 The current English README, installation/build guides and the release's own

@@ -4,6 +4,21 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b5 - Windows beta 5 (2026-11-04)
+
+- Disable and gray the main-menu **Mods** entry while the generated ModLoader
+  set is active, replacing the earlier guard that only disabled list rows.
+  Reject direct navigation to that screen and return stale screen state to
+  the main menu. The Workshop uploader behind the entry is also unavailable;
+  other menus and gameplay remain available.
+- Keep the decorator inside the generated merged menu resource, with final
+  Lua syntax validation and adapter/input/output hashes. Removing or undoing
+  the generated set restores the ordinary menu; an empty selection adds no guard.
+- Record `locked-mods-menu-v2` in new package provenance and retain schema
+  compatibility with `read-only-mod-list-v1`. See ADR-0028.
+- Cover the entry, navigation, stale state and unrelated UI with owned synthetic
+  Lua fixtures. No fresh in-game visual or gameplay acceptance is claimed.
+
 ## 0.4.0b4 - Windows beta 4 (2026-11-04)
 
 - Documentation addendum: beginner-first English README with four actual GUI

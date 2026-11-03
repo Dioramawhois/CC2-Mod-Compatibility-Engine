@@ -22,8 +22,8 @@ this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 directly. This permanent link is updated when a newer beta is published.
 
-Alternatively, open the [0.4.0 beta 4 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b4)
-and download **CC2ModLoader-0.4.0b4-windows-x64.zip** for the complete package with
+Alternatively, open the [0.4.0 beta 5 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b5)
+and download **CC2ModLoader-0.4.0b5-windows-x64.zip** for the complete package with
 its README, notices and metadata.
 
 Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links
@@ -150,10 +150,13 @@ open it also checks for changed sources periodically. If the game is running,
 changes wait for it to close.
 
 **Launch** starts `carrier_command.exe` directly from the selected installation.
-Only the generated build is enabled. Its game mod list is gray and read-only;
-use ModLoader to change your selection and then restart the game. The menu
-guard requires readable game menu resources. It does not alter the game files
-or Workshop subscriptions, and restoring/removing the build removes the guard.
+Only the generated build is enabled. The game's main-menu **Mods** entry is
+gray and disabled while this set is active. This also prevents opening the
+game's Workshop uploader through that entry. Use ModLoader to change your
+selection with the game closed, then restart the game. Other menus and gameplay
+remain available. The guard requires readable game menu resources and lives
+only in the generated build. Restoring or disabling that build removes the
+guard and restores the ordinary menu; an empty selection adds no guard.
 
 Open **Load order** to change the merge order. Drag a selected package, or use
 **Alt+Up** and **Alt+Down**. Each change rebuilds the result automatically and
@@ -226,6 +229,7 @@ set you no longer want.
 | An existing `dinput8.dll` blocks activation | Identify the installed loader. Preserve it and check compatibility instead of overwriting it blindly. |
 | Update is waiting | Close the game and allow the pending change or recovery to finish. |
 | A change is rejected | Read the named mod/file in the result and open problem details; the previous set is retained. |
+| The game's Mods entry is gray | The active generated set is controlled by ModLoader. Close the game to change or disable that set in ModLoader; disabling it restores the ordinary game menu. |
 | Files were changed outside the app | Preserve the files and recovery data; report the issue before deleting or replacing them. |
 
 For a bug report, include the application and game versions, selected mod names,

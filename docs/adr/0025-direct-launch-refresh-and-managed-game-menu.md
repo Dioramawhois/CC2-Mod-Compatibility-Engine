@@ -4,6 +4,12 @@ Status: accepted by the owner on 2026-11-03; supersedes the Steam-launch choice
 in ADR-0016. The stable output, reversible activation and native review rules
 from ADR-0009/0010 remain in effect.
 
+Update 2026-11-04: [ADR-0028](0028-disabled-managed-game-mods-entry.md)
+supersedes the reachable read-only mod list described below. New builds disable
+the main-menu Mods entry and reject navigation to that screen while the owned
+set is active. This also removes access to its Workshop uploader. The direct
+launcher, refresh, reversible activation and source-integrity rules remain.
+
 ## Owner request
 
 Start the game's executable instead of opening a Steam URL. Rebuild selected

@@ -3,7 +3,10 @@
 The owned managed-menu decorator is appended only after the ordinary menu
 resource merge succeeds. Validate the resulting Lua and record both adapter
 and input/output hashes. Never replace a rejected menu merge with stock.
-See ADR-0025 and the optional `managed_menu` package provenance contract.
+New outputs use `managed_menu.policy = locked-mods-menu-v2` to identify the
+disabled main-menu Mods entry and blocked Mods navigation. Retain schema support
+for `read-only-mod-list-v1` manifests. No selected mods means no decorator.
+See ADR-0025/0028 and the optional `managed_menu` package provenance contract.
 
 Lua framework requirements are capability checks, not merge priority: a source
 declaring `lua_api` requires a reviewed matching runtime before activation.

@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 
 from cc2_mce.discovery import discover
 from cc2_mce.filesystem import digest
@@ -59,10 +60,26 @@ def test_owned_menu_adapter_is_hashed_validated_and_reversible(tmp_path: Path, e
     assert plan.payload[MENU_PATH] == decorate(source)
     assert plan.report["managed_menu"]["adapter_sha256"] == digest(ADAPTER)
     assert plan.report["managed_menu"]["input_sha256"] == digest(source)
+    assert plan.report["managed_menu"]["output_sha256"] == digest(decorate(source))
+    assert plan.report["managed_menu"]["policy"] == "locked-mods-menu-v2"
     package = apply_plan(plan, user, game_running=lambda: False)
     assert (package / "content" / MENU_PATH).read_bytes() == decorate(source)
     assert original.read_bytes() == source
     restore_previous(user, game_running=lambda: False)
+    assert original.read_bytes() == source
+    assert not package.exists()
+
+
+def test_empty_selection_does_not_lock_the_game_menu(tmp_path: Path):
+    game, profile, _ = fixture(tmp_path)
+    source = b"function begin() end\nfunction update() end\n"
+    original = game.root / "rom_0" / MENU_PATH
+    original.parent.mkdir(parents=True)
+    original.write_bytes(source)
+    plan = analyze(game, discover([tmp_path / "workshop"]), [], profile=profile)
+    assert not plan.blockers
+    assert MENU_PATH not in plan.payload
+    assert "managed_menu" not in plan.report
     assert original.read_bytes() == source
 
 
@@ -78,3 +95,23 @@ def test_unresolved_menu_conflict_is_not_replaced_by_stock_menu(tmp_path: Path):
     plan = analyze(game, discover([tmp_path / "workshop"]), ["a", "b"], profile=profile)
     assert plan.blockers
     assert MENU_PATH not in plan.payload
+
+
+@pytest.mark.parametrize("policy", ["read-only-mod-list-v1", "locked-mods-menu-v2"])
+def test_menu_schema_accepts_existing_and_current_policy(policy: str):
+    schema = json.loads(
+        (Path(__file__).parents[1] / "cc2_mce/schemas/package.schema.json").read_text("utf-8")
+    )
+    validator = Draft202012Validator(
+        {"$defs": schema["$defs"], **schema["properties"]["managed_menu"]}
+    )
+    metadata = {
+        "policy": policy,
+        "logical_path": MENU_PATH,
+        "input_sha256": digest(b"input"),
+        "adapter_sha256": digest(ADAPTER),
+        "output_sha256": digest(b"output"),
+    }
+    validator.validate(metadata)
+    metadata["policy"] = "unknown-policy"
+    assert list(validator.iter_errors(metadata))

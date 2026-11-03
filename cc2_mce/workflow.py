@@ -161,7 +161,13 @@ def _package_metadata(selected: tuple[ModRef, ...]) -> bytes:
     return bytes(ET.tostring(root, encoding="utf-8", xml_declaration=True))
 
 
-def _original_path(root: Path, folder: str, logical: str, budget: Budget) -> Path | None:
+def _original_path(
+    root: Path,
+    folder: str,
+    logical: str,
+    budget: Budget,
+    directory_cache: dict[Path, tuple[Path, ...]],
+) -> Path | None:
     directory = root / folder
     if not directory.exists() and not directory.is_symlink():
         return None
@@ -173,9 +179,12 @@ def _original_path(root: Path, folder: str, logical: str, budget: Budget) -> Pat
     cursor = directory
     for component in logical.split("/"):
         key = unicodedata.normalize("NFC", component).casefold()
+        cursor = input_root(cursor)
+        if cursor not in directory_cache:
+            directory_cache[cursor] = tuple(bounded_children(cursor, budget))
         matches = [
             path
-            for path in bounded_children(input_root(cursor), budget)
+            for path in directory_cache[cursor]
             if unicodedata.normalize("NFC", path.name).casefold() == key
         ]
         if not matches:
@@ -225,6 +234,7 @@ def analyze(
     config_providers: dict[str, set[str]] = defaultdict(set)
     runtime_inputs: dict[str, str] = {}
     baseline_budget = Budget(Limits())
+    baseline_directories: dict[Path, tuple[Path, ...]] = {}
     for key, variants in sorted(groups.items()):
         logical = variants[0][1].logical_path
         source_hashes = {mod.id: item.sha256 for mod, item in variants}
@@ -244,7 +254,9 @@ def analyze(
         base: bytes | None = None
         baseline_source = None
         for folder in ("rom_0", "mod_dev_kit/source"):
-            candidate = _original_path(game.root, folder, logical, baseline_budget)
+            candidate = _original_path(
+                game.root, folder, logical, baseline_budget, baseline_directories
+            )
             if candidate is not None:
                 base = read_regular(candidate, game.root, baseline_budget)
                 baseline_source = folder + "/" + logical

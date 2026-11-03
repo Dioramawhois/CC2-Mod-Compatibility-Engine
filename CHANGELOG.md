@@ -82,6 +82,10 @@
 
 # Changelog
 
+- Original-directory lookup accounts each directory once per analysis, preventing
+  false scan-budget failures for mods adding many resources. Runtime recovery
+  preserves the full relative executable path, including macOS app layouts.
+
 ## 0.3.3 — игровые форматы и конкретная причина отказа (2026-11-02)
 
 - Исправлен отказ Combined Fleet на двух `.glsl` shaders и двух `.txtr` textures, подтверждённых в установленном rom_0: шейдеры обрабатываются настоящим text merge, TXTR-magic ресурсы копируются/заменяются целиком по прежней policy. Unknown header в любом варианте остаётся blocker; неизвестные типы/DLL не разрешены молча.

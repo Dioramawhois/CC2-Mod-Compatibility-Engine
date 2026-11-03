@@ -175,3 +175,17 @@ def test_unlisted_old_library_runtime_stays_blocked(setup):
     make_mod(source, "unreviewed", {"dinput8.dll": b"unreviewed source runtime"})
     prepared = analyze(game, discover([source]), ["app", "unreviewed"], profile=profile)
     assert any(b["code"] == "runtime_conflict" for b in prepared.blockers)
+
+
+def test_recovery_binds_the_full_relative_executable_path(setup):
+    from dataclasses import replace
+
+    game, profile, user, source = setup
+    nested = game.root / "build_mac/carriercommand.app/Contents/MacOS/carriercommand"
+    nested.parent.mkdir(parents=True)
+    nested.write_bytes(game.executable.read_bytes())
+    nested_game = replace(game, executable=nested)
+    prepared = analyze(nested_game, discover([source]), ["app"], profile=profile)
+    apply_plan(prepared, user, game_running=lambda: False)
+    restore_previous(user, game_running=lambda: False)
+    assert (game.root / "dinput8.dll").read_bytes() == OLD

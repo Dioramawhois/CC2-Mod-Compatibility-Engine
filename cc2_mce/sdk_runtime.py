@@ -9,7 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from cc2_mce.errors import InputError
-from cc2_mce.filesystem import Budget, Limits, digest, input_root, read_regular
+from cc2_mce.filesystem import (
+    Budget,
+    Limits,
+    digest,
+    input_root,
+    normalize_logical_path,
+    read_regular,
+)
 from cc2_mce.installation import Installation
 
 
@@ -48,7 +55,7 @@ def stage(
     info = temporary.stat()
     return {
         "game_root": str(game.root),
-        "executable": game.executable.name,
+        "executable": game.executable.relative_to(game.root).as_posix(),
         "game_sha256": profile["game_sha256"],
         "temporary": temporary.name,
         "backup": cache if old is not None else None,
@@ -62,7 +69,8 @@ def stage(
 def _paths(record: dict[str, Any]) -> tuple[Path, Path, Path]:
     root = input_root(Path(record["game_root"]))
     executable = record["executable"]
-    if executable != Path(executable).name or "/" in executable or "\\" in executable:
+    normalized, _ = normalize_logical_path(executable)
+    if normalized != executable:
         raise InputError("Invalid runtime executable identity")
     if digest(_read(root / executable, root)) != record["game_sha256"]:
         raise InputError("Game changed; runtime restoration stopped")

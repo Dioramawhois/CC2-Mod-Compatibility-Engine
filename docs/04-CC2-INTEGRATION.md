@@ -1,5 +1,22 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+ADR-0025 replaces Steam URL launch with the local executable and game working
+directory. Startup refresh restores only the verified remembered selection.
+Its activation enables exactly the generated package; its menu resource
+decorator makes the game mod list gray/read-only without changing vanilla.
+
+New Lua-only package contract: `<cc2mce schema="1" type="mod" id="example"
+sdk="cc2x" api="8" lua_api="2"><requires id="cc2x.runtime"/></cc2mce>`.
+The SDK Lua API version and reviewed `lua-mod-api-v2` capability must both be
+available. C API 8 alone is insufficient. Steam Required Items advertises the
+SDK dependency; the matching ModLoader still installs its native bootstrap.
+Native authors retain the C/C++ route. A package using the new named C
+extension declares `framework_api="1"`; analysis requires reviewed
+`runtime_framework_api >= 1` and `framework-c-api-v1`. A mixed package declares
+both API requirements. Existing packages without these attributes retain their
+previous behavior, and exact native hash review remains mandatory.
+See ADR-0024; the new migration has not yet reached complete game acceptance.
+
 Exact previous-runtime whitelist разрешает обратимое обновление общего SDK; неизвестный dinput8.dll сохраняется. Bundled runtime проверяется по hash до dependency fallback. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
 
 Кандидат 0.4.0b2 содержит SDK API 8 и точные review-профили Hold/Modes/Brake/v46,

@@ -117,7 +117,7 @@ EN: dict[str, str] = {
     "Не удалось безопасно прочитать или записать выбранные папки.": "Could not safely read or write the selected folders.",
     "Не удалось безопасно прочитать список библиотек Steam.": "Could not safely read the Steam library list.",
     "Не удалось выполнить встроенную проверку файлов.": "The bundled file validation could not be completed.",
-    "Не удалось открыть игру через Steam.": "Could not open the game through Steam.",
+    "Не удалось запустить игру.": "Could not launch the game.",
     "Не удалось подготовить mods и libraries. Проверьте доступ к папке игры.": "Could not prepare mods and libraries. Check access to the game folder.",
     "Не удалось проверить, закрыта ли игра": "Could not check whether the game is closed",
     "Не удалось прочитать mods.xml": "Could not read mods.xml",

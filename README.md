@@ -4,8 +4,8 @@ Combine selected Carrier Command 2 mods into one local game mod, using a desktop
 interface and real Git three-way merging. Choose mods with checkboxes, arrange
 patches in **Load order**, and launch the prepared set from the same window.
 
-**Current release: 0.4.0 beta 2 for Windows x64.**
-[Download the release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b2)
+**Current release: 0.4.0 beta 3 for Windows x64.**
+[Download the release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b3)
 | [Installation and use](docs/INSTALLATION.md)
 | [Build from source](docs/BUILDING.md)
 | [Documentation](docs/README.md)
@@ -18,8 +18,8 @@ native code, invalid syntax and unsafe paths.
 
 | Route | What to download | What you need |
 | --- | --- | --- |
-| **1. Use the ready executable** - recommended for players | [CC2ModLoader-0.4.0b2-windows-x64.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b2/CC2ModLoader-0.4.0b2-windows-x64.zip) | Windows x64 and an installed copy of Carrier Command 2. No Python, Git, Lua or terminal setup. |
-| **2. Build the application yourself** | [CC2ModLoader-0.4.0b2-source.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b2/CC2ModLoader-0.4.0b2-source.zip), or clone tag `v0.4.0b2` | A Windows developer environment with Python 3.12+ and Git. The build prepares its pinned dependencies. Follow the [complete build guide](docs/BUILDING.md). |
+| **1. Use the ready executable** - recommended for players | [CC2ModLoader-0.4.0b3-windows-x64.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b3/CC2ModLoader-0.4.0b3-windows-x64.zip) | Windows x64 and an installed copy of Carrier Command 2. No Python, Git, Lua or terminal setup. |
+| **2. Build the application yourself** | [CC2ModLoader-0.4.0b3-source.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b3/CC2ModLoader-0.4.0b3-source.zip), or clone tag `v0.4.0b3` | A Windows developer environment with Python 3.12+ and Git. The build prepares its pinned dependencies. Follow the [complete build guide](docs/BUILDING.md). |
 
 Both routes produce **CC2ModLoader.exe** and lead to the same GUI workflow.
 GitHub's automatic Source code ZIP is not the ready application. Application
@@ -45,7 +45,11 @@ undo and troubleshooting, read [Installation and use](docs/INSTALLATION.md).
 
 - Discovers Workshop subscriptions across Steam libraries and reads them in
   place, alongside local `mods` and `libraries` folders.
-- Rebuilds one fixed generated mod after checkbox or load-order changes.
+- Rebuilds one fixed generated mod after checkbox or load-order changes and
+  refreshes the saved selection on every startup, including Workshop updates.
+- Starts the local game executable with the generated build already enabled.
+  The generated menu makes the game mod list gray and read-only; change your
+  selection in ModLoader before starting the game.
 - Uses installed originals as the common base for real Git three-way text
   merging, followed by the applicable syntax/format checks.
 - Preserves independent Lua modules when supported by the reviewed runtime,
@@ -129,14 +133,15 @@ launch. The normal GUI remains available when that option is disabled.
 | Ready desktop download | Windows x64 graphical executable with bundled merge/validation tools. |
 | Shared code | Windows/macOS CI on Python 3.12 and 3.13, including real Git fixtures and the synthetic golden corpus. |
 | Native game integration | Exact reviewed Windows CC2 1.5.18-r2 game/runtime/plugin profiles; unreviewed binaries stay blocked. |
-| Recorded single-player checks | Combined native/Lua loading with AI Bridge, Island Airfields v46, Hold, Modes, Brake and separate aircraft; custom aircraft registration/hangar creation and unchanged-catalog save/reload. |
+| Current SDK integration | Exact 0.7 framework runtime: real-game bootstrap alone and with the existing native mod set and public C/C++ consumers. Independent Lua API 2 and named C API 1 have paired offline fixtures. |
+| Historical single-player checks | The earlier 0.6 runtime covered combined native/Lua loading, custom aircraft registration/hangar creation and unchanged-catalog save/reload. Those results do not certify the new binary's full gameplay. |
 | Remaining gates | Remote multiplayer, dedicated-server profile/bootstrap, full custom flight/island landing, changed-catalog save migration, clean-machine acceptance, packaged macOS app and native macOS runtime. |
 
 These are distinct validation levels. Shared-core CI and a successful synthetic
 merge do not prove game compatibility or a certified macOS application. See the
 release notes and attached build metadata for the evidence for a particular
 binary. The SDK's own source and distribution are maintained in the separate
-[CC2X SDK project](https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/tag/0.6.0-client-beta.1).
+[CC2X SDK project](https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/tag/0.7.0-client-beta.1).
 
 ## Release contents and source transparency
 

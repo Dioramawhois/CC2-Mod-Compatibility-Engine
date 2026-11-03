@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import os
 import queue
 import sys
 import textwrap
 import threading
 import tkinter as tk
-import webbrowser
 from collections.abc import Callable
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -18,9 +16,9 @@ from cc2_mce.baseline import Baseline
 from cc2_mce.discovery import ModRef, Scan, discover
 from cc2_mce.errors import InputError, MCEError
 from cc2_mce.filesystem import Budget, Limits, input_root, read_regular
+from cc2_mce.game_launch import launch_game
 from cc2_mce.i18n import LANGUAGES, Translator
 from cc2_mce.installation import (
-    GAME_ID,
     Installation,
     Installations,
     find_installations,
@@ -39,6 +37,7 @@ from cc2_mce.workflow import (
     apply_plan,
     game_user_dir,
     recover_interrupted,
+    remembered_package,
     restore_previous,
 )
 
@@ -809,6 +808,11 @@ class App(tk.Tk):
                 self._applied_ids = applied
                 self._applied_order = list(dict.fromkeys(applied_order))
                 self._activation_known = True
+                if not preserve_selection:
+                    remembered = remembered_package(selected_game, game_user_dir())
+                    if remembered is not None:
+                        desired = set(remembered["mod_order"])
+                        self.auto_enabled = True
                 showing_warning = (
                     self._applied_warning is not None
                     and self.notice_title.get() == self._applied_warning.title
@@ -886,11 +890,11 @@ class App(tk.Tk):
             self._update_rows()
             self._render_order()
             if (
-                self.auto_enabled
-                and self._activation_known
+                self._activation_known
                 and rebuild_after_scan
                 and (not preserve_selection or selection_sources_changed)
             ):
+                self.auto_enabled = True
                 self.selection_dirty = True
                 self._queue_rebuild()
             self._refresh_controls()
@@ -1279,16 +1283,20 @@ class App(tk.Tk):
             )
             return False
         try:
-            input_root(self.game.root)
-            url = f"steam://rungameid/{GAME_ID}"
-            if sys.platform == "win32":
-                os.startfile(url)
-            else:
-                if not webbrowser.open(url):
-                    raise OSError("Steam URL handler unavailable")
+            expected = (self.active_package,) if self._applied_ids else ()
+            if active_paths(game_user_dir()) != expected:
+                self._play_requested = True
+                self.selection_dirty = True
+                self.status.set(self.tr("Обновляем сборку…"))
+                self._queue_rebuild()
+                self._refresh_controls()
+                return False
+            launch_game(
+                self.game, game_user_dir(), self.active_package if self._applied_ids else None
+            )
             return True
         except (OSError, MCEError):
-            self.status.set(self.tr("Не удалось открыть игру через Steam."))
+            self.status.set(self.tr("Не удалось запустить игру."))
             return False
 
 

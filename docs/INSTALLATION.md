@@ -19,8 +19,8 @@ this Windows release. See [the current scope](../README.md#support-and-validatio
 
 ## 1. Download the application
 
-Open the [0.4.0 beta 2 release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b2)
-and download **CC2ModLoader-0.4.0b2-windows-x64.zip** from Assets.
+Open the [0.4.0 beta 3 release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b3)
+and download **CC2ModLoader-0.4.0b3-windows-x64.zip** from Assets.
 
 Choose the Windows ZIP for this route. GitHub's automatic **Source code** links
 and the separate `-source.zip` are for developers; they are not the application.
@@ -118,6 +118,18 @@ from the game's installation folder. **Menu > File locations...** shows the
 paths used by your installation; no manual configuration editing is needed.
 
 ## 5. Arrange patches and understand warnings
+
+Each time you open ModLoader, it checks the saved selection and rebuilds it
+from the currently installed mod files. Updates to selected Workshop mods are
+included; newly discovered mods still need a checkbox. While ModLoader remains
+open it also checks for changed sources periodically. If the game is running,
+changes wait for it to close.
+
+**Launch** starts `carrier_command.exe` directly from the selected installation.
+Only the generated build is enabled. Its game mod list is gray and read-only;
+use ModLoader to change your selection and then restart the game. The menu
+guard requires readable game menu resources. It does not alter the game files
+or Workshop subscriptions, and restoring/removing the build removes the guard.
 
 Open **Load order** to change the merge order. Drag a selected package, or use
 **Alt+Up** and **Alt+Down**. Each change rebuilds the result automatically and

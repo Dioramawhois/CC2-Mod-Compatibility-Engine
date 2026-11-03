@@ -52,6 +52,8 @@ class ModRef:
     api: int = 0
     metadata: bytes = b""
     root_files: tuple[FileRef, ...] = ()
+    lua_api: int = 0
+    framework_api: int = 0
 
     def report(self) -> dict[str, object]:
         value: dict[str, object] = {
@@ -67,6 +69,10 @@ class ModRef:
         }
         if self.root_files:
             value["root_files"] = [item.report() for item in self.root_files]
+        if self.lua_api:
+            value["lua_api"] = self.lua_api
+        if self.framework_api:
+            value["framework_api"] = self.framework_api
         return value
 
 
@@ -84,7 +90,9 @@ def fingerprint(value: object) -> str:
     )
 
 
-def _metadata(data: bytes, fallback: str) -> tuple[str, str, str, tuple[str, ...], str | None, int]:
+def _metadata(
+    data: bytes, fallback: str
+) -> tuple[str, str, str, tuple[str, ...], str | None, int, int, int]:
     try:
         text = data.decode("utf-8-sig").lstrip()
         if re.search(r"<!\s*(?:DOCTYPE|ENTITY)", text, re.IGNORECASE):
@@ -95,14 +103,15 @@ def _metadata(data: bytes, fallback: str) -> tuple[str, str, str, tuple[str, ...
             raise InputError("Invalid mod metadata root/name")
         sections = root.findall("cc2mce")
         if not sections:
-            return root.attrib.get("name", fallback), "mod", fallback, (), None, 0
+            return root.attrib.get("name", fallback), "mod", fallback, (), None, 0, 0, 0
         if len(sections) != 1:
             raise InputError("Duplicate CC2-MCE package declaration")
         section = sections[0]
         if (
             section.get("schema") != "1"
             or section.get("type") not in {"mod", "library"}
-            or set(section.attrib) - {"schema", "type", "id", "sdk", "api"}
+            or set(section.attrib)
+            - {"schema", "type", "id", "sdk", "api", "lua_api", "framework_api"}
         ):
             raise InputError("Unsupported CC2-MCE package declaration")
         package_id = section.get("id", fallback)
@@ -112,6 +121,21 @@ def _metadata(data: bytes, fallback: str) -> tuple[str, str, str, tuple[str, ...
         api_value = section.get("api", "0")
         if not api_value.isascii() or not api_value.isdigit() or not 0 <= int(api_value) <= 10000:
             raise InputError("Invalid SDK API version")
+        lua_api_value = section.get("lua_api", "0")
+        if (
+            not lua_api_value.isascii()
+            or not lua_api_value.isdigit()
+            or not 0 <= int(lua_api_value) <= 10000
+        ):
+            raise InputError("Invalid SDK Lua API version")
+        framework_api_value = section.get("framework_api", "0")
+        if (
+            not framework_api_value.isascii()
+            or not framework_api_value.isdigit()
+            or len(framework_api_value) > 5
+            or not 0 <= int(framework_api_value) <= 10000
+        ):
+            raise InputError("Invalid SDK framework API version")
         sdk = section.get("sdk")
         if sdk not in {None, "cc2x"}:
             raise InputError("Unknown SDK declaration")
@@ -131,6 +155,8 @@ def _metadata(data: bytes, fallback: str) -> tuple[str, str, str, tuple[str, ...
             tuple(dependencies),
             sdk,
             int(api_value),
+            int(lua_api_value),
+            int(framework_api_value),
         )
     except (UnicodeError, ElementTree.ParseError) as exc:
         raise InputError("Invalid metadata XML") from exc
@@ -178,8 +204,8 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
         metadata = b""
         if (root / "mod.xml").exists() or (root / "mod.xml").is_symlink():
             metadata = read_regular(root / "mod.xml", root, budget)
-        name, package_kind, package_id, dependencies, sdk, api = (
-            _metadata(metadata, mod_id) if metadata else (mod_id, "mod", mod_id, (), None, 0)
+        name, package_kind, package_id, dependencies, sdk, api, lua_api, framework_api = (
+            _metadata(metadata, mod_id) if metadata else (mod_id, "mod", mod_id, (), None, 0, 0, 0)
         )
         files: list[FileRef] = []
         local_keys: set[str] = set()
@@ -236,6 +262,8 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
                 api,
                 metadata,
                 tuple(root_files),
+                lua_api,
+                framework_api,
             )
         )
     return Scan(canonical_roots, tuple(mods), fingerprint([mod.report() for mod in mods]), limits)

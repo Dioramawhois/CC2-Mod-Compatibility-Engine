@@ -1,5 +1,18 @@
 # 01. Product Requirements (PRD)
 
+Owner update 2026-11-03: launch the local game executable directly, reanalyze
+the saved set on every startup, and activate only its generated package. The
+generated menu makes mod rows gray/read-only; changes stay in ModLoader.
+Newly discovered mods still require selection. See ADR-0025.
+
+New framework boundary: the supplied gameplay ports use Lua/content and declare their
+separate `lua_api` requirement; the SDK supplies only reusable engine primitives.
+C/C++ plugins remain supported with the same shared engine operations. New
+native consumers declare `framework_api`; both languages require the matching
+reviewed runtime capability and version before activation.
+The published C API 8 binary does not imply newer Lua support. ADR-0024 defines
+the candidate migration and acceptance gates; existing beta evidence stays scoped.
+
 0.4.0b2 client-candidate поставляет точный проверенный SDK API 8 для выбранных
 native consumers без ручной установки. Статус тестовой сборки SDK не показывается
 в GUI ModLoader; сведения о приёмке сохраняются в SDK documentation и runtime

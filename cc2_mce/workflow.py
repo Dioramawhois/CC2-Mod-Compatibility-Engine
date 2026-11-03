@@ -33,10 +33,12 @@ from cc2_mce.filesystem import (
 )
 from cc2_mce.installation import Installation
 from cc2_mce.locking import activation_lock
+from cc2_mce.managed_menu import ADAPTER, MENU_PATH, POLICY, decorate
 from cc2_mce.merge import GitMergeAdapter, MergeInput, merge_file
 from cc2_mce.module_bundles import prepare_modules
 from cc2_mce.reports import engine_hash
 from cc2_mce.toolchain import Toolchain
+from cc2_mce.validation import validate_content
 
 OUTPUT_FOLDER = "CC2-MCE"
 RUNTIME_DATA = Path(__file__).parent / "runtime_data"
@@ -255,6 +257,17 @@ def analyze(
     for mod in chosen:
         if mod.api > profile.get("runtime_api", 0):
             blockers.append({"code": "sdk_api", "message": f"{mod.name}: нужна новая версия SDK"})
+        if mod.lua_api and (
+            mod.lua_api > profile.get("runtime_lua_api", 0)
+            or f"lua-mod-api-v{mod.lua_api}" not in profile.get("runtime_capabilities", [])
+        ):
+            blockers.append({"code": "sdk_api", "message": f"{mod.name}: нужна новая версия SDK"})
+        if mod.framework_api and (
+            mod.framework_api > profile.get("runtime_framework_api", 0)
+            or f"framework-c-api-v{mod.framework_api}"
+            not in profile.get("runtime_capabilities", [])
+        ):
+            blockers.append({"code": "sdk_api", "message": f"{mod.name}: нужна новая версия SDK"})
         for item in mod.files:
             if (mod.id, item.key) in bundle.handled:
                 continue
@@ -355,6 +368,52 @@ def analyze(
                     "message": "; ".join(diagnostics) or f"{logical}: {status}",
                 }
             )
+    managed_menu = None
+    if chosen:
+        menu_row = next(
+            (item for item in files if item["logical_path"].casefold() == MENU_PATH), None
+        )
+        menu_logical = menu_row["logical_path"] if menu_row else MENU_PATH
+        menu_source = payload.get(menu_logical)
+        menu_baseline = None
+        if menu_row is None:
+            for folder in ("rom_0", "mod_dev_kit/source"):
+                candidate = _original_path(
+                    game.root, folder, MENU_PATH, baseline_budget, baseline_directories
+                )
+                if candidate is not None:
+                    menu_source = read_regular(candidate, game.root, baseline_budget)
+                    menu_baseline = folder + "/" + MENU_PATH
+                    break
+        # Never replace a rejected source menu with the vanilla version.
+        if menu_source is not None:
+            decorated = decorate(menu_source)
+            status, diagnostic = validate_content(
+                menu_logical, decorated, luac=str(tools.luac) if tools else None
+            )
+            if status == "valid":
+                payload[menu_logical] = decorated
+                if menu_row is None:
+                    menu_row = {
+                        "logical_path": menu_logical,
+                        "status": "copied",
+                        "strategy": "managed-menu",
+                        "source_sha256": {},
+                        "baseline_sha256": digest(menu_source),
+                        "baseline_source": menu_baseline,
+                        "diagnostics": [],
+                    }
+                    files.append(menu_row)
+                menu_row["output_sha256"] = digest(decorated)
+                managed_menu = {
+                    "policy": POLICY,
+                    "logical_path": menu_logical,
+                    "input_sha256": digest(menu_source),
+                    "adapter_sha256": digest(ADAPTER),
+                    "output_sha256": digest(decorated),
+                }
+            else:
+                blockers.append({"code": status, "file": menu_logical, "message": diagnostic})
     runtime = None
     if needs_runtime:
         expected = profile.get("runtime_sha256")
@@ -404,6 +463,8 @@ def analyze(
     }
     if bundle.modules:
         report["modules"] = bundle.modules
+    if managed_menu is not None:
+        report["managed_menu"] = managed_menu
     if runtime_inputs:
         report["runtime_inputs"] = runtime_inputs
     if needs_runtime and profile.get("runtime_review"):
@@ -545,6 +606,31 @@ def _verified_package(path: Path) -> dict[str, Any]:
     if actual != expected:
         raise InputError("В выходной пакет добавлены или изменены файлы")
     return report  # type: ignore[no-any-return]
+
+
+def remembered_package(game: Installation, user_dir: Path) -> dict[str, Any] | None:
+    """Recover the last owned selection even when the game changed mods.xml."""
+    state_dir = user_dir / "cc2-mce"
+    state_file = state_dir / "activation.json"
+    if not state_file.exists() and not state_file.is_symlink():
+        return None
+    state = json.loads(_read(state_file, input_root(state_dir)))
+    if not isinstance(state, dict) or state.get("owner") != "cc2-mce":
+        raise InputError("Unknown activation journal")
+    package = user_dir / "mods" / OUTPUT_FOLDER
+    if state.get("package") != str(package):
+        raise InputError("Unexpected saved package path")
+    report = _verified_package(package)
+    if (
+        report["build_id"] != state.get("build_id")
+        or report["mod_order"] != state.get("mod_order")
+        or digest(_read(package / "mce-manifest.json", package)) != state.get("new_manifest_sha256")
+    ):
+        raise InputError("Saved activation and package do not match")
+    # The same user-data directory may be used with another installed game.
+    if digest(_read(game.executable, game.root)) != report["game_sha256"]:
+        return None
+    return report
 
 
 def _cache_path(state_dir: Path, name: str) -> Path:

@@ -1,5 +1,17 @@
 # 03. Спецификация движка слияния
 
+The owned managed-menu decorator is appended only after the ordinary menu
+resource merge succeeds. Validate the resulting Lua and record both adapter
+and input/output hashes. Never replace a rejected menu merge with stock.
+See ADR-0025 and the optional `managed_menu` package provenance contract.
+
+Lua framework requirements are capability checks, not merge priority: a source
+declaring `lua_api` requires a reviewed matching runtime before activation.
+A source declaring `framework_api` has the same rule for the named C extension.
+Neither requirement changes merge order or authorizes an unknown native DLL.
+Independent Lua module roots remain separate under ADR-0017/0024; native safety
+and the existing resource merge policy are unchanged.
+
 Независимые SDK manifest/code paths не участвуют в file merge: для каждого
 выбранного модуля сохраняются отдельные bytes и code root. Общие game resources
 следуют обычным правилам; ordered patches не разрешают duplicate owner IDs

@@ -4,6 +4,35 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b3 - Windows beta 3 (2026-11-03)
+
+- Pin the published CC2X SDK 0.7.0-client-beta.1 runtime, Lua API 2 and
+  named C framework API 1. Upgrade the exact reviewed 0.6 runtime reversibly;
+  preserve unknown installed loaders. Exact-source and compiler-library
+  notices remain separate release assets. Current native acceptance covers
+  bootstrap and consumer loading; full gameplay and multiplayer remain open.
+
+- Start the local game executable directly with the game working directory.
+  Recheck the applied activation and package before launching.
+- Refresh and rebuild the saved mod set on every ModLoader startup, including
+  added/removed Workshop files. Recover the last owned selection if the game
+  changed its active mods, then activate only the generated build.
+- Add an owned, syntax-checked menu decorator to generated packages: the game
+  mod list is gray and read-only while ModLoader manages the selected set.
+  Vanilla and Workshop files remain untouched; see ADR-0025.
+
+- Keep native C/C++ plugin support alongside Lua. Recognize a separate
+  `framework_api` package requirement and require the matching reviewed C
+  extension capability, preventing an older API 8 binary from silently
+  accepting a consumer of the new named interface.
+
+- Record a separate `lua_api` requirement in package metadata and source reports.
+  Require a matching reviewed runtime capability as well as its Lua API version;
+  the published C API 8 runtime cannot silently satisfy newer Lua-only mods.
+- Adopt the framework-only SDK boundary: new gameplay releases own their Lua
+  policy and content and contain no private native plugin. Migration and fresh
+  game acceptance remain in progress; see ADR-0024.
+
 ## 0.4.0b2 - Windows beta 2 (2026-11-03)
 
 - Publish two documented distribution routes: the ready-to-use Windows executable

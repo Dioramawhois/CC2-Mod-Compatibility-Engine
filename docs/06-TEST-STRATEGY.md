@@ -1,5 +1,11 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0025 regressions cover direct executable spawning, changed activation/game/
+payload refusal, forced startup analysis, new/removed Workshop files, remembered
+selection recovery, and generated-menu hashing/syntax/rollback. The owned Lua
+UI fixture checks disabled rows/buttons and stale keyboard/dialog actions;
+no user mod Lua is executed by it. Real game-menu checks remain separate.
+
 Version-selection fixtures: source choice, duplicate selection refusal,
 dependency preference/ambiguity, ID shadow, fixed-output switch/Undo и реальные
 Tk checkbox success/rejection. Не требуется менять Workshop для теста обновления.

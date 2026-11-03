@@ -1,5 +1,16 @@
 # 02. Архитектура
 
+`game_launch` validates the applied package/activation and spawns the discovered
+executable directly. `managed_menu` supplies an owned post-merge Lua decorator
+inside the generated package, with provenance in schema v2. Initial discovery
+always refreshes the remembered selected set before auto-launch. ADR-0025.
+
+Framework migration: source metadata includes optional `lua_api` and
+`framework_api`. Analysis requires the reviewed runtime's corresponding API
+level and matching capability. Gameplay stays in separate modules or native
+plugins; the supplied ports use Lua. Both frontends share SDK mechanisms.
+See ADR-0024.
+
 `sdk_runtime` отделяет runtime stage/install/recovery от resource merge; journal фиксирует backup, EXE и inode до atomic publication. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
 
 Client-candidate содержит hash-addressed runtime_data с точными DLL/provenance/

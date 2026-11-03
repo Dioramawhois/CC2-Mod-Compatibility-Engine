@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "file": "dinput8.dll",
-  "url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/download/0.6.0-client-beta.1/dinput8.dll",
-  "sha256": "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
-  "bytes": 1549824
+  "url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/download/0.7.0-client-beta.1/dinput8.dll",
+  "sha256": "ed27641315e3957e991bb5fb00de8481c4a5ba7432d48a2638dee1d939110ff0",
+  "bytes": 1679360
 }

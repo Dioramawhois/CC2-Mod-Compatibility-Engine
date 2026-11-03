@@ -41,6 +41,35 @@ def index(plan):
     return json.loads(plan.payload["cc2x-modules/index.json"])
 
 
+def test_rules_entry_is_validated_and_kept_private(setup):
+    game, profile, _, root = setup
+    package = root / "zeta"
+    (package / "mod.xml").write_text(
+        '<data><cc2mce schema="1" type="mod" id="zeta" sdk="cc2x" api="8" lua_api="2"/></data>',
+        encoding="utf-8",
+    )
+    profile.update(runtime_lua_api=2)
+    profile["runtime_capabilities"].append("lua-mod-api-v2")
+    manifest = package / "content/bridge.json"
+    (package / "content/bridge/rules.lua").write_bytes(b"return {}\n")
+    value = {"id": "zeta", "scripts": ["bridge/main.lua"], "rules": "bridge/rules.lua"}
+    manifest.write_text(json.dumps(value), encoding="utf-8")
+    plan = analyze(game, discover([root]), ["zeta"], profile=profile)
+    assert not plan.blockers
+    key = index(plan)["packages"][0]
+    assert plan.payload[f"cc2x-modules/{key}/content/bridge/rules.lua"] == b"return {}\n"
+    for invalid in (
+        "../outside.lua",
+        "bridge/missing.lua",
+        "scripts/screen.lua",
+        ["bridge/rules.lua"],
+    ):
+        value["rules"] = invalid
+        manifest.write_text(json.dumps(value), encoding="utf-8")
+        plan = analyze(game, discover([root]), ["zeta"], profile=profile)
+        assert plan.blockers, invalid
+
+
 def test_identical_entry_names_keep_separate_code_and_owner_order(setup):
     game, profile, _, root = setup
     plan = analyze(game, discover([root]), ["zeta", "alpha"], profile=profile)

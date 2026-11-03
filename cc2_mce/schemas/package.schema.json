@@ -20,6 +20,18 @@
     "package_metadata_sha256"
   ],
   "properties": {
+    "managed_menu": {
+      "type": "object",
+      "required": ["policy", "logical_path", "input_sha256", "adapter_sha256", "output_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "policy": {"const": "read-only-mod-list-v1"},
+        "logical_path": {"type": "string"},
+        "input_sha256": {"$ref": "#/$defs/hash"},
+        "adapter_sha256": {"$ref": "#/$defs/hash"},
+        "output_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
     "config_defaults": {
       "type": "array", "maxItems": 256,
       "items": {

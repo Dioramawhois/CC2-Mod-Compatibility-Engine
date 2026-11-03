@@ -1,5 +1,11 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Известный SDK bundle index внутри content — целевой контракт общего runtime,
+а не произвольный JSON asset. Publisher сохраняет module containers и требует
+API 8, точный reviewed runtime SHA и capability ordered-module-bundles-v1.
+Native plugins остаются в reviewed content/cc2x. Старый выпущенный runtime не
+объявляется совместимым автоматически. [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+
 **0.3.3:** read-only проверка Combined Fleet3783006839 нашла два GLSL shader и две TXTR texture по тем же logical paths в установленном rom_0. Поддержка этих resource types устранила четыре Unknown resource type blockers; текущий набор + Fleet дал plan252 resources/5 overrides/0 blockers. Пакет с Fleet не активировался нами; игровая совместимость не проверена. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
 
 **0.3.2:** [Steam-аудит](19-STEAM-DISTRIBUTION-AUDIT.md) сверяет официальный UGC контракт и текущий CC2X0.5.1: plugins из активных Workshop папок уже обнаруживаются, первоначальный game-root bootstrap всё ещё нужен. Подготовлены авторские metadata templates; публикация/саморазмещающийся installer не сделаны. Required Items и XML requires — разные уровни.

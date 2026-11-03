@@ -98,10 +98,12 @@ Workshop IDs не придумываются. Публикация обновл�
 повторные ID модулей отклоняются все, остальные модули остаются. Лимиты — 64 KiB
 и 256 entries; traversal, reparse points, пропуски, вложенные индексы, повторные
 ключи и неизвестная schema отклоняют весь bundle без частичной активации.
-Это реализованный SDK reader с регрессиями. Publisher в текущей выпущенной
-beta ModLoader ещё не создаёт такие контейнеры; потребуется реализация и
-проверенный capability profile точного runtime. Старый beta EXE не объявляется
-поддерживающим новый формат. Обычный JSON merge не служит обходным путём.
+SDK reader и development publisher реализованы с регрессиями. Publisher
+сохраняет private bytes, source/manifest/output hashes и транзакцию обычной
+сборки; metadata/code не перезаписываются поздним модом. Старый выпущенный beta
+EXE не объявляется поддерживающим новый формат. До реальной активации нужен
+reviewed capability profile точного runtime и отдельный игровой прогон.
+[ADR-0017](adr/0017-independent-lua-module-bundles.md).
 Общие игровые resources продолжают проходить Git merge с выбранным порядком.
 SDK получает несколько module contexts из одного активного CC2-MCE package;
 entry/require paths ограничиваются соответствующим code root, а доступ к

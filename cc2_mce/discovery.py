@@ -50,9 +50,11 @@ class ModRef:
     dependencies: tuple[str, ...] = ()
     sdk: str | None = None
     api: int = 0
+    metadata: bytes = b""
+    root_files: tuple[FileRef, ...] = ()
 
     def report(self) -> dict[str, object]:
-        return {
+        value: dict[str, object] = {
             "id": self.id,
             "name": self.name,
             "sha256": self.sha256,
@@ -63,6 +65,9 @@ class ModRef:
             "sdk": self.sdk,
             "api": self.api,
         }
+        if self.root_files:
+            value["root_files"] = [item.report() for item in self.root_files]
+        return value
 
 
 @dataclass(frozen=True)
@@ -137,14 +142,16 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
     canonical_roots = tuple(dict.fromkeys(input_root(root) for root in roots))
     candidates: list[Path] = []
     for root in canonical_roots:
-        if (root / "content").exists():
+        if (root / "content").exists() or (root / "bridge.json").exists():
             candidates.append(root)
             continue
         try:
             for child in bounded_children(root, budget):
                 if is_link(child):
                     raise InputError("Input link/junction forbidden")
-                if child.is_dir() and (child / "content").exists():
+                if child.is_dir() and (
+                    (child / "content").exists() or (child / "bridge.json").exists()
+                ):
                     candidates.append(child)
         except OSError as exc:
             raise InputError("Mod collection cannot be read") from exc
@@ -166,7 +173,8 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
             raise InputError("Duplicate mod id")
         ids.add(id_key)
         content = root / "content"
-        input_root(content)
+        if content.exists() or content.is_symlink():
+            input_root(content)
         metadata = b""
         if (root / "mod.xml").exists() or (root / "mod.xml").is_symlink():
             metadata = read_regular(root / "mod.xml", root, budget)
@@ -175,7 +183,7 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
         )
         files: list[FileRef] = []
         local_keys: set[str] = set()
-        for path in walk_regular(content, budget):
+        for path in walk_regular(content, budget) if content.exists() else []:
             logical, key = normalize_logical_path(path.relative_to(content).as_posix())
             if key in local_keys or (key in spellings and spellings[key] != logical):
                 raise InputError("Logical path case/Unicode collision")
@@ -184,8 +192,35 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
             data = read_regular(path, root, budget)
             files.append(FileRef(logical, key, digest(data), classify(logical, data), data))
         files.sort(key=lambda item: item.key)
+        root_files: list[FileRef] = []
+        if (root / "bridge.json").exists() or (root / "bridge.json").is_symlink():
+            for child in bounded_children(root, budget):
+                if child.name in {"content", ".git", "mod.xml"}:
+                    continue
+                if is_link(child):
+                    raise InputError("Input link/junction forbidden")
+                entries = walk_regular(input_root(child), budget) if child.is_dir() else [child]
+                for path in entries:
+                    logical, key = normalize_logical_path(path.relative_to(root).as_posix())
+                    if (
+                        path.suffix.casefold()
+                        not in {".lua", ".xml", ".png", ".mesh", ".txtr", ".txt", ".glsl", ".dll"}
+                        and key != "bridge.json"
+                    ):
+                        continue
+                    if any(item.key == key for item in root_files):
+                        raise InputError("Logical path case/Unicode collision")
+                    data = read_regular(path, root, budget)
+                    root_files.append(
+                        FileRef(logical, key, digest(data), classify(logical, data), data)
+                    )
+            root_files.sort(key=lambda item: item.key)
         source_hash = fingerprint(
-            {"metadata": digest(metadata), "files": [item.report() for item in files]}
+            {
+                "metadata": digest(metadata),
+                "files": [item.report() for item in files],
+                **({"root_files": [item.report() for item in root_files]} if root_files else {}),
+            }
         )
         mods.append(
             ModRef(
@@ -199,6 +234,8 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
                 dependencies,
                 sdk,
                 api,
+                metadata,
+                tuple(root_files),
             )
         )
     return Scan(canonical_roots, tuple(mods), fingerprint([mod.report() for mod in mods]), limits)

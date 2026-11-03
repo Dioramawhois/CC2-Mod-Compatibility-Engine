@@ -1,4 +1,15 @@
-## Unreleased — аудит Native Bridge и cc2mods (2026-11-02)
+## Unreleased — общий SDK и независимые Lua-модули
+
+- Development publisher сохраняет отдельные owner/code roots Bridge-модулей
+  внутри одной CC2-MCE папки; порядок, зависимости, обновление и Undo используют
+  тот же транзакционный workflow. Поддержаны три manifest layouts, включая
+  root-only legacy. Обычные game resources продолжают Git merge.
+- Manifests/private Lua не перезаписываются поздними патчами. Повторные owners,
+  unsafe/invalid metadata, stock-script entries и неизвестный native блокируются;
+  runtime требует API 8, bundle capability и точный reviewed hash. Добавлены
+  module provenance в schema v2 и 27 packaging/metadata/order regressions.
+
+## Аудит Native Bridge и cc2mods (2026-11-02)
 
 - По запросу владельца подготовлена карта общего CC2X SDK и отдельных модов:
   учтены code namespaces в едином output, сохранение identity/catalog и сетевые

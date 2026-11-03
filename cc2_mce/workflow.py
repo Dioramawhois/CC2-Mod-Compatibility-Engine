@@ -34,6 +34,7 @@ from cc2_mce.filesystem import (
 from cc2_mce.installation import Installation
 from cc2_mce.locking import activation_lock
 from cc2_mce.merge import GitMergeAdapter, MergeInput, merge_file
+from cc2_mce.module_bundles import prepare_modules
 from cc2_mce.reports import engine_hash
 from cc2_mce.toolchain import Toolchain
 
@@ -187,14 +188,17 @@ def analyze(
         raise InputError("Сборка игры изменилась")
     chosen = resolve_selection(scan, selected)
     groups: dict[str, list[tuple[ModRef, Any]]] = defaultdict(list)
-    blockers: list[dict[str, str]] = []
-    files: list[dict[str, Any]] = []
-    payload: dict[str, bytes] = {}
-    needs_runtime = any(mod.sdk == "cc2x" for mod in chosen)
+    bundle = prepare_modules(chosen, profile, luac=str(tools.luac) if tools else None)
+    blockers: list[dict[str, str]] = list(bundle.blockers)
+    files: list[dict[str, Any]] = list(bundle.files)
+    payload: dict[str, bytes] = dict(bundle.payload)
+    needs_runtime = bool(bundle.modules) or any(mod.sdk == "cc2x" for mod in chosen)
     for mod in chosen:
         if mod.api > profile.get("runtime_api", 0):
             blockers.append({"code": "sdk_api", "message": f"{mod.name}: нужна новая версия SDK"})
         for item in mod.files:
+            if (mod.id, item.key) in bundle.handled:
+                continue
             groups[item.key].append((mod, item))
     native_names: dict[str, str] = {}
     baseline_budget = Budget(Limits())
@@ -286,6 +290,20 @@ def analyze(
                     "message": "Проверенный dinput8.dll не найден в игре или libraries.",
                 }
             )
+    output_budget = Budget(Limits())
+    try:
+        output_paths = {"mod.xml", "mce-manifest.json", "content"}
+        for logical, data in payload.items():
+            parts = logical.split("/")
+            if len(parts) > output_budget.limits.max_depth:
+                raise InputError("Output depth limit exceeded")
+            for index in range(1, len(parts) + 1):
+                output_paths.add("content/" + "/".join(parts[:index]))
+            output_budget.consume(len(data))
+        for _ in output_paths:
+            output_budget.entry()
+    except InputError as exc:
+        blockers.append({"code": "input_error", "message": str(exc)})
     report: dict[str, Any] = {
         "schema_version": 2,
         "owner": "cc2-mce",
@@ -304,6 +322,8 @@ def analyze(
         "gameplay_verified": False,
         "package_metadata_sha256": digest(_package_metadata(chosen)),
     }
+    if bundle.modules:
+        report["modules"] = bundle.modules
     report["build_id"] = fingerprint(report)
     schema = json.loads((Path(__file__).parent / "schemas/package.schema.json").read_text())
     if not Draft202012Validator(schema).is_valid(report):

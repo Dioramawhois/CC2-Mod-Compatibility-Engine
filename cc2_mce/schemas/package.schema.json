@@ -20,6 +20,22 @@
     "package_metadata_sha256"
   ],
   "properties": {
+    "modules": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": ["source_id", "owner_id", "container", "source_sha256", "manifest_sha256"],
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {"type": "string"},
+          "owner_id": {"type": "string", "maxLength": 64},
+          "container": {"type": "string", "pattern": "^m-[0-9a-f]{32}$"},
+          "source_sha256": {"$ref": "#/$defs/hash"},
+          "manifest_sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    },
     "schema_version": {
       "const": 2
     },

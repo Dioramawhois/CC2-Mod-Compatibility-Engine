@@ -1,5 +1,10 @@
 # 01. Product Requirements (PRD)
 
+**Independent Lua modules:** один output сохраняет отдельные code roots и owner
+IDs Bridge-модулей, выбранный порядок и зависимости. Manifest/code не сливаются
+как overlays; shared game resources проходят обычный Git pipeline. Требуется
+точный reviewed runtime с bundle capability. [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+
 **0.3.3:** распознаются игровые `.glsl` как UTF-8 text/Git resources и `.txtr` с TXTR magic как binary byte copy/whole-file replacement. Неизвестные типы не разрешаются молча; отказ показывает конкретный файл/причину. Shader compiler/TXTR decoder acceptance не заявлены. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
 
 **0.3.2:** status=overridden оставляет предупреждение об участниках/ресурсе и неизвестном результате в игре, включая повторное открытие. Запуск не блокируется. Steam Required Items не считаются auto-installer. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md), [аудит Steam](19-STEAM-DISTRIBUTION-AUDIT.md).

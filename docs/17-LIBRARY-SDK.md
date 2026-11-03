@@ -1,5 +1,11 @@
 # 17. SDK: моды и библиотеки в Steam Workshop
 
+Новый development publisher сохраняет самостоятельные Bridge VM в отдельных
+контейнерах одного output, без merge их manifests/entry Lua. Приоритеты manifest
+и обязательный runtime capability описаны в [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+Обычные game Lua overlays продолжают прежний pipeline; метка library не
+заменяет проверку runtime/DLL и не добавляет сетевой транспорт.
+
 **Распространение:** [полный аудит Steam](19-STEAM-DISTRIBUTION-AUDIT.md) и [metadata для авторов](../distribution/workshop/README.md). Steam Required Items — soft relation по PublishedFileId; requires — локальная зависимость по package ID. Для первого запуска bootstrap нужен отдельно, подписка его не устанавливает автоматически. DLL остаются отдельными plugin файлами под общим runtime; компиляции всех библиотек в один injector нет.
 
 Это контракт для авторов пакетов. Игрок выбирает готовый пакет в GUI и не редактирует XML/JSON.

@@ -188,6 +188,10 @@
             "$ref": "#/$defs/inputFile"
           }
         },
+        "root_files": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/inputFile"}
+        },
         "package_kind": {
           "enum": [
             "mod",

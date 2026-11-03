@@ -1,5 +1,12 @@
 # 06. Стратегия тестирования и Definition of Done
 
+Module bundle fixtures до реализации: одинаковые filenames у разных owners,
+порядок/зависимости, disable/update/rebuild/rollback, три manifest layouts,
+duplicate/oversized/deep/unsafe metadata, все Lua entries, неизвестный native,
+namespace injection и output depth. Packaging использует fake runtime/syntax
+boundary; shared files — настоящий Git. Bundled luac, SDK reader и игра требуют
+отдельного evidence. [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+
 **0.3.3:** fixtures до реализации воспроизводят `.glsl`/`.txtr` отказы и общий needs_review banner. Real Git text merge, UTF-8 refusal, byte-identical TXTR copy, strict/ordered collision и malformed header в обоих положениях/режимах; UI file/reason и Lua-tool diagnosis. Mac CI fixture следует реальному host, Windows/Darwin layouts проверяются явно. Реальный Fleet read-only plan без blockers не равен game acceptance. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
 
 **0.3.1:** 183 Windows tests passed, 3 symlink skips. Проверки всех 12 дополнительных каталогов: полные 174 IDs, непустые строки, неизменные placeholders и успешный format; locale mapping включая zh-Hant/TW, generated name c ModLoader/авторскими именами, frozen exe/title/hash data. Raw machine outputs не равны профессиональной лингвистической редактуре; primary labels проверены отдельно. CI перенесён с retired macos-14 на macos-15. [ADR-0013](adr/0013-modloader-brand-and-offline-language-pack.md).

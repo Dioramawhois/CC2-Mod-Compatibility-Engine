@@ -1,5 +1,10 @@
 # 02. Архитектура
 
+`module_bundles` валидирует metadata и сохраняет самостоятельные VM contexts
+внутри одного game package. Discovery фиксирует mod.xml bytes и legacy root
+inputs; workflow объединяет private records с обычным merge report и использует
+существующий transactional publisher. [ADR-0017](adr/0017-independent-lua-module-bundles.md).
+
 **0.3.3:** classifier включает `.glsl` text и TXTR-magic `.txtr` binary; merge проверяет kinds всех вариантов перед copy/priority. UI использует исходный diagnostic needs_review и первый logical_path вместо общей заглушки. Схема не меняется. [ADR-0015](adr/0015-cc2-shaders-textures-and-actionable-refusals.md).
 
 **0.3.2:** чистый ui_feedback строит OverrideWarning из существующих report.files/status/strategy/source_sha256/mod_order. GUI хранит предупреждение активного набора отдельно от отказа нового запроса, восстанавливает из manifest и отображает после apply. Merge/JSON schema не меняются. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).

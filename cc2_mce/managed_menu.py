@@ -1,14 +1,27 @@
-"""An owned Lua decorator for the generated package's read-only game mod list."""
+"""An owned Lua decorator disabling the generated package's game Mods entry."""
 
 MENU_PATH = "scripts/screen_menu_main.lua"
-POLICY = "read-only-mod-list-v1"
+POLICY = "locked-mods-menu-v2"
 
 # This wraps published menu callbacks after resource merging. It does not parse
 # or rewrite another mod's Lua, and contains no copied vanilla script.
 ADAPTER = r"""
 return function(env)
+    local function is_screen(index, name)
+        return type(env.g_screens) == "table" and env.g_screens[name] ~= nil
+            and index == env.g_screens[name]
+    end
     local function locked()
-        return type(env.g_screens) == "table" and env.g_screen_index == env.g_screens.mods
+        return is_screen(env.g_screen_index, "mods")
+    end
+    local function leave_mods()
+        if locked() then
+            env.g_screen_index = env.g_screens.main
+            env.g_screen_nav_stack = {}
+            env.g_selected_mod_id = 0
+            env.g_selected_mod_confirm = false
+            env.g_disable_mods_confirm = false
+        end
     end
     local wrapped_ui = nil
     local notice_shown = false
@@ -16,6 +29,17 @@ return function(env)
         local ui = env.g_ui
         if type(ui) ~= "table" or ui == wrapped_ui then return end
         wrapped_ui = ui
+        local list_item = ui.list_item
+        if type(list_item) == "function" then
+            ui.list_item = function(self, label, select_on_hover, enabled, ...)
+                if is_screen(env.g_screen_index, "main")
+                    and label == env.update_get_loc(env.e_loc.upp_mods) then
+                    list_item(self, label, select_on_hover, false, ...)
+                    return false
+                end
+                return list_item(self, label, select_on_hover, enabled, ...)
+            end
+        end
         local details = ui.mod_details
         if type(details) == "function" then
             ui.mod_details = function(self, ...)
@@ -45,11 +69,19 @@ return function(env)
             end
         end
     end
+    local nav_original = env.nav_set_screen
+    if type(nav_original) == "function" then
+        env.nav_set_screen = function(index, ...)
+            if is_screen(index, "mods") then return false end
+            return nav_original(index, ...)
+        end
+    end
     local begin_original = env.begin
     if type(begin_original) == "function" then
         env.begin = function(...)
             begin_original(...)
             wrap_ui()
+            leave_mods()
         end
     end
     local update_original = env.update
@@ -57,11 +89,7 @@ return function(env)
         env.update = function(...)
             notice_shown = false
             wrap_ui()
-            if locked() then
-                env.g_selected_mod_id = 0
-                env.g_selected_mod_confirm = false
-                env.g_disable_mods_confirm = false
-            end
+            leave_mods()
             return update_original(...)
         end
     end

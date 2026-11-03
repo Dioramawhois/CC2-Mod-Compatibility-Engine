@@ -1,5 +1,14 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0028 fixtures require the main-menu Mods list item's third (enabled)
+argument to be false for the current localized label, even if a synthetic UI
+reports a click. Direct Mods navigation is rejected; stale Mods state returns
+to main before update. Unrelated list items/screens and ordinary callbacks
+retain their arguments and behavior. Cover recreated UI objects, real Lua
+syntax validation, adapter/input/output hashes, both package policy values,
+and empty-selection/Undo behavior. Execute only the owned synthetic Lua fixture,
+never a user's mod Lua. These checks are not fresh in-game visual acceptance.
+
 ADR-0026 GUI fixtures cover Workshop/game-folder/user-data mods together,
 exclusion of the owned generated output, and a user-data `mods` folder created
 after startup. Passive discovery preserves the active selection, leaves new

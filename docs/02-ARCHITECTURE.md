@@ -1,5 +1,12 @@
 # 02. Архитектура
 
+ADR-0028 updates the generated `managed_menu` decorator: intercept only the
+main menu's localized Mods `ui:list_item` and pass `false` as its third, enabled
+argument. Reject `nav_set_screen(g_screens.mods)` and return stale Mods state to
+the main menu before updating it. Other list items, screens and gameplay keep
+their ordinary callbacks. New provenance uses `locked-mods-menu-v2`; schema v2
+still accepts the earlier `read-only-mod-list-v1` policy.
+
 GUI source-root refresh includes the existing game-user `mods` directory on
 every scan, using the same `game_user_dir()` location as activation. Optional
 absent user folders are omitted; existing files/links still reach the normal

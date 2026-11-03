@@ -1,5 +1,11 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
+ADR-0028: new schema-v2 `managed_menu` records use policy
+`locked-mods-menu-v2`. The schema continues to accept `read-only-mod-list-v1`
+for existing packages. The optional object's logical path, input/adapter/output
+SHA-256 fields and package inventory remain required when it is present.
+No selected mods means no menu decorator or `managed_menu` record.
+
 **0.3.3:** `.glsl` имеет kind=text, `.txtr` с magic TXTR kind=binary; другие/неверные header остаются unknown/needs_review. Report schemas не меняются. GUI Unknown resource type теперь объясняет отсутствие поддержки и показывает путь; missing/wrong Lua validator объясняет встроенный инструмент, raw diagnostic остаётся в подробностях.
 
 **0.3.2:** package JSON v2 не меняется. Неблокирующее GUI warning выводится из файлов status=overridden, strategy, source_sha256 и общего mod_order; language/UI presentation не меняют payload. При открытии предупреждение восстанавливается из активного собственного manifest. Strict blockers сохраняют прежний контракт. [ADR-0014](adr/0014-persistent-override-warning-and-workshop-delivery.md).

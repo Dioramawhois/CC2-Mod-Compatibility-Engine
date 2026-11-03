@@ -1,5 +1,12 @@
 # 01. Product Requirements (PRD)
 
+Owner correction 2026-11-04 (0.4.0b5): while the generated set is active, the
+main-menu Mods entry must be gray and disabled, with direct navigation and stale
+Mods-screen state blocked. The Workshop uploader behind that entry is unavailable;
+other menus and gameplay remain available. Changes stay in ModLoader. Undo or
+unloading the generated set restores the ordinary menu; an empty selection adds
+no guard. ADR-0028 supersedes ADR-0025's reachable read-only list behavior.
+
 User feedback 2026-11-04: discover custom packages in the game's standard
 user-data `mods` folder automatically, alongside Workshop and game-folder
 collections. Refresh this root on every scan, including creation after startup.

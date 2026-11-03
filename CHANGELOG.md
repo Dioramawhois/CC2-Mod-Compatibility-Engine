@@ -6,6 +6,10 @@ for installation, self-build and support information.
 
 ## 0.4.0b4 - Windows beta 4 (2026-11-04)
 
+- Documentation addendum: beginner-first English README with four actual GUI
+  screenshots, separate compatibility/provenance pages, and an English announcement
+  kit. Screenshots use an isolated demo workspace and do not claim gameplay acceptance.
+
 - Distribution addendum: publish the byte-identical standalone executable and
   checksum, plus a permanent `latest-beta` EXE download that follows published
   beta releases. Complete sources/notices and numbered archives remain available.

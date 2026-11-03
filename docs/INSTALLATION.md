@@ -15,7 +15,7 @@ return here. Both routes produce the same graphical application.
 Native SDK/plugin support is limited to explicitly reviewed game and DLL
 versions. Data-file merging and native-code compatibility are separate checks.
 A packaged macOS application and native macOS SDK support are not certified by
-this Windows release. See [the current scope](../README.md#support-and-validation).
+this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 
 ## 1. Download the application
 
@@ -184,8 +184,8 @@ feature of every mod combination works together.
 
 ## 6. Launch, language and automatic startup
 
-Select **Launch game** after the selection is ready. The app starts the game
-through Steam.
+Select **Launch game** after the selection is ready. The app starts the local
+`carrier_command.exe` directly with the prepared set enabled.
 
 The interface follows the system language by default. Use **Menu > Language**
 to choose English or another included language; the choice is saved. The 14

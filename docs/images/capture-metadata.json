@@ -1,0 +1,58 @@
+{
+  "engine_sha256": "75c230d8f3e960d984c4c41eb23cfcc5347d642346d01f9ff3e39794727c40a9",
+  "app_version": "0.4.0b4",
+  "source_binary_sha256": "f8c6fd3ce95c597dc0c44e0922d3b78644261b430d136f3389c66f8f64531180",
+  "scope": "actual UI, actual merge/activation in private demo; no live game changes or game execution",
+  "captures": [
+    {
+      "file": "docs/images/01-choose-mods.png",
+      "width": 882,
+      "height": 632,
+      "sha256": "388340961494f7dc99ef81d115c5049854af0e4b0d9cdf78ae043fae034892b2",
+      "mod_order": [
+        "3833014670",
+        "3828182483",
+        "3826940003"
+      ],
+      "notice": ""
+    },
+    {
+      "file": "docs/images/02-load-order.png",
+      "width": 882,
+      "height": 632,
+      "sha256": "fb6d5e0b66833e165f53e6b208ae2e79be0778a9b09e52923107c8025f701ba5",
+      "mod_order": [
+        "3833014670",
+        "3828182483",
+        "3826940003"
+      ],
+      "notice": ""
+    },
+    {
+      "file": "docs/images/03-libraries.png",
+      "width": 882,
+      "height": 632,
+      "sha256": "1761c39be273d74006b821cc03b61210ce9b31206f27a00491821854f5b43f31",
+      "mod_order": [
+        "3833014670",
+        "3828182483",
+        "3826940003"
+      ],
+      "notice": ""
+    },
+    {
+      "file": "docs/images/04-overlap-warning.png",
+      "width": 882,
+      "height": 722,
+      "sha256": "dee07dde4aa8ae31f8e7d2df23407b8c11c096d30850a00d4cf203f0a21ddd49",
+      "mod_order": [
+        "3833014670",
+        "3828182483",
+        "3826940003",
+        "example-patch",
+        "example-theme"
+      ],
+      "notice": "Warning: mods overwrite other mods' changes"
+    }
+  ]
+}

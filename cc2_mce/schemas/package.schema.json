@@ -20,6 +20,19 @@
     "package_metadata_sha256"
   ],
   "properties": {
+    "config_defaults": {
+      "type": "array", "maxItems": 256,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["filename", "sha256", "providers", "policy"],
+        "properties": {
+          "filename": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*\\.ini$"},
+          "sha256": {"$ref": "#/$defs/hash"},
+          "providers": {"type": "array", "items": {"$ref": "#/$defs/hash"}},
+          "policy": {"const": "create-missing-preserve-user"}
+        }
+      }
+    },
     "modules": {
       "type": "array",
       "maxItems": 32,

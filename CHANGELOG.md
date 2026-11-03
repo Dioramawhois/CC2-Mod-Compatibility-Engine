@@ -1,5 +1,11 @@
 ## Unreleased — общий SDK и независимые Lua-модули
 
+- Отсутствующие INI approved native consumers создаются автоматически по точному
+  hash-профилю; существующие настройки сохраняются. Creation, interruption и Undo
+  используют inode/hash journal без overwrite. Исправлен повторный apply, который
+  мог пропускать восстановление удалённого runtime/settings при прежнем payload.
+  Добавлены 14 regressions; source metadata не даёт неизвестной DLL прав на запись.
+
 - Development publisher сохраняет отдельные owner/code roots Bridge-модулей
   внутри одной CC2-MCE папки; порядок, зависимости, обновление и Undo используют
   тот же транзакционный workflow. Поддержаны три manifest layouts, включая

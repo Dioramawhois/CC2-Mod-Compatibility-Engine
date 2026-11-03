@@ -1,5 +1,10 @@
 # 01. Product Requirements (PRD)
 
+Reviewed native profiles могут автоматически создавать отсутствующие SDK INI,
+чтобы выбор мода давал эффект без ручного редактирования. Пользовательские
+settings сохраняются; неизвестный DLL не получает этого разрешения.
+[ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
 **Independent Lua modules:** один output сохраняет отдельные code roots и owner
 IDs Bridge-модулей, выбранный порядок и зависимости. Manifest/code не сливаются
 как overlays; shared game resources проходят обычный Git pipeline. Требуется

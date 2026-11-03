@@ -1,5 +1,10 @@
 # 17. SDK: моды и библиотеки в Steam Workshop
 
+Для native consumers opt-in metadata не разрешает произвольную запись настроек.
+Только engine profile точного reviewed DLL hash может задать missing INI defaults
+в SDK config namespace. Existing user preferences сохраняются; все изменения
+участвуют в recovery/Undo. [ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
 Новый development publisher сохраняет самостоятельные Bridge VM в отдельных
 контейнерах одного output, без merge их manifests/entry Lua. Приоритеты manifest
 и обязательный runtime capability описаны в [ADR-0017](adr/0017-independent-lua-module-bundles.md).

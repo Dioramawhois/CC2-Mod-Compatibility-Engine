@@ -1,5 +1,10 @@
 # 06. Стратегия тестирования и Definition of Done
 
+SDK settings: fixtures покрывают create/undo/preserve, ordinary failure и
+interruption/recovery, writer race с одинаковыми bytes, path scope, удалённые
+settings/runtime и conflicting approved defaults. Проверяется реальная файловая
+транзакция; native fixtures не исполняются. [ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
 Module bundle fixtures до реализации: одинаковые filenames у разных owners,
 порядок/зависимости, disable/update/rebuild/rollback, три manifest layouts,
 duplicate/oversized/deep/unsafe metadata, все Lua entries, неизвестный native,

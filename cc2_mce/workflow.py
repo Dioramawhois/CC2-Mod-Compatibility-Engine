@@ -11,14 +11,14 @@ import unicodedata
 import uuid
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree as ET
 
 from jsonschema import Draft202012Validator
 
-from cc2_mce import APP_NAME
+from cc2_mce import APP_NAME, sdk_settings
 from cc2_mce.discovery import ModRef, Scan, fingerprint, snapshot_unchanged
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import (
@@ -51,6 +51,7 @@ class PackagePlan:
     payload: dict[str, bytes]
     report: dict[str, Any]
     runtime_source: Path | None
+    config_defaults: dict[str, bytes] = field(default_factory=dict)
 
     @property
     def blockers(self) -> list[dict[str, str]]:
@@ -201,6 +202,8 @@ def analyze(
                 continue
             groups[item.key].append((mod, item))
     native_names: dict[str, str] = {}
+    config_defaults: dict[str, bytes] = {}
+    config_providers: dict[str, set[str]] = defaultdict(set)
     baseline_budget = Budget(Limits())
     for key, variants in sorted(groups.items()):
         logical = variants[0][1].logical_path
@@ -239,6 +242,19 @@ def analyze(
             else:
                 status, strategy, content = "copied", "reviewed-native-copy", variants[0][1].content
                 native_names[name] = key
+                native_hash = next(iter(hashes))
+                for filename, data in sdk_settings.reviewed_defaults(approved[native_hash]).items():
+                    if filename in config_defaults and config_defaults[filename] != data:
+                        blockers.append(
+                            {
+                                "code": "native_plugin_review_required",
+                                "file": logical,
+                                "message": "Conflicting reviewed SDK defaults: " + filename,
+                            }
+                        )
+                    else:
+                        config_defaults[filename] = data
+                    config_providers[filename].add(native_hash)
             diagnostics: list[str] = []
         else:
             outcome = merge_file(
@@ -324,11 +340,23 @@ def analyze(
     }
     if bundle.modules:
         report["modules"] = bundle.modules
+    if config_defaults:
+        report["config_defaults"] = [
+            {
+                "filename": name,
+                "sha256": digest(data),
+                "providers": sorted(config_providers[name]),
+                "policy": "create-missing-preserve-user",
+            }
+            for name, data in sorted(config_defaults.items())
+        ]
     report["build_id"] = fingerprint(report)
     schema = json.loads((Path(__file__).parent / "schemas/package.schema.json").read_text())
     if not Draft202012Validator(schema).is_valid(report):
         raise InputError("Internal package report contract violation")
-    return PackagePlan(game, scan, chosen, profile, tools, payload, report, runtime)
+    return PackagePlan(
+        game, scan, chosen, profile, tools, payload, report, runtime, config_defaults
+    )
 
 
 def _parse_activation(raw: bytes) -> ET.Element:
@@ -514,6 +542,7 @@ def _recover_pending(user: Path) -> None:
             _write_new(state_file, previous)
     elif state_file.exists():
         state_file.unlink()
+    sdk_settings.cleanup(user, state_dir, journal.get("config_created", []), remove_targets=True)
     pending.unlink()
 
 
@@ -623,10 +652,19 @@ def _apply_plan_locked(
         and state.get("build_id") == plan.report["build_id"]
         and old_manifest_hash == digest(_read(stage / "mce-manifest.json", stage))
         and not legacy_moves
+        and not sdk_settings.missing(user, plan.config_defaults)
+        and (
+            plan.runtime_source is None
+            or (
+                runtime_target.exists()
+                and digest(_read(runtime_target, plan.game.root)) == plan.report["runtime_sha256"]
+            )
+        )
     ):
         shutil.rmtree(input_root(stage))
         return destination
     backup_name = f"mods-{uuid.uuid4().hex}.xml"
+    config_created = sdk_settings.stage(user, state_dir, plan.config_defaults, token, _write_new)
     _write_new(state_dir / backup_name, old)
     updated = {
         "owner": "cc2-mce",
@@ -644,6 +682,7 @@ def _apply_plan_locked(
         "old_manifest_sha256": old_manifest_hash,
         "new_manifest_sha256": digest(_read(stage / "mce-manifest.json", stage)),
         "legacy_moves": legacy_moves,
+        "config_created": config_created,
     }
     prior_name = "previous-state-" + token + ".json" if previous_state else None
     if previous_state is not None:
@@ -667,6 +706,7 @@ def _apply_plan_locked(
             _replace_checked(state_file, encoded, previous_state)
         else:
             _write_new(state_file, encoded)
+        sdk_settings.install(user, state_dir, config_created)
         if plan.runtime_source is not None:
             if runtime_target.exists():
                 if digest(_read(runtime_target, plan.game.root)) != plan.report["runtime_sha256"]:
@@ -698,6 +738,7 @@ def _apply_plan_locked(
             runtime_target.unlink()
         _recover_pending(user)
         raise
+    sdk_settings.cleanup(user, state_dir, config_created, remove_targets=False)
     # Keep only the current undo payload; never prune source or unrecognized directories.
     obsolete = [state.get("package_backup", "")]
     obsolete += [move["cache"] for move in state.get("legacy_moves", [])]

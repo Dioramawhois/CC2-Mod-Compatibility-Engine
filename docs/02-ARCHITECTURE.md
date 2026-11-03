@@ -1,5 +1,10 @@
 # 02. Архитектура
 
+`sdk_settings` отделяет approved defaults от исходных модов, публикует missing
+INI атомарно без overwrite и участвует в общем journal/rollback по hash/inode.
+Profile входит в engine hash, пользовательские значения — нет.
+[ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
 `module_bundles` валидирует metadata и сохраняет самостоятельные VM contexts
 внутри одного game package. Discovery фиксирует mod.xml bytes и legacy root
 inputs; workflow объединяет private records с обычным merge report и использует

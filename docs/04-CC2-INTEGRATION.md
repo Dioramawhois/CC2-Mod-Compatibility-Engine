@@ -1,5 +1,10 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+SDK API config_dir соответствует `<user-data>/cc2x`; только reviewed defaults
+точного native hash могут автоматически создать отсутствующий INI. Существующие
+settings не заменяются. Это часть transactional GUI apply, не инструкция игроку
+редактировать конфиг. [ADR-0018](adr/0018-reviewed-sdk-setting-defaults.md).
+
 Известный SDK bundle index внутри content — целевой контракт общего runtime,
 а не произвольный JSON asset. Publisher сохраняет module containers и требует
 API 8, точный reviewed runtime SHA и capability ordered-module-bundles-v1.

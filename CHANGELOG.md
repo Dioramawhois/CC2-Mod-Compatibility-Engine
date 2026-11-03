@@ -6,6 +6,11 @@ for installation, self-build and support information.
 
 ## 0.4.0b5 - Windows beta 5 (2026-11-04)
 
+- Distribution addendum: accept verified LF/CRLF standalone checksums without
+  rewriting published assets, and generate future checksums with LF on both
+  Windows and macOS. This repairs the rolling beta link; the beta 5 executable
+  and numbered release remain unchanged.
+
 - Disable and gray the main-menu **Mods** entry while the generated ModLoader
   set is active, replacing the earlier guard that only disabled list rows.
   Reject direct navigation to that screen and return stale screen state to

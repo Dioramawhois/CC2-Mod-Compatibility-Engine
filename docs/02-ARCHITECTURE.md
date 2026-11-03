@@ -8,6 +8,10 @@ optional report.runtime_review восстанавливает предупреж
 Release publisher отдельно сохраняет соответствующие SDK/toolchain sources.
 [ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
 
+Resolver различает уникальный source id и canonical package_id нескольких версий.
+Explicit selection задаёт единственную версию для dependency resolution; GUI
+переключает source checkbox до транзакции. [ADR-0021](adr/0021-explicit-package-version-selection.md).
+
 `sdk_settings` отделяет approved defaults от исходных модов, публикует missing
 INI атомарно без overwrite и участвует в общем journal/rollback по hash/inode.
 Profile входит в engine hash, пользовательские значения — нет.

@@ -208,7 +208,7 @@ def native_toolchain_sources(root: Path, zig: Path | None) -> dict[str, bytes]:
 
 
 def finalize_release(staging: Path, destination: Path) -> None:
-    for attempt in range(10):
+    for attempt in range(40):
         if destination.exists():
             raise ValueError("A previous release is never overwritten")
         try:
@@ -217,9 +217,9 @@ def finalize_release(staging: Path, destination: Path) -> None:
         except PermissionError:
             # Windows scanners can briefly retain a newly written asset handle.
             # Keep the complete staging directory and preserve atomic promotion.
-            if attempt == 9:
+            if attempt == 39:
                 raise
-            time.sleep(0.2)
+            time.sleep(0.5)
 
 
 def runtime_notices(root: Path) -> tuple[dict[str, bytes], list[dict]]:

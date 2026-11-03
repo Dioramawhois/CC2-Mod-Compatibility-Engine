@@ -6,6 +6,10 @@ Exact previous-runtime whitelist разрешает обратимое обно�
 проверенные вместе на Windows client 1.5.18. Warning обозначает client-only scope;
 dedicated/client offsets не смешиваются. [ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
 
+Локальная новая версия может соседствовать в списке с подписанной Workshop-
+версией того же package. Выбор переключается явно, подписка не переписывается.
+[ADR-0021](adr/0021-explicit-package-version-selection.md).
+
 SDK API config_dir соответствует `<user-data>/cc2x`; только reviewed defaults
 точного native hash могут автоматически создать отсутствующий INI. Существующие
 settings не заменяются. Это часть transactional GUI apply, не инструкция игроку

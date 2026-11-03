@@ -90,20 +90,50 @@ def resolve_selection(
     scan: Scan, selected: list[str], *, provided_dependencies: frozenset[str] = frozenset()
 ) -> tuple[ModRef, ...]:
     by_id: dict[str, ModRef] = {}
+    versions: dict[str, list[ModRef]] = {}
+    ambiguous = "Выберите одну версию мода: Workshop или локальную."
     for mod in scan.mods:
-        for key in {mod.id, mod.package_id or mod.id}:
-            if key in by_id and by_id[key] != mod:
-                raise InputError("Неоднозначный идентификатор мода или библиотеки")
-            by_id[key] = mod
+        if mod.id in by_id:
+            raise InputError("Неоднозначный идентификатор мода или библиотеки")
+        by_id[mod.id] = mod
+        versions.setdefault(mod.package_id or mod.id, []).append(mod)
+    for identity in versions:
+        source = by_id.get(identity)
+        if source is not None and (source.package_id or source.id) != identity:
+            raise InputError("Неоднозначный идентификатор мода или библиотеки")
+    preferred: dict[str, ModRef] = {}
+    explicit: dict[str, ModRef] = {}
+    for key in selected:
+        requested = by_id.get(key)
+        candidates = versions.get(key, [])
+        if requested is None and candidates:
+            if len(candidates) != 1:
+                raise InputError(ambiguous)
+            requested = candidates[0]
+        if requested is not None:
+            identity = requested.package_id or requested.id
+            if identity in preferred and preferred[identity] != requested:
+                raise InputError(ambiguous)
+            preferred[identity] = requested
+            explicit[key] = requested
     result: list[ModRef] = []
     visiting: set[str] = set()
 
     def visit(key: str, *, dependency: bool = False) -> None:
-        mod = by_id.get(key)
+        mod = explicit.get(key) if not dependency else preferred.get(key)
+        if dependency and mod is None:
+            candidates = versions.get(key, [])
+            if len(candidates) > 1:
+                raise InputError(ambiguous)
+            mod = candidates[0] if candidates else by_id.get(key)
         if mod is None:
             if dependency and key in provided_dependencies:
                 return
             raise InputError(f"Не найдена зависимость: {key}")
+        identity = mod.package_id or mod.id
+        if identity in preferred and preferred[identity] != mod:
+            raise InputError(ambiguous)
+        preferred[identity] = mod
         if mod.id in visiting:
             raise InputError("Циклическая зависимость библиотек")
         if mod in result:

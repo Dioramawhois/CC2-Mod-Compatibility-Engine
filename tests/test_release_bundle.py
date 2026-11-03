@@ -172,7 +172,10 @@ def test_release_sources_require_a_license_and_keep_test_fixtures():
     validate_source_names(["LICENSE", "cc2_mce/gui.py", "tests/fixtures/mod/content/test.xml"])
 
 
-def test_release_finalize_retries_windows_scanner_lock_without_overwriting(tmp_path, monkeypatch):
+@pytest.mark.parametrize("locks", [2, 12])
+def test_release_finalize_retries_windows_scanner_lock_without_overwriting(
+    tmp_path, monkeypatch, locks
+):
     from tools.package_release import finalize_release
 
     stage, destination = tmp_path / "stage", tmp_path / "release"
@@ -183,14 +186,14 @@ def test_release_finalize_retries_windows_scanner_lock_without_overwriting(tmp_p
 
     def locked(path, target):
         attempts.append(path)
-        if len(attempts) < 3:
+        if len(attempts) <= locks:
             raise PermissionError("Windows scanner has just-created ZIP open")
         return rename(path, target)
 
     monkeypatch.setattr(Path, "rename", locked)
     monkeypatch.setattr("time.sleep", lambda _: None)
     finalize_release(stage, destination)
-    assert len(attempts) == 3
+    assert len(attempts) == locks + 1
     assert (destination / "SHA256SUMS.txt").read_text() == "verified"
     stage.mkdir()
     with pytest.raises(ValueError, match="overwritten"):

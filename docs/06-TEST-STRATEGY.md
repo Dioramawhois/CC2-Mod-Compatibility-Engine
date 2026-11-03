@@ -1,5 +1,9 @@
 # 06. Стратегия тестирования и Definition of Done
 
+Version-selection fixtures: source choice, duplicate selection refusal,
+dependency preference/ambiguity, ID shadow, fixed-output switch/Undo и реальные
+Tk checkbox success/rejection. Не требуется менять Workshop для теста обновления.
+
 Client-candidate regressions проверяют shipped PE32/hash/source provenance,
 approved defaults, полные offline переводы предупреждения и его сочетание с
 override notice. Release fixtures отклоняют изменённые DLL/source/generated

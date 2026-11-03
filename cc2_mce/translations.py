@@ -3,6 +3,7 @@
 # ruff: noqa: E501 -- message IDs and translations are kept as complete catalog entries.
 
 EN: dict[str, str] = {
+    "Выберите одну версию мода: Workshop или локальную.": "Choose one mod version: Workshop or local.",
     "Тестовая версия SDK": "SDK test version",
     "SDK проверен в одиночной игре. Мультиплеер и dedicated server не проверены.": "The SDK has been tested in single-player. Multiplayer and dedicated servers have not been verified.",
     "Запускать игру при открытии": "Launch game when opening ModLoader",

@@ -5,6 +5,10 @@ native consumers без ручной установки. GUI постоянно 
 приёмки; multiplayer/dedicated не заявляются. Unknown native остаётся запрещён.
 [ADR-0020](adr/0020-scoped-client-sdk-candidate.md).
 
+Выбор новой локальной версии сохраняет identity существующего Workshop-мода:
+галочка переключает версию, отказ восстанавливает прежнюю. Две версии одного
+package не активируются вместе. [ADR-0021](adr/0021-explicit-package-version-selection.md).
+
 Обновление общего SDK допускается только с exact reviewed previous runtime; backup и Undo обязательны. Built-in reviewed runtime удовлетворяет отсутствующую cc2x.runtime dependency. [ADR-0019](adr/0019-reviewed-runtime-upgrade-and-built-in-dependency.md).
 
 Reviewed native profiles могут автоматически создавать отсутствующие SDK INI,

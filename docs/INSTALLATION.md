@@ -19,13 +19,17 @@ this Windows release. See [the current scope](../README.md#support-and-validatio
 
 ## 1. Download the application
 
-Open the [0.4.0 beta 4 release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b4)
-and download **CC2ModLoader-0.4.0b4-windows-x64.zip** from Assets.
+Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
+directly. This permanent link is updated when a newer beta is published.
 
-Choose the Windows ZIP for this route. GitHub's automatic **Source code** links
+Alternatively, open the [0.4.0 beta 4 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b4)
+and download **CC2ModLoader-0.4.0b4-windows-x64.zip** for the complete package with
+its README, notices and metadata.
+
+Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links
 and the separate `-source.zip` are for developers; they are not the application.
 
-Extract the ZIP with Windows Explorer. Keep its README, license notices and
+If you downloaded the ZIP, extract it with Windows Explorer. Keep its README, license notices and
 release metadata with your downloaded copy. The executable includes its Python
 runtime, GUI, Git merge tool, Lua syntax checker and the reviewed SDK dependency;
 you do not install Python, Git or Lua to use this build.

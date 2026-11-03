@@ -5,7 +5,9 @@ interface and real Git three-way merging. Choose mods with checkboxes, arrange
 patches in **Load order**, and launch the prepared set from the same window.
 
 **Current release: 0.4.0 beta 4 for Windows x64.**
-[Download the release](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/tag/v0.4.0b4)
+[**Download CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
+
+[Download the release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b4)
 | [Installation and use](docs/INSTALLATION.md)
 | [Build from source](docs/BUILDING.md)
 | [Documentation](docs/README.md)
@@ -18,8 +20,8 @@ native code, invalid syntax and unsafe paths.
 
 | Route | What to download | What you need |
 | --- | --- | --- |
-| **1. Use the ready executable** - recommended for players | [CC2ModLoader-0.4.0b4-windows-x64.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b4/CC2ModLoader-0.4.0b4-windows-x64.zip) | Windows x64 and an installed copy of Carrier Command 2. No Python, Git, Lua or terminal setup. |
-| **2. Build the application yourself** | [CC2ModLoader-0.4.0b4-source.zip](https://github.com/Dioramawhois/CC2-Mod-Compatibility-Engine/releases/download/v0.4.0b4/CC2ModLoader-0.4.0b4-source.zip), or clone tag `v0.4.0b4` | A Windows developer environment with Python 3.12+ and Git. The build prepares its pinned dependencies. Follow the [complete build guide](docs/BUILDING.md). |
+| **1. Use the ready executable** - recommended for players | [Latest CC2ModLoader.exe](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe), or the [complete Windows ZIP](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/v0.4.0b4/CC2ModLoader-0.4.0b4-windows-x64.zip) with notices and metadata | Windows x64 and an installed copy of Carrier Command 2. No Python, Git, Lua or terminal setup. |
+| **2. Build the application yourself** | [CC2ModLoader-0.4.0b4-source.zip](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/v0.4.0b4/CC2ModLoader-0.4.0b4-source.zip), or clone tag `v0.4.0b4` | A Windows developer environment with Python 3.12+ and Git. The build prepares its pinned dependencies. Follow the [complete build guide](docs/BUILDING.md). |
 
 Both routes produce **CC2ModLoader.exe** and lead to the same GUI workflow.
 GitHub's automatic Source code ZIP is not the ready application. Application
@@ -28,7 +30,7 @@ choose the application source ZIP when building ModLoader.
 
 ## Quick start with the executable
 
-1. Download and extract the Windows ZIP from the release page.
+1. [Download CC2ModLoader.exe](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe), or extract it from the Windows ZIP.
 2. In Steam, right-click **Carrier Command 2 > Manage > Browse local files**.
 3. Put **CC2ModLoader.exe** beside **carrier_command.exe** and open it.
 4. Select your mods and libraries. The app checks, merges and activates the
@@ -149,11 +151,18 @@ binary. The SDK's own source and distribution are maintained in the separate
 
 The release page separates:
 
+- the standalone `CC2ModLoader.exe` and its SHA-256 checksum;
 - the ready Windows application ZIP;
 - the exact ModLoader application source ZIP;
 - matching SDK runtime, SDK source and linked compiler-library sources;
 - the pinned Git/Lua build-tools archive and corresponding dependency sources;
 - release/build metadata, component notices, SBOM and SHA-256 checksums.
+
+The permanent EXE link follows the newest published Windows beta automatically.
+The `latest-beta` release mirrors the complete numbered release and records its
+exact source/version in `CHANNEL.json`. Numbered tags and their original archives
+remain fixed. For redistribution, retain the complete ZIP's license notices and
+the corresponding source materials.
 
 The Windows ZIP includes its player README and notices. The build guide explains
 which additional archives are useful for an offline source build. Normal use of

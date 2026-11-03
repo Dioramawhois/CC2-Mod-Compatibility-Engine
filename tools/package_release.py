@@ -440,6 +440,10 @@ def main() -> None:
         **notices,
     }
     write_zip(output / (prefix + "-windows-x64.zip"), contents)
+    (output / APP_EXECUTABLE).write_bytes(payload)
+    (output / (APP_EXECUTABLE + ".sha256")).write_text(
+        sha(payload) + "  " + APP_EXECUTABLE + "\n", encoding="ascii"
+    )
     if native_files:
         write_zip(output / (prefix + "-sdk-runtime.zip"), native_files)
         assert sdk_source is not None

@@ -25,6 +25,12 @@ A serialized release-published workflow updates the channel after a numbered
 beta is published; manual workflow dispatch supports an existing release.
 Maintainer credentials are supplied by environment, never stored in source.
 
+The publisher accepts an existing standalone checksum with either one LF or
+one CRLF line ending, after checking the exact executable hash and filename.
+It mirrors those original bytes without rewriting numbered assets. Malformed
+lines, different hashes and different executable bytes are rejected. New
+packages write checksums with LF on every host.
+
 ## Validation
 
 Fixtures cover numeric beta ordering, branch/tag rejection and mismatched

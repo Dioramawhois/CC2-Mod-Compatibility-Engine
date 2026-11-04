@@ -442,7 +442,7 @@ def main() -> None:
     write_zip(output / (prefix + "-windows-x64.zip"), contents)
     (output / APP_EXECUTABLE).write_bytes(payload)
     (output / (APP_EXECUTABLE + ".sha256")).write_text(
-        sha(payload) + "  " + APP_EXECUTABLE + "\n", encoding="ascii"
+        sha(payload) + "  " + APP_EXECUTABLE + "\n", encoding="ascii", newline="\n"
     )
     if native_files:
         write_zip(output / (prefix + "-sdk-runtime.zip"), native_files)
@@ -496,6 +496,7 @@ def main() -> None:
             if p.is_file()
         ),
         encoding="ascii",
+        newline="\n",
     )
     finalize_release(output, destination)
     print(

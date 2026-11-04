@@ -332,6 +332,21 @@ def _managed(release: dict[str, Any]) -> None:
         raise ValueError("Refusing an unknown, non-beta or immutable latest-beta release")
 
 
+def standalone_assets(executable: bytes, existing: dict[str, bytes]) -> dict[str, bytes]:
+    additions = {
+        EXECUTABLE: executable,
+        CHECKSUM: (digest(executable) + "  " + EXECUTABLE + "\n").encode("ascii"),
+    }
+    # Early Windows packages use CRLF. Keep the verified published bytes intact;
+    # only the line ending may differ from the canonical one-line checksum.
+    if existing.get(CHECKSUM) == additions[CHECKSUM].replace(b"\n", b"\r\n"):
+        additions[CHECKSUM] = existing[CHECKSUM]
+    for name, payload in additions.items():
+        if name in existing and existing[name] != payload:
+            raise ValueError("Differing standalone versioned asset: " + name)
+    return additions
+
+
 def publish(github: GitHub, tag: str) -> None:
     version = beta_version(tag)
     source = github.release(tag)
@@ -383,13 +398,7 @@ def publish(github: GitHub, tag: str) -> None:
             raise ValueError("Invalid original SHA256SUMS.txt entry")
         if digest(payloads[name]) != checksum:
             raise ValueError("Original release checksum mismatch: " + name)
-    additions = {
-        EXECUTABLE: executable,
-        CHECKSUM: (digest(executable) + "  " + EXECUTABLE + "\n").encode("ascii"),
-    }
-    for name, payload in additions.items():
-        if name in payloads and payloads[name] != payload:
-            raise ValueError("Differing standalone versioned asset: " + name)
+    additions = standalone_assets(executable, payloads)
     # Refuse stale snapshots before the first mutation. Existing source bytes stay intact.
     if _asset_snapshot(github.assets(source)) != _asset_snapshot(source_assets):
         raise ValueError("Source release assets changed during verification")

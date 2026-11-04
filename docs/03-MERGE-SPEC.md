@@ -1,5 +1,15 @@
 # 03. Спецификация движка слияния
 
+Resource input is deferred after streamed discovery. Before selected resources
+reach the merge adapter, enforce their aggregate budget and verify their bytes
+against the recorded size/SHA-256. Text-processing inputs retain 16 MiB/file,
+even when a larger text resource can be indexed. Resource limits must also
+cover originals and generated-output verification; metadata retains smaller
+independent bounds.
+The Git algorithm, ordered-patch/strict policies, validation, provenance fields
+and package/report schemas are unchanged. See
+[ADR-0031](adr/0031-streamed-resource-discovery-and-budgets.md).
+
 The owned managed-menu policy is staged separately as
 `content/cc2x/ui/modloader_menu.lua`, declared by schema-1
 `content/cc2x/screen_extensions.json` for `scripts/screen_menu_main.lua`.

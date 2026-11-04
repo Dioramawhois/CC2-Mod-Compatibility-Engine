@@ -4,11 +4,11 @@ Choose the Carrier Command 2 mods you want to play. ModLoader combines their
 files into one local mod, merges changes where possible, and starts the game
 with that build selected.
 
-**Windows x64 beta · 0.4.0 beta 7**
+**Windows x64 beta · 0.4.0 beta 8**
 
 [**Download CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 
-[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b7)
+[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b8)
 · [Build from source](docs/BUILDING.md) · [Detailed help](docs/INSTALLATION.md)
 
 ## Start here
@@ -77,15 +77,19 @@ untick a mod if needed. **Menu → Later patches take priority** controls this p
   the game's `mods` folder. New discoveries appear unchecked.
 - **Mod updates:** selected mods are checked again when you open ModLoader and
   while it stays open. Changes wait until the game is closed before applying.
+- **Large collections:** installed resources are hashed incrementally; unchecked
+  mod contents are not all retained in memory. Beta 8 fixes the former startup
+  `Input byte limit exceeded` failure. See [resource limits](docs/INSTALLATION.md#large-mods-and-resource-limits).
 - **One result:** ModLoader maintains one generated `mods/CC2-MCE` package.
   Source mod files stay in place. The previous applied set is kept if a change
   is rejected; **Menu → Restore previous selection…** offers the recorded undo.
 - **In the game:** the combined mod is selected before launch. Change the set
-  in ModLoader with the game closed. Beta 7 uses the matching SDK's screen
+  in ModLoader with the game closed. The matching SDK's screen
   extension to show **CC2 ModLoader** and selected mod names on the main menu,
   and to gray out its **Mods** entry. See the
-  [exact-build menu verification](docs/verification/main-menu-v4.md) for current
-  acceptance status and scope.
+  [beta 7 exact-build menu verification](docs/verification/main-menu-v4.md) for
+  that binary's acceptance status and scope; the beta 8 resource hotfix does
+  not claim a new exact-binary game test.
 - **Your language:** the UI follows the system language. Choose another in
   **Menu → Language**; 14 offline languages are included.
 

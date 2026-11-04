@@ -1,5 +1,15 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0031 regressions cover a resource above the former 16 MiB limit and an
+installed collection above 256 MiB without retaining every resource in memory.
+Exercise streamed discovery, lazy-content size/hash revalidation, explicit
+small limits, replacement per-file/aggregate bounds, metadata isolation and
+16 MiB text-processing limits despite larger binary-copy capacity,
+selected-input preflight, generated output and activation/reuse verification.
+Verify the existing source report/hash contract for unchanged bytes. These
+offline filesystem/package checks do not certify new gameplay or turn beta 7's
+exact-binary menu evidence into beta 8 acceptance.
+
 ADR-0030 adds the missing delivery gate. Package fixtures verify the schema-1
 screen declaration, owned extension source, inventory/provenance hashes,
 historical policies, empty selection and Undo. SDK fixtures cover exact screen

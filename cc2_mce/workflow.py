@@ -22,6 +22,7 @@ from cc2_mce import APP_NAME, sdk_runtime, sdk_settings
 from cc2_mce.discovery import ModRef, Scan, fingerprint, snapshot_unchanged
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import (
+    RESOURCE_LIMITS,
     Budget,
     Limits,
     bounded_children,
@@ -29,6 +30,7 @@ from cc2_mce.filesystem import (
     input_root,
     normalize_logical_path,
     read_regular,
+    snapshot_regular,
     walk_regular,
 )
 from cc2_mce.installation import Installation
@@ -44,6 +46,7 @@ from cc2_mce.managed_menu import (
 from cc2_mce.merge import GitMergeAdapter, MergeInput, merge_file
 from cc2_mce.module_bundles import prepare_modules
 from cc2_mce.reports import engine_hash
+from cc2_mce.resources import validate_selection_resources
 from cc2_mce.toolchain import Toolchain
 from cc2_mce.validation import validate_content
 
@@ -255,6 +258,7 @@ def analyze(
         except InputError:
             pass  # Never satisfy a missing dependency using an unknown installed DLL.
     chosen = resolve_selection(scan, selected, provided_dependencies=provided)
+    validate_selection_resources(chosen, limits=RESOURCE_LIMITS)
     groups: dict[str, list[tuple[ModRef, Any]]] = defaultdict(list)
     bundle = prepare_modules(chosen, profile, luac=str(tools.luac) if tools else None)
     blockers: list[dict[str, str]] = list(bundle.blockers)
@@ -283,7 +287,8 @@ def analyze(
     config_defaults: dict[str, bytes] = {}
     config_providers: dict[str, set[str]] = defaultdict(set)
     runtime_inputs: dict[str, str] = {}
-    baseline_budget = Budget(Limits())
+    baseline_budget = Budget(RESOURCE_LIMITS)
+    baseline_text_budget = Budget(Limits(max_total_bytes=RESOURCE_LIMITS.max_total_bytes))
     baseline_directories: dict[Path, tuple[Path, ...]] = {}
     for key, variants in sorted(groups.items()):
         logical = variants[0][1].logical_path
@@ -308,7 +313,10 @@ def analyze(
                 game.root, folder, logical, baseline_budget, baseline_directories
             )
             if candidate is not None:
-                base = read_regular(candidate, game.root, baseline_budget)
+                resource_budget = (
+                    baseline_text_budget if variants[0][1].kind == "text" else baseline_budget
+                )
+                base = read_regular(candidate, game.root, resource_budget)
                 baseline_source = folder + "/" + logical
                 break
         if variants[0][1].kind == "native":
@@ -439,7 +447,7 @@ def analyze(
                     "message": "Проверенный dinput8.dll не найден в игре или libraries.",
                 }
             )
-    output_budget = Budget(Limits())
+    output_budget = Budget(RESOURCE_LIMITS)
     try:
         output_paths = {"mod.xml", "mce-manifest.json", "content"}
         for logical, data in payload.items():
@@ -448,7 +456,7 @@ def analyze(
                 raise InputError("Output depth limit exceeded")
             for index in range(1, len(parts) + 1):
                 output_paths.add("content/" + "/".join(parts[:index]))
-            output_budget.consume(len(data))
+            output_budget.consume(len(data), label=logical)
         for _ in output_paths:
             output_budget.entry()
     except InputError as exc:
@@ -605,10 +613,14 @@ def _verified_package(path: Path) -> dict[str, Any]:
     if not Draft202012Validator(schema).is_valid(report) or not report["installable"]:
         raise InputError("Папка сборки не принадлежит Engine или повреждена")
     expected = {"mod.xml", "mce-manifest.json"}
+    resource_budget = Budget(RESOURCE_LIMITS)
     for item in report["files"]:
         logical, _ = normalize_logical_path(item["logical_path"])
         expected.add("content/" + logical)
-        if digest(_read(root / "content" / logical, root)) != item["output_sha256"]:
+        if (
+            snapshot_regular(root / "content" / logical, root, resource_budget).sha256
+            != item["output_sha256"]
+        ):
             raise InputError("Выходной пакет изменён извне")
     if digest(_read(root / "mod.xml", root)) != report["package_metadata_sha256"]:
         raise InputError("Метаданные выходного пакета изменены извне")

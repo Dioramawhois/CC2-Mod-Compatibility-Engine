@@ -8,7 +8,9 @@ from xml.etree import ElementTree
 
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import (
+    SCAN_LIMITS,
     Budget,
+    FileSnapshot,
     Limits,
     bounded_children,
     classify,
@@ -17,6 +19,7 @@ from cc2_mce.filesystem import (
     is_link,
     normalize_logical_path,
     read_regular,
+    snapshot_regular,
     walk_regular,
 )
 
@@ -27,14 +30,22 @@ class FileRef:
     key: str
     sha256: str
     kind: str
-    content: bytes
+    _payload: bytes | FileSnapshot
+
+    @property
+    def content(self) -> bytes:
+        return self._payload if isinstance(self._payload, bytes) else self._payload.read()
+
+    @property
+    def size(self) -> int:
+        return len(self._payload) if isinstance(self._payload, bytes) else self._payload.size
 
     def report(self) -> dict[str, object]:
         return {
             "logical_path": self.logical_path,
             "sha256": self.sha256,
             "kind": self.kind,
-            "size": len(self.content),
+            "size": self.size,
         }
 
 
@@ -163,8 +174,16 @@ def _metadata(
 
 
 def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
-    limits = limits or Limits()
+    limits = limits or SCAN_LIMITS
     budget = Budget(limits)
+
+    class MetadataBudget(Budget):
+        def consume(self, size: int, *, label: str | None = None) -> None:
+            budget.consume(size, label=label)
+            super().consume(size, label=label)
+
+    metadata_budget = MetadataBudget(Limits())
+
     canonical_roots = tuple(dict.fromkeys(input_root(root) for root in roots))
     candidates: list[Path] = []
     for root in canonical_roots:
@@ -189,7 +208,7 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
             manifest = root / "mce-manifest.json"
             if manifest.exists():
                 try:
-                    generated = json.loads(read_regular(manifest, root, budget))
+                    generated = json.loads(read_regular(manifest, root, metadata_budget))
                 except (ValueError, UnicodeError) as exc:
                     raise InputError("Invalid generated package manifest") from exc
                 if isinstance(generated, dict) and generated.get("owner") == "cc2-mce":
@@ -203,7 +222,7 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
             input_root(content)
         metadata = b""
         if (root / "mod.xml").exists() or (root / "mod.xml").is_symlink():
-            metadata = read_regular(root / "mod.xml", root, budget)
+            metadata = read_regular(root / "mod.xml", root, metadata_budget)
         name, package_kind, package_id, dependencies, sdk, api, lua_api, framework_api = (
             _metadata(metadata, mod_id) if metadata else (mod_id, "mod", mod_id, (), None, 0, 0, 0)
         )
@@ -215,8 +234,10 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
                 raise InputError("Logical path case/Unicode collision")
             local_keys.add(key)
             spellings[key] = logical
-            data = read_regular(path, root, budget)
-            files.append(FileRef(logical, key, digest(data), classify(logical, data), data))
+            snapshot = snapshot_regular(path, root, budget)
+            files.append(
+                FileRef(logical, key, snapshot.sha256, classify(logical, snapshot.header), snapshot)
+            )
         files.sort(key=lambda item: item.key)
         root_files: list[FileRef] = []
         if (root / "bridge.json").exists() or (root / "bridge.json").is_symlink():
@@ -236,9 +257,15 @@ def discover(roots: list[Path], *, limits: Limits | None = None) -> Scan:
                         continue
                     if any(item.key == key for item in root_files):
                         raise InputError("Logical path case/Unicode collision")
-                    data = read_regular(path, root, budget)
+                    snapshot = snapshot_regular(path, root, budget)
                     root_files.append(
-                        FileRef(logical, key, digest(data), classify(logical, data), data)
+                        FileRef(
+                            logical,
+                            key,
+                            snapshot.sha256,
+                            classify(logical, snapshot.header),
+                            snapshot,
+                        )
                     )
             root_files.sort(key=lambda item: item.key)
         source_hash = fingerprint(

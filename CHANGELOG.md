@@ -4,6 +4,25 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b8 - Windows beta 8 (2026-11-04)
+
+- Fix startup failure `Input byte limit exceeded` for large installed mods and
+  subscription collections. Discovery hashes resources incrementally rather
+  than retaining all unchecked content in memory.
+- Separate bounded resource discovery from selected-build input/output:
+  512 MiB per resource, 16 GiB per discovery and 1 GiB each for materialized
+  selected input and generated output. Text-processing inputs retain 16 MiB
+  per-file limits; metadata/configuration keep separate tighter bounds.
+  Explicit smaller developer limits remain effective.
+- Revalidate deferred resource contents against their recorded size/hash.
+  Preserve path/link/native checks, source provenance, merge rules and
+  transactional activation. Byte-limit diagnostics identify the resource and
+  applicable per-file or aggregate limit. See ADR-0031.
+- Add offline regression coverage for large resources/collections, bounded
+  discovery, changed sources and package verification. This hotfix does not
+  claim fresh gameplay or beta 8 exact-binary menu acceptance; beta 7's menu
+  evidence remains separately identified.
+
 ## 0.4.0b7 - Windows beta 7 (2026-11-04)
 
 - Correct the main-menu integration boundary: the game's menu world clears

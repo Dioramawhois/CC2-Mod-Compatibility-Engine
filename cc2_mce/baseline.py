@@ -8,6 +8,7 @@ from typing import Any
 from cc2_mce.discovery import fingerprint
 from cc2_mce.errors import BaselineError, InputError
 from cc2_mce.filesystem import (
+    RESOURCE_LIMITS,
     Budget,
     Limits,
     digest,
@@ -73,11 +74,12 @@ class Baseline:
 
 def load_baseline(root: Path, *, game_executable: Path | None = None) -> Baseline:
     root = input_root(root)
-    budget = Budget(Limits())
+    metadata_budget = Budget(Limits())
+    budget = Budget(RESOURCE_LIMITS)
     manifest_path = root / "baseline-manifest.json"
     if not manifest_path.exists():
         raise BaselineError("baseline-manifest.json is required; SDK mapping is never guessed")
-    raw = read_regular(manifest_path, root, budget)
+    raw = read_regular(manifest_path, root, metadata_budget)
     manifest = parse_json(raw)
     if not isinstance(manifest, dict):
         raise BaselineError("Baseline manifest must be an object")
@@ -104,7 +106,7 @@ def load_baseline(root: Path, *, game_executable: Path | None = None) -> Baselin
         if game_executable is None:
             raise BaselineError("Game baseline requires --game-executable fingerprint check")
         executable_root = input_root(game_executable.parent)
-        executable_data = read_regular(game_executable, executable_root, budget)
+        executable_data = read_regular(game_executable, executable_root, metadata_budget)
         if digest(executable_data) != game["executable_sha256"]:
             raise BaselineError("Game executable fingerprint mismatch")
     entries = manifest["files"]
@@ -120,7 +122,17 @@ def load_baseline(root: Path, *, game_executable: Path | None = None) -> Baselin
         source, _ = normalize_logical_path(entry["source_path"])
         if key in files:
             raise InputError("Baseline logical path collision")
-        data = read_regular(root / source, root, budget)
+        max_file_bytes = budget.limits.max_file_bytes
+        if Path(entry["logical_path"]).suffix.casefold() in {".lua", ".txt", ".xml", ".glsl"}:
+            max_file_bytes = Limits().max_file_bytes
+        file_budget = Budget(
+            Limits(
+                max_file_bytes=max_file_bytes,
+                max_total_bytes=budget.limits.max_total_bytes - budget.total_bytes,
+            )
+        )
+        data = read_regular(root / source, root, file_budget)
+        budget.consume(len(data), label=source)
         if digest(data) != entry["sha256"]:
             raise BaselineError("Baseline file hash mismatch")
         files[key] = data

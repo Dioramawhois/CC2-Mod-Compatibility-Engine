@@ -7,9 +7,10 @@ from cc2_mce.baseline import Baseline
 from cc2_mce.discovery import FileRef, ModRef, Scan, fingerprint, snapshot_unchanged
 from cc2_mce.doctor import tool_version
 from cc2_mce.errors import InputError
-from cc2_mce.filesystem import digest
+from cc2_mce.filesystem import RESOURCE_LIMITS, digest
 from cc2_mce.merge import GitMergeAdapter, MergeInput, merge_file
 from cc2_mce.reports import envelope
+from cc2_mce.resources import validate_selection_resources
 
 
 def plan(
@@ -23,6 +24,7 @@ def plan(
 ) -> tuple[dict[str, object], int, dict[str, bytes]]:
     if not selected or len(selected) > scan.limits.max_variants:
         raise InputError("Select 1..32 mods explicitly")
+    validate_selection_resources(selected, limits=RESOURCE_LIMITS)
     report = envelope(command)
     report["mod_order"] = [mod.id for mod in selected]
     report["sources"] = [mod.report() for mod in selected]

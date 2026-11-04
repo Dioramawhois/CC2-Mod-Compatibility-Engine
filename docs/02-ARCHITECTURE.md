@@ -1,5 +1,17 @@
 # 02. Архитектура
 
+ADR-0031 separates streamed discovery from materialized selected inputs.
+Resource snapshots retain paths, byte sizes, type headers and SHA-256 rather
+than whole unchecked mod contents. Default resource bounds are 512 MiB/file,
+16 GiB/discovery, and 1 GiB each for selected input and generated output.
+Text-processing inputs retain 16 MiB/file, including originals; indexing a
+larger text file does not authorize Git/Lua/XML/JSON processing of it.
+Metadata/configuration retain separate smaller bounds. Deferred reads recheck
+the snapshot's size/hash through the same safe regular-file boundary. Reports
+do not load content, and existing schemas/hashes keep their meaning. The
+16/256 MiB values in the historical prototype section below are superseded by
+[ADR-0031](adr/0031-streamed-resource-discovery-and-budgets.md).
+
 ADR-0030 replaces ordinary menu-resource delivery with a generic reviewed SDK
 screen extension. Stage `content/cc2x/screen_extensions.json` (schema 1) pointing
 from `scripts/screen_menu_main.lua` to owned `cc2x/ui/modloader_menu.lua`.

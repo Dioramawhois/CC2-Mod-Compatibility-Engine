@@ -1,13 +1,22 @@
 # 02. Архитектура
 
-ADR-0029 extends the owned post-merge `managed_menu` decorator with a
+ADR-0030 replaces ordinary menu-resource delivery with a generic reviewed SDK
+screen extension. Stage `content/cc2x/screen_extensions.json` (schema 1) pointing
+from `scripts/screen_menu_main.lua` to owned `cc2x/ui/modloader_menu.lua`.
+The SDK executes it after the matching stock screen and before `begin()`, even
+when main-menu resource overlays are disabled. New provenance uses
+`sdk-screen-extension-v4`; historical policies remain readable. No vanilla or
+author files are edited. Final Windows managed-menu acceptance is recorded in
+[menu verification](verification/main-menu-v4.md); wider runtime gates remain separate.
+See [ADR-0030](adr/0030-sdk-screen-extension-delivery.md).
+
+ADR-0029 defines the owned `managed_menu` policy behavior with a
 noninteractive CC2 ModLoader header and selected source names above the main
 menu's first ordinary header, once per frame. Normalize control characters,
 bound the name line to 140 Unicode characters and escape it as a Lua literal.
 Keep ADR-0028's disabled localized Mods entry, rejected navigation and stale
-state handling; unrelated screens and callbacks retain their behavior. New
-provenance uses `modloader-main-menu-v3`; schema v2 retains both older policies.
-No SDK, vanilla or author files are changed. See
+state handling; unrelated screens and callbacks retain their behavior.
+Historical resource-decorator provenance used `modloader-main-menu-v3`. See
 [ADR-0029](adr/0029-main-menu-modloader-badge.md).
 
 GUI source-root refresh includes the existing game-user `mods` directory on
@@ -17,7 +26,7 @@ path validation. Scan/report identity and generated-output exclusion stay in
 the discovery adapter. ADR-0026.
 
 `game_launch` validates the applied package/activation and spawns the discovered
-executable directly. `managed_menu` supplies an owned post-merge Lua decorator
+executable directly. `managed_menu` supplies an owned Lua extension
 inside the generated package, with provenance in schema v2. Initial discovery
 always refreshes the remembered selected set before auto-launch. ADR-0025.
 

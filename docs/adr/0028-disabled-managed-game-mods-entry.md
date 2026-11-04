@@ -4,6 +4,10 @@ Status: accepted following the owner's correction, 2026-11-04. Supersedes
 ADR-0025's reachable read-only mod-list behavior. Direct launch, refresh,
 reversible activation and native/source safety rules remain in effect.
 
+Delivery superseded by [ADR-0030](0030-sdk-screen-extension-delivery.md): the
+real main menu clears ordinary mod overlays, so the generated resource alone
+does not apply this policy there. The requested UI behavior below is retained.
+
 ## Problem
 
 The earlier decorator disabled mod-list rows only after the player opened Mods.

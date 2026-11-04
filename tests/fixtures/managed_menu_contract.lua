@@ -2,6 +2,7 @@
 local window = {is_active=true}
 local items, rows, buttons, notices, writes, updates = {}, {}, {}, 0, 0, 0
 local headers, texts = {}, {}
+local ready_logs = 0
 local selected_names = 'AI Bridge + Island Airfields'
 local labels = {[20]='Disable all', [21]='Mods', [22]='New game'}
 local function make_ui()
@@ -32,6 +33,10 @@ local env={g_screens={main=0,join=3,mods=15},g_screen_index=15,
     g_disable_mods_confirm=true,e_loc={upp_disable_all=20,upp_mods=21,upp_new_game=22},
     update_get_loc=function(id) return assert(labels[id]) end,
     update_set_is_mod_enabled=function() writes=writes+1 end,
+    cc2x={log=function(message)
+        assert(message=='MODLOADER_MENU_READY policy=sdk-screen-extension-v4')
+        ready_logs=ready_logs+1
+    end},
 }
 local navigation_calls = 0
 local function mark_stale()
@@ -123,4 +128,5 @@ local wrapped_header=env.g_ui.header
 env.update('repeated')
 assert(env.g_ui.list_item==wrapped_item)
 assert(env.g_ui.header==wrapped_header)
+assert(ready_logs==1)
 print('PASS managed menu: visible ModLoader identity and ordered names once per frame, disabled localized Mods entry, preserved callbacks/other screens, blocked navigation, stale recovery, recreated UI')

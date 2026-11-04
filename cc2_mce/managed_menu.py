@@ -1,10 +1,12 @@
 """An owned Lua decorator identifying the managed set and locking game Mods."""
 
 MENU_PATH = "scripts/screen_menu_main.lua"
-POLICY = "modloader-main-menu-v3"
+POLICY = "sdk-screen-extension-v4"
+SCREEN_DESCRIPTOR = "cc2x/screen_extensions.json"
+SCREEN_SOURCE = "cc2x/ui/modloader_menu.lua"
 
-# This wraps published menu callbacks after resource merging. It does not parse
-# or rewrite another mod's Lua, and contains no copied vanilla script.
+# The SDK runs this after the actual screen's chunks, including when CC2 has
+# disabled ordinary resource overlays. It contains no copied vanilla script.
 ADAPTER = r"""
 return function(env, selection_label)
     local function is_screen(index, name)
@@ -26,10 +28,16 @@ return function(env, selection_label)
     local wrapped_ui = nil
     local notice_shown = false
     local badge_shown = false
+    local ready_logged = false
     local function wrap_ui()
         local ui = env.g_ui
         if type(ui) ~= "table" or ui == wrapped_ui then return end
         wrapped_ui = ui
+        if not ready_logged and type(env.cc2x) == "table"
+            and type(env.cc2x.log) == "function" then
+            ready_logged = true
+            env.cc2x.log("MODLOADER_MENU_READY policy=sdk-screen-extension-v4")
+        end
         local header = ui.header
         if type(header) == "function" then
             ui.header = function(self, ...)
@@ -138,3 +146,8 @@ def decorate(source: bytes, selected_names: tuple[str, ...] = ()) -> bytes:
     )
     # Preserve every source byte and use its newline convention for owned code.
     return source + (suffix.replace(b"\n", b"\r\n") if b"\r\n" in source else suffix)
+
+
+def screen_source(selected_names: tuple[str, ...]) -> bytes:
+    """Owned screen extension; the SDK appends it after the actual stock menu."""
+    return decorate(b"", selected_names)

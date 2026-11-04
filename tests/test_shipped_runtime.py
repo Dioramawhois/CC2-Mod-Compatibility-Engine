@@ -32,13 +32,11 @@ def test_client_candidate_runtime_matches_reviewed_profile_and_pe_architecture()
     assert provenance["source_commit"] == profile["runtime_review"]["source_commit"]
     lock = json.loads((ROOT.parent / "distribution/windows-runtime.json").read_text())
     assert lock["sha256"] == digest(data) and lock["bytes"] == len(data)
-    assert "/0.7.0-client-beta.1/" in lock["url"]
+    assert "/" + profile["runtime_review"]["runtime_version"] + "/" in lock["url"]
     assert b"cc2x_query_framework_v1" in data
-    assert profile["runtime_review"]["verified_scope"] == [
-        "sdk-alone-bootstrap-no-external-plugins",
-        "legacy-native-mod-bootstrap",
-        "public-c-and-cpp-framework-consumer-bootstrap",
-    ]
+    assert "screen-extensions-v1" in profile["runtime_capabilities"]
+    assert "screen-extensions-v1" in provenance["capabilities"]
+    assert "screen-extension-offline-contract" in profile["runtime_review"]["verified_scope"]
     assert "full-gameplay" in profile["runtime_review"]["unverified_scope"]
     assert b"GNU GENERAL PUBLIC LICENSE" in (folder / "LICENSE").read_bytes()
     assert b"Lua" in (folder / "Lua-LICENSE.txt").read_bytes()
@@ -60,4 +58,5 @@ def test_only_tested_native_bytes_receive_client_settings_defaults():
     assert profile["previous_runtime_sha256"] == [
         "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba",
         "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
+        "ed27641315e3957e991bb5fb00de8481c4a5ba7432d48a2638dee1d939110ff0",
     ]

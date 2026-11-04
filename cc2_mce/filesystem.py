@@ -4,8 +4,11 @@ import hashlib
 import os
 import stat
 import unicodedata
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
+from typing import BinaryIO
 
 from cc2_mce.errors import InputError
 
@@ -19,6 +22,11 @@ class Limits:
     max_variants: int = 32
 
 
+RESOURCE_LIMITS = Limits(max_file_bytes=512 * 1024 * 1024, max_total_bytes=1024 * 1024 * 1024)
+SCAN_LIMITS = Limits(max_file_bytes=512 * 1024 * 1024, max_total_bytes=16 * 1024 * 1024 * 1024)
+_HASH_CHUNK_BYTES = 1024 * 1024
+
+
 @dataclass
 class Budget:
     limits: Limits
@@ -30,10 +38,44 @@ class Budget:
         if self.entries > self.limits.max_entries:
             raise InputError("Scan entry limit exceeded")
 
-    def consume(self, size: int) -> None:
-        self.total_bytes += size
-        if size > self.limits.max_file_bytes or self.total_bytes > self.limits.max_total_bytes:
-            raise InputError("Input byte limit exceeded")
+    def consume(self, size: int, *, label: str | None = None) -> None:
+        suffix = f": {label}" if label else ""
+        if size > self.limits.max_file_bytes:
+            raise InputError(
+                f"Input file byte limit exceeded{suffix} "
+                f"({size} bytes; limit {self.limits.max_file_bytes} bytes)"
+            )
+        total = self.total_bytes + size
+        if total > self.limits.max_total_bytes:
+            raise InputError(
+                f"Input total byte limit exceeded{suffix} "
+                f"({total} bytes; limit {self.limits.max_total_bytes} bytes)"
+            )
+        self.total_bytes = total
+
+
+@dataclass(frozen=True)
+class FileSnapshot:
+    path: Path
+    root: Path
+    size: int
+    sha256: str
+    header: bytes
+
+    def read(self) -> bytes:
+        """Load selected content only, requiring the exact bytes hashed during discovery."""
+        if input_root(self.root) != self.root:
+            raise InputError("Input root changed since scan")
+        data = read_regular(
+            self.path,
+            self.root,
+            Budget(Limits(max_file_bytes=self.size, max_total_bytes=self.size)),
+        )
+        if len(data) != self.size or digest(data) != self.sha256:
+            raise InputError(
+                f"Input changed since scan: {self.path.relative_to(self.root).as_posix()}"
+            )
+        return data
 
 
 def digest(data: bytes) -> str:
@@ -74,7 +116,14 @@ def input_root(path: Path) -> Path:
         raise InputError("Input directory is not accessible") from exc
 
 
-def read_regular(path: Path, root: Path, budget: Budget) -> bytes:
+def _identity(info: os.stat_result) -> tuple[int, int, int, int]:
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns
+
+
+@contextmanager
+def _regular_stream(
+    path: Path, root: Path, budget: Budget
+) -> Iterator[tuple[BinaryIO, os.stat_result]]:
     try:
         relative = path.relative_to(root)
         cursor = root
@@ -87,25 +136,47 @@ def read_regular(path: Path, root: Path, budget: Budget) -> bytes:
         before = path.lstat()
         if not stat.S_ISREG(before.st_mode):
             raise InputError("Input is not a regular file")
-        budget.consume(before.st_size)
+        budget.consume(before.st_size, label=relative.as_posix())
         flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0)
         with os.fdopen(os.open(path, flags), "rb") as stream:
             opened = os.fstat(stream.fileno())
             if (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino):
                 raise InputError("Input changed while opening")
-            data = stream.read(budget.limits.max_file_bytes + 1)
+            yield stream, before
             after = os.fstat(stream.fileno())
-
-        def identity(info: os.stat_result) -> tuple[int, int, int, int]:
-            return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns
-
-        if len(data) != before.st_size or identity(before) != identity(after):
+        if _identity(before) != _identity(after):
             raise InputError("Input changed while reading")
-        if is_link(path) or identity(path.lstat()) != identity(after):
+        if is_link(path) or _identity(path.lstat()) != _identity(after):
             raise InputError("Input changed after reading")
-        return data
     except (OSError, ValueError) as exc:
         raise InputError("Input file is inaccessible or outside its root") from exc
+
+
+def read_regular(path: Path, root: Path, budget: Budget) -> bytes:
+    with _regular_stream(path, root, budget) as (stream, before):
+        data = stream.read(before.st_size + 1)
+        if len(data) != before.st_size:
+            raise InputError("Input changed while reading")
+    return data
+
+
+def snapshot_regular(path: Path, root: Path, budget: Budget) -> FileSnapshot:
+    """Hash an input in bounded chunks without retaining unselected mod resources."""
+    hasher = hashlib.sha256()
+    header = b""
+    total = 0
+    with _regular_stream(path, root, budget) as (stream, before):
+        while total <= before.st_size:
+            chunk = stream.read(min(_HASH_CHUNK_BYTES, before.st_size + 1 - total))
+            if not chunk:
+                break
+            if len(header) < 4:
+                header += chunk[: 4 - len(header)]
+            hasher.update(chunk)
+            total += len(chunk)
+        if total != before.st_size:
+            raise InputError("Input changed while reading")
+    return FileSnapshot(path, root, total, hasher.hexdigest(), header)
 
 
 def bounded_children(directory: Path, budget: Budget) -> list[Path]:

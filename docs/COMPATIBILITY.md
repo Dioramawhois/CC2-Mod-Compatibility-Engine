@@ -1,7 +1,13 @@
 # Compatibility and verification
 
-CC2 ModLoader 0.4.0 beta 7 is a Windows x64 desktop beta. A successful file
+CC2 ModLoader 0.4.0 beta 8 is a Windows x64 desktop beta. A successful file
 merge is useful evidence about files; it does not establish gameplay compatibility.
+
+Beta 8 changes bounded resource discovery/reading to fix large-collection
+startup failures. See [resource limits](INSTALLATION.md#large-mods-and-resource-limits)
+and [ADR-0031](adr/0031-streamed-resource-discovery-and-budgets.md). Its offline
+regressions do not constitute new game-menu or gameplay acceptance. The beta 7
+exact-binary menu checks below remain identified as beta 7 evidence.
 
 ## What the application checks
 

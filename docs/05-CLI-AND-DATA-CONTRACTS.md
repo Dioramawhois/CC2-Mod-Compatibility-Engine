@@ -1,5 +1,14 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
+ADR-0031 changes resource storage/read budgets without changing JSON schemas.
+File `size` and SHA-256 fields still describe the full resource bytes, even
+when discovery retains a deferred file snapshot. Source/mod fingerprints and
+output hashes keep their existing meaning; report projection must not load
+resource contents. A later selected read must match that recorded size/hash.
+Byte-limit diagnostics distinguish file versus total bounds and identify the
+affected relative resource. See
+[ADR-0031](adr/0031-streamed-resource-discovery-and-budgets.md).
+
 ADR-0029: new schema-v2 `managed_menu` records use policy
 `modloader-main-menu-v3` for the main-menu brand/selected-mod label and existing
 Mods entry/navigation guard. The schema continues to accept

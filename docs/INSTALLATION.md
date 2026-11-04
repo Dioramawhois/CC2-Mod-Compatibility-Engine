@@ -22,8 +22,8 @@ this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 directly. This permanent link is updated when a newer beta is published.
 
-Alternatively, open the [0.4.0 beta 7 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b7)
-and download **CC2ModLoader-0.4.0b7-windows-x64.zip** for the complete package with
+Alternatively, open the [0.4.0 beta 8 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b8)
+and download **CC2ModLoader-0.4.0b8-windows-x64.zip** for the complete package with
 its README, notices and metadata.
 
 Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links
@@ -153,13 +153,14 @@ changes wait for it to close.
 Only the generated build is enabled. Use ModLoader to change your selection
 with the game closed, then restart the game.
 
-Beta 7 uses its matching reviewed SDK to load a menu extension. The main menu
+The loader uses its matching reviewed SDK to load a menu extension. The main menu
 shows a **CC2 ModLoader** heading and compact selected-mod names; its **Mods**
 entry is gray and disabled. Other menus retain their ordinary navigation.
 The policy belongs to the generated package. An empty selection adds no
 extension; removing it restores the ordinary menu on the next start.
-See [exact-build menu verification](verification/main-menu-v4.md) for the
-current acceptance status and limits.
+See [beta 7 exact-build menu verification](verification/main-menu-v4.md) for that
+binary's acceptance status and limits. Beta 8 changes resource handling and
+does not claim a fresh exact-binary game-menu test.
 
 Beta 6's generated menu-file change did not reach the initial menu because the
 game clears ordinary resource overlays there. Beta 7 uses the SDK boundary
@@ -225,12 +226,45 @@ Deleting the executable alone does not undo an active generated package. Keep
 the application's recovery/backup data until you have restored or disabled the
 set you no longer want.
 
+## Large mods and resource limits
+
+Beta 8 fixes `Input byte limit exceeded` during startup for resources above the
+old 16 MiB limit or installed collections above the old 256 MiB limit. Update
+the loader using the current EXE link above; you do not need to delete your
+Workshop subscriptions or move your mods to work around those old limits.
+
+The loader now hashes installed resources incrementally instead of keeping all
+unchecked mod contents in memory. It keeps these bounded resource limits:
+
+| Scope | Limit |
+| --- | --- |
+| One resource file for discovery or supported binary copying | 512 MiB |
+| One text input processed for merging/validation | 16 MiB |
+| Resource input scanned across installed packages | 16 GiB |
+| Selected source input for one build, including package metadata | 1 GiB |
+| Generated resource output | 1 GiB |
+
+Metadata and configuration have separate, smaller bounds. Large binary-copy
+capacity does not apply to text merging or Lua/XML/JSON processing. A large
+text resource can appear in the list and still exceed the text-processing
+limit when selected. A resource-limit message names the affected relative file
+and shows its actual size and limit.
+For a selected-set limit, reduce the selected set. If a single resource or the
+installed collection exceeds the supported bounds, report the named resource,
+size and loader version so the case can be reviewed. Keep the original files;
+renaming an extension or editing a size declaration does not change support.
+
+These limits concern file processing, not gameplay compatibility or native
+plugin approval. A rejected build preserves the previously applied set.
+
 ## Troubleshooting
 
 | Message or symptom | Action |
 | --- | --- |
 | Game not found or portable placement requested | Put the executable beside the intended `carrier_command.exe`; use **Menu > Choose game folder...** where available. |
 | A subscribed mod is missing | Finish Steam downloads, check the selected game, then refresh the list. |
+| `Input byte limit exceeded` immediately after opening an older loader | Update to beta 8 or later. The old scanner limited all installed mods to 256 MiB and each file to 16 MiB, including unchecked mods. |
+| A file or aggregate resource limit is exceeded in beta 8 | Read the named file, actual size and limit. Reduce a selected set if its build exceeds 1 GiB; otherwise include those details in a bug report. See [resource limits](#large-mods-and-resource-limits). |
 | A local package is missing | Check its `mod.xml` and `content` layout, or add its parent folder through the menu. |
 | A library cannot be unchecked | A selected mod may require it. Disable the dependent mod first. |
 | Unknown or incompatible DLL | Use a supported release of the mod/SDK; do not rename a DLL to bypass review. |
@@ -238,7 +272,7 @@ set you no longer want.
 | Update is waiting | Close the game and allow the pending change or recovery to finish. |
 | A change is rejected | Read the named mod/file in the result and open problem details; the previous set is retained. |
 | The game's Mods entry is gray | The active set is managed by ModLoader. Close the game to change it in the loader. |
-| The game's Mods entry is still clickable | Check that you are using beta 7 and its matching reviewed SDK. Beta 6 had this defect. Include app/runtime versions and your exported report when reporting it. |
+| The game's Mods entry is still clickable | Check that you are using beta 7 or later and its matching reviewed SDK. Beta 6 had this defect. Include app/runtime versions and your exported report when reporting it. |
 | Files were changed outside the app | Preserve the files and recovery data; report the issue before deleting or replacing them. |
 
 For a bug report, include the application and game versions, selected mod names,

@@ -1,5 +1,12 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Beta 8 streams discovery of Workshop and local resource files without retaining
+unchecked content. Use the same bounded resource policy through selected-input
+reads, installed originals, staging and activation/reuse verification. A larger
+data-resource budget grants no additional native approval; source folders and
+game/SDK assets remain read-only. Closed-game deferral and rollback are unchanged.
+See [ADR-0031](adr/0031-streamed-resource-discovery-and-budgets.md).
+
 Current GUI discovery includes `%APPDATA%\Carrier Command 2\mods` on Windows
 and `~/Library/Application Support/Carrier Command 2/mods` on macOS, alongside
 Workshop, game-folder collections and user-added roots. This is read-in-place

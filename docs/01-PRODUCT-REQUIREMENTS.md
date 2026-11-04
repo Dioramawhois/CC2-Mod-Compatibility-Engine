@@ -1,5 +1,11 @@
 # 01. Product Requirements (PRD)
 
+Beta 8 startup fix: discovering large installed collections must not require
+retaining every unchecked resource in memory. Stream resource hashes with
+separate bounded collection and selected-build budgets; preserve source
+integrity, path/native safety and the existing GUI workflow. See
+[ADR-0031](adr/0031-streamed-resource-discovery-and-budgets.md).
+
 Delivery correction 2026-11-04: beta 6's generated menu resource does not lock
 the real main menu. Beta 7 delivers the policy through the reviewed SDK
 screen-extension boundary. Its final Windows EXE/runtime pair passed the real

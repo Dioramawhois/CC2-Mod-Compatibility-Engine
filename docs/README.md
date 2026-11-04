@@ -43,6 +43,7 @@ ADRs together; they are not an alternative set of player installation steps.
 - [Library metadata contract](17-LIBRARY-SDK.md)
 - [Steam distribution audit](19-STEAM-DISTRIBUTION-AUDIT.md)
 - [Common SDK and separate gameplay mods](22-UNIFIED-SDK-AND-MOD-SPLIT.md)
+- [Streamed resource discovery and separate collection/build budgets](adr/0031-streamed-resource-discovery-and-budgets.md)
 - [SDK screen-extension delivery and the beta 6 menu defect](adr/0030-sdk-screen-extension-delivery.md)
 - [Beta 7 exact-build Windows menu verification](verification/main-menu-v4.md)
 - [Main-menu ModLoader label and selected mod names](adr/0029-main-menu-modloader-badge.md)

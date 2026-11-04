@@ -41,6 +41,8 @@ def test_client_candidate_runtime_matches_reviewed_profile_and_pe_architecture()
     assert b"GNU GENERAL PUBLIC LICENSE" in (folder / "LICENSE").read_bytes()
     assert b"Lua" in (folder / "Lua-LICENSE.txt").read_bytes()
     assert (folder / "NOTICE.md").is_file()
+    for library in ("libcxx", "libcxxabi", "libunwind"):
+        assert b"LLVM" in (folder / (library + "-LICENSE.txt")).read_bytes()
 
 
 def test_only_tested_native_bytes_receive_client_settings_defaults():

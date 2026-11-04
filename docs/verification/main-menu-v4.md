@@ -12,7 +12,7 @@ multiplayer, dedicated-server, clean-machine or macOS runtime acceptance.
 | Component | Identity |
 | --- | --- |
 | ModLoader | 0.4.0b7, Windows x64 GUI |
-| `CC2ModLoader.exe` SHA-256 | `71b3a142c4b5fff996c80d875d360467ed1c8fe3603bc313138d992d423a61f4` |
+| `CC2ModLoader.exe` SHA-256 | `c53eda4e58434040524df70f2db315c89115163f585a74f406f9377cd6d4b4a3` |
 | SDK | 0.7.1-client-beta.1 maintenance release |
 | `dinput8.dll` SHA-256 | `c741ed111cdb186463c01f6e9e189fb80ee15b43bc52e6bacdd92fe88ee95d12` |
 | SDK source commit | `59a8f9a48e51e8559d7c32deac2677c8f2059bee` |
@@ -21,7 +21,7 @@ multiplayer, dedicated-server, clean-machine or macOS runtime acceptance.
 | Generated package manifest SHA-256 | `4cf0b09f77f47350625bb0201bf6308eda1641a8d618f3ef2cf2cfbc6d674a2f` |
 | Extension source SHA-256 | `fc1ad07beed6417835f357f9ed475b6b0fde4b7020a40c026fa0999403f3e4df` |
 | Declaration SHA-256 | `bf8866e171de49eb37ec766aa87ce3ec8a2c6f0207391ca39207c6e75f9d47b5` |
-| Tested game log SHA-256 | `305014e4ec7adf567d894360bcb53dc5c00a06373a97015d6d879f3f0d5a6e05` |
+| Tested game log SHA-256 | `e718ad91695361407d651fae7fa3a00de0fcc142ae614e99d9cf34c52651a280` |
 
 The SDK dependency is pinned to this maintenance release. The parallel SDK 0.8
 release and its latest-release channel are separate.
@@ -53,8 +53,15 @@ application retains all 14 offline language catalogs.
 
 | Public capture | SHA-256 |
 | --- | --- |
-| `05-game-managed-menu.png` | `587d3371a8a8118a13cd78628be11b9a6254f9fa6f580f5f7f1c633a54a0e762` |
-| `06-game-new-game.png` | `6ad0d529bdfd24b1fb8033fbb803cd31ccebb71db445ef55f953e0638c032078` |
+| `05-game-managed-menu.png` | `1eac5c6e77a30d999379e9a108bbe2c0e59c4b3d66b849218bef0c1aac672fa9` |
+| `06-game-new-game.png` | `0538e4b901e277aa6bc85582d9af3095ae5ba15b5bf2edd24d3827db81b15e8c` |
+
+Original accepted BMP capture hashes are
+`38f980ae36f206ec5ccd4211d11509e53a9b28b9bbe864994bf87c11bea98637`
+(Mods after Enter) and
+`76b75121bd3e5b6b8cbb35639c656563cb4e7118fce08fb1693e67115f8a4739`
+(New Game). The local receipt also retains the mouse-click capture hash,
+`10c7d06495e3849694246ba5b21815a8071df657326e9bd08979e45faebb2a0c`.
 
 ## SDK-only control
 

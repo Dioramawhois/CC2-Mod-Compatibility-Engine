@@ -22,8 +22,8 @@ this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 directly. This permanent link is updated when a newer beta is published.
 
-Alternatively, open the [0.4.0 beta 6 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b6)
-and download **CC2ModLoader-0.4.0b6-windows-x64.zip** for the complete package with
+Alternatively, open the [0.4.0 beta 7 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b7)
+and download **CC2ModLoader-0.4.0b7-windows-x64.zip** for the complete package with
 its README, notices and metadata.
 
 Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links
@@ -150,15 +150,20 @@ open it also checks for changed sources periodically. If the game is running,
 changes wait for it to close.
 
 **Launch** starts `carrier_command.exe` directly from the selected installation.
-Only the generated build is enabled. The game's main menu shows a
-**CC2 ModLoader** heading and a compact line of selected mod names in merge
-order; long lists are shortened. This label is informational. The **Mods**
-entry remains gray and disabled, including access to its Workshop uploader.
-Use ModLoader to change your selection with the game closed, then restart the
-game. Other menus and gameplay remain available. These menu changes require
-readable game menu resources and live only in the generated build. Undo restores
-the prior build's menu behavior; disabling the generated set removes its menu
-changes. An empty selection adds neither the label nor the guard.
+Only the generated build is enabled. Use ModLoader to change your selection
+with the game closed, then restart the game.
+
+Beta 7 uses its matching reviewed SDK to load a menu extension. The main menu
+shows a **CC2 ModLoader** heading and compact selected-mod names; its **Mods**
+entry is gray and disabled. Other menus retain their ordinary navigation.
+The policy belongs to the generated package. An empty selection adds no
+extension; removing it restores the ordinary menu on the next start.
+See [exact-build menu verification](verification/main-menu-v4.md) for the
+current acceptance status and limits.
+
+Beta 6's generated menu-file change did not reach the initial menu because the
+game clears ordinary resource overlays there. Beta 7 uses the SDK boundary
+described in [ADR-0030](adr/0030-sdk-screen-extension-delivery.md).
 
 Open **Load order** to change the merge order. Drag a selected package, or use
 **Alt+Up** and **Alt+Down**. Each change rebuilds the result automatically and
@@ -232,7 +237,8 @@ set you no longer want.
 | An existing `dinput8.dll` blocks activation | Identify the installed loader. Preserve it and check compatibility instead of overwriting it blindly. |
 | Update is waiting | Close the game and allow the pending change or recovery to finish. |
 | A change is rejected | Read the named mod/file in the result and open problem details; the previous set is retained. |
-| The game's Mods entry is gray | The active generated set is controlled by ModLoader. Close the game to change or disable that set in ModLoader; disabling it restores the ordinary game menu. |
+| The game's Mods entry is gray | The active set is managed by ModLoader. Close the game to change it in the loader. |
+| The game's Mods entry is still clickable | Check that you are using beta 7 and its matching reviewed SDK. Beta 6 had this defect. Include app/runtime versions and your exported report when reporting it. |
 | Files were changed outside the app | Preserve the files and recovery data; report the issue before deleting or replacing them. |
 
 For a bug report, include the application and game versions, selected mod names,

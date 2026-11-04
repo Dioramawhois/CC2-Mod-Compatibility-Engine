@@ -1,6 +1,13 @@
 # 01. Product Requirements (PRD)
 
-Owner update 2026-11-04 (0.4.0b6): the active generated set visibly identifies
+Delivery correction 2026-11-04: beta 6's generated menu resource does not lock
+the real main menu. Beta 7 delivers the policy through the reviewed SDK
+screen-extension boundary. Its final Windows EXE/runtime pair passed the real
+Mods mouse-click/Enter and New Game checks; see
+[menu verification](verification/main-menu-v4.md) and
+[ADR-0030](adr/0030-sdk-screen-extension-delivery.md).
+
+Requested behavior (ADR-0029): the active generated set visibly identifies
 CC2 ModLoader on the game's main menu, above its first ordinary header, with a
 compact selected-mod line in source order. Both are noninteractive and appear
 only on that menu, once per frame. Names are normalized, bounded and safely Lua
@@ -17,7 +24,7 @@ See ADR-0026; package/report schemas and merge rules are unchanged.
 
 Owner update 2026-11-03: launch the local game executable directly, reanalyze
 the saved set on every startup, and activate only its generated package. The
-generated menu makes mod rows gray/read-only; changes stay in ModLoader.
+managed-menu requirement makes mod rows gray/read-only; changes stay in ModLoader.
 Newly discovered mods still require selection. See ADR-0025.
 
 New framework boundary: the supplied gameplay ports use Lua/content and declare their

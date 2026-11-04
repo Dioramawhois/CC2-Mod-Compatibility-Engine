@@ -33,7 +33,14 @@ from cc2_mce.filesystem import (
 )
 from cc2_mce.installation import Installation
 from cc2_mce.locking import activation_lock
-from cc2_mce.managed_menu import ADAPTER, MENU_PATH, POLICY, decorate
+from cc2_mce.managed_menu import (
+    ADAPTER,
+    MENU_PATH,
+    POLICY,
+    SCREEN_DESCRIPTOR,
+    SCREEN_SOURCE,
+    screen_source,
+)
 from cc2_mce.merge import GitMergeAdapter, MergeInput, merge_file
 from cc2_mce.module_bundles import prepare_modules
 from cc2_mce.reports import engine_hash
@@ -369,51 +376,54 @@ def analyze(
                 }
             )
     managed_menu = None
-    if chosen:
-        menu_row = next(
-            (item for item in files if item["logical_path"].casefold() == MENU_PATH), None
+    if chosen and "screen-extensions-v1" in profile.get("runtime_capabilities", []):
+        # CC2 deliberately disables ordinary mod resource roots in the front menu.
+        # Only a reviewed SDK screen extension can run the owned policy there.
+        needs_runtime = True
+        owned_menu = screen_source(tuple(mod.name for mod in chosen))
+        descriptor = (
+            json.dumps(
+                {"schema": 1, "extensions": [{"screen": MENU_PATH, "source": SCREEN_SOURCE}]},
+                sort_keys=True,
+            ).encode("utf-8")
+            + b"\n"
         )
-        menu_logical = menu_row["logical_path"] if menu_row else MENU_PATH
-        menu_source = payload.get(menu_logical)
-        menu_baseline = None
-        if menu_row is None:
-            for folder in ("rom_0", "mod_dev_kit/source"):
-                candidate = _original_path(
-                    game.root, folder, MENU_PATH, baseline_budget, baseline_directories
-                )
-                if candidate is not None:
-                    menu_source = read_regular(candidate, game.root, baseline_budget)
-                    menu_baseline = folder + "/" + MENU_PATH
-                    break
-        # Never replace a rejected source menu with the vanilla version.
-        if menu_source is not None:
-            decorated = decorate(menu_source, tuple(mod.name for mod in chosen))
-            status, diagnostic = validate_content(
-                menu_logical, decorated, luac=str(tools.luac) if tools else None
-            )
-            if status == "valid":
-                payload[menu_logical] = decorated
-                if menu_row is None:
-                    menu_row = {
-                        "logical_path": menu_logical,
+        collisions = [
+            name
+            for name in (SCREEN_DESCRIPTOR, SCREEN_SOURCE)
+            if name.casefold() in groups or name in payload
+        ]
+        status, diagnostic = validate_content(
+            SCREEN_SOURCE, owned_menu, luac=str(tools.luac) if tools else None
+        )
+        if collisions:
+            blockers.append({"code": "managed_menu_collision", "message": ", ".join(collisions)})
+        elif status != "valid":
+            blockers.append({"code": status, "file": SCREEN_SOURCE, "message": diagnostic})
+        else:
+            for logical, content in ((SCREEN_SOURCE, owned_menu), (SCREEN_DESCRIPTOR, descriptor)):
+                payload[logical] = content
+                files.append(
+                    {
+                        "logical_path": logical,
                         "status": "copied",
                         "strategy": "managed-menu",
                         "source_sha256": {},
-                        "baseline_sha256": digest(menu_source),
-                        "baseline_source": menu_baseline,
+                        "baseline_sha256": None,
+                        "output_sha256": digest(content),
                         "diagnostics": [],
                     }
-                    files.append(menu_row)
-                menu_row["output_sha256"] = digest(decorated)
-                managed_menu = {
-                    "policy": POLICY,
-                    "logical_path": menu_logical,
-                    "input_sha256": digest(menu_source),
-                    "adapter_sha256": digest(ADAPTER),
-                    "output_sha256": digest(decorated),
-                }
-            else:
-                blockers.append({"code": status, "file": menu_logical, "message": diagnostic})
+                )
+            managed_menu = {
+                "policy": POLICY,
+                "logical_path": MENU_PATH,
+                "input_sha256": digest(ADAPTER),
+                "adapter_sha256": digest(ADAPTER),
+                "output_sha256": digest(owned_menu),
+                "source_path": SCREEN_SOURCE,
+                "descriptor_path": SCREEN_DESCRIPTOR,
+                "descriptor_sha256": digest(descriptor),
+            }
     runtime = None
     if needs_runtime:
         expected = profile.get("runtime_sha256")

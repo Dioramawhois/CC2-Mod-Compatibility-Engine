@@ -1,5 +1,18 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0030 adds the missing delivery gate. Package fixtures verify the schema-1
+screen declaration, owned extension source, inventory/provenance hashes,
+historical policies, empty selection and Undo. SDK fixtures cover exact screen
+matching, validated paths, active-package scope and execution after stock code
+but before `begin()`. Keep the UI behavior checks below, using only owned code.
+Before release, launch the exact candidate/runtime in the real game, record
+extension delivery for the main menu, confirm the badge and attempt to open
+Mods. Check ordinary navigation and a launch without the managed extension.
+Beta 6's isolated callback tests did not prove this boundary and the owner
+reported that Mods remained clickable. The final beta 7 Windows pair passed
+the scoped live menu checks in [menu verification](verification/main-menu-v4.md);
+these do not establish full gameplay or multiplayer acceptance.
+
 ADR-0029 adds owned Lua fixtures for the noninteractive brand/selected-mod label
 above the main menu's first ordinary header, once per frame and absent from
 other screens. Cover source order, Unicode truncation to at most 140 characters,

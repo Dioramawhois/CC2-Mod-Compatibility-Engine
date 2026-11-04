@@ -1,0 +1,21 @@
+{
+  "stage": "client-candidate",
+  "source_commit": "59a8f9a48e51e8559d7c32deac2677c8f2059bee",
+  "runtime_version": "0.7.1-client-beta.1",
+  "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/59a8f9a48e51e8559d7c32deac2677c8f2059bee",
+  "verified_scope": [
+    "screen-extension-offline-contract"
+  ],
+  "unverified_scope": [
+    "full-gameplay",
+    "remote-multiplayer",
+    "dedicated-server",
+    "changed-catalog-save-migration",
+    "full-flight-and-island-landing",
+    "clean-machine",
+    "macos-native-runtime"
+  ],
+  "multiplayer_verified": false,
+  "dedicated_verified": false,
+  "evidence_log_sha256": "da1eec4107a7c72eaab120c3a63b2226261cb19929dd5f4fb133462d1a877624"
+}

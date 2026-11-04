@@ -8,14 +8,25 @@ discovery, with no author-file copies or automatic selection. The owned
 
 ADR-0025 replaces Steam URL launch with the local executable and game working
 directory. Startup refresh restores only the verified remembered selection.
-Its activation enables exactly the generated package. ADR-0029 adds a
+Its activation enables exactly the generated package. Beta 6 does not establish
+the requested main-menu lock: the menu world clears ordinary resource overlays.
+ADR-0030 delivers the owned policy through the reviewed SDK stock-screen
+extension boundary. Its schema-1 `content/cc2x/screen_extensions.json` maps
+`scripts/screen_menu_main.lua` to `cc2x/ui/modloader_menu.lua` inside the same
+package. The matching reviewed runtime must load it after stock screen code and
+before `begin()`; ordinary mod activation alone is insufficient.
+
+The candidate retains ADR-0029's requested
 noninteractive CC2 ModLoader header and compact selected-mod line to the main
 menu, retaining ADR-0028's gray Mods entry, navigation guard and stale-state
 handling. The Workshop uploader behind that entry remains inaccessible; other
-menus and gameplay remain available. Vanilla, Workshop, SDK and author files
-stay unchanged. Undo restores the prior build's menu behavior; unloading the
+menus and gameplay remain available. Vanilla, Workshop and author files
+stay unchanged. A generic reviewed SDK capability supplies delivery; gameplay
+policy remains in the generated package. Undo restores the prior build's menu behavior; unloading the
 generated set removes its menu changes. An empty selection adds no label or
-guard. See [ADR-0029](adr/0029-main-menu-modloader-badge.md).
+guard. The exact final Windows pair passed the managed-menu checks recorded in
+[menu verification](verification/main-menu-v4.md). Wider runtime gates remain separate.
+See [ADR-0030](adr/0030-sdk-screen-extension-delivery.md).
 
 New Lua-only package contract: `<cc2mce schema="1" type="mod" id="example"
 sdk="cc2x" api="8" lua_api="2"><requires id="cc2x.runtime"/></cc2mce>`.

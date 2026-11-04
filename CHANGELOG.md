@@ -4,6 +4,28 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b7 - Windows beta 7 (2026-11-04)
+
+- Correct the main-menu integration boundary: the game's menu world clears
+  ordinary resource overlays, so beta 5/6's generated menu-file decorator did
+  not lock the real Mods entry. Retain this finding in the historical record.
+- Deliver the owned policy through the SDK screen-extension declaration at
+  `content/cc2x/screen_extensions.json` and `cc2x/ui/modloader_menu.lua`, using
+  `sdk-screen-extension-v4` provenance. Preserve the requested badge/lock
+  behavior, ordinary merge rules and reversible activation. See ADR-0030.
+- Pin CC2X SDK **0.7.1-client-beta.1**, a maintenance release providing the
+  generic screen-extension boundary. The SDK remains a framework; the menu
+  policy is supplied by ModLoader's generated package. This exact pin does not
+  replace the parallel SDK 0.8 release or its latest-release channel.
+- The final Windows EXE/runtime pair passed real menu checks: the heading was
+  visible, Mods stayed closed after a mouse click and Enter, and New Game
+  opened normally. Exact hashes and captures are recorded in
+  [menu verification](docs/verification/main-menu-v4.md);
+  full gameplay and multiplayer are not certified by those menu checks.
+- A separate run with the same SDK and no enabled extensions retained the
+  ordinary Mods screen and showed no ModLoader heading. The original managed
+  selection was restored after this control test.
+
 ## 0.4.0b6 - Windows beta 6 (2026-11-04)
 
 - Identify the active generated set on the game's main menu with a

@@ -25,12 +25,17 @@
       "required": ["policy", "logical_path", "input_sha256", "adapter_sha256", "output_sha256"],
       "additionalProperties": false,
       "properties": {
-        "policy": {"enum": ["read-only-mod-list-v1", "locked-mods-menu-v2", "modloader-main-menu-v3"]},
+        "policy": {"enum": ["read-only-mod-list-v1", "locked-mods-menu-v2", "modloader-main-menu-v3", "sdk-screen-extension-v4"]},
         "logical_path": {"type": "string"},
         "input_sha256": {"$ref": "#/$defs/hash"},
         "adapter_sha256": {"$ref": "#/$defs/hash"},
-        "output_sha256": {"$ref": "#/$defs/hash"}
-      }
+        "output_sha256": {"$ref": "#/$defs/hash"},
+        "source_path": {"const": "cc2x/ui/modloader_menu.lua"},
+        "descriptor_path": {"const": "cc2x/screen_extensions.json"},
+        "descriptor_sha256": {"$ref": "#/$defs/hash"}
+      },
+      "if": {"properties": {"policy": {"const": "sdk-screen-extension-v4"}}},
+      "then": {"required": ["source_path", "descriptor_path", "descriptor_sha256"]}
     },
     "config_defaults": {
       "type": "array", "maxItems": 256,

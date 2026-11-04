@@ -1,14 +1,18 @@
 # 03. Спецификация движка слияния
 
-The owned managed-menu decorator is appended only after the ordinary menu
-resource merge succeeds. Validate the resulting Lua and record both adapter
-and input/output hashes. Never replace a rejected menu merge with stock.
-New outputs use `managed_menu.policy = modloader-main-menu-v3` for the main-menu
+The owned managed-menu policy is staged separately as
+`content/cc2x/ui/modloader_menu.lua`, declared by schema-1
+`content/cc2x/screen_extensions.json` for `scripts/screen_menu_main.lua`.
+Validate owned Lua and record declaration/extension inventory hashes and
+managed-menu provenance. Ordinary menu-resource merging retains its normal
+rules; never replace a rejected merge with stock. See ADR-0030.
+New outputs use `managed_menu.policy = sdk-screen-extension-v4` for the main-menu
 brand/selected-mod label and existing disabled Mods entry/navigation guard.
 The name line follows source order, normalizes control characters and is bounded
 to 140 Unicode characters before safe Lua escaping. Retain schema support for
-`read-only-mod-list-v1` and `locked-mods-menu-v2`. No selected mods means no
-decorator. See [ADR-0029](adr/0029-main-menu-modloader-badge.md) and the optional
+`read-only-mod-list-v1`, `locked-mods-menu-v2` and `modloader-main-menu-v3`.
+No selected mods means no extension. See
+[ADR-0030](adr/0030-sdk-screen-extension-delivery.md) and the optional
 `managed_menu` package provenance contract; ordinary merge rules are unchanged.
 
 Lua framework requirements are capability checks, not merge priority: a source

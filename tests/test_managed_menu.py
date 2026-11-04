@@ -10,15 +10,23 @@ from jsonschema import Draft202012Validator
 
 from cc2_mce.discovery import discover
 from cc2_mce.filesystem import digest
-from cc2_mce.managed_menu import ADAPTER, MENU_PATH, decorate
-from cc2_mce.toolchain import Toolchain
-from cc2_mce.workflow import analyze, apply_plan, restore_previous
+from cc2_mce.managed_menu import ADAPTER, MENU_PATH, decorate, screen_source
+from cc2_mce.workflow import analyze
 from tests.test_workflow import fixture
 
 
-def test_real_lua_owned_menu_contract(tmp_path: Path):
+@pytest.mark.parametrize("delivered_source", [False, True])
+def test_real_lua_owned_menu_contract(tmp_path: Path, delivered_source: bool):
     adapter = tmp_path / "managed_menu.lua"
-    adapter.write_bytes(ADAPTER)
+    # Run the exact generated extension too, including its installation wrapper.
+    # The fixture provides an owned screen environment, never game/mod source.
+    adapter.write_bytes(
+        b"return function(env)\nlocal _G = env\n"
+        + screen_source(("AI Bridge", "Island Airfields"))
+        + b"\nend\n"
+        if delivered_source
+        else ADAPTER
+    )
     contract = Path(__file__).parent / "fixtures/managed_menu_contract.lua"
     runner = os.environ.get("CC2_MCE_LUA_POLICY_RUNNER")
     if runner:
@@ -37,41 +45,6 @@ def test_real_lua_owned_menu_contract(tmp_path: Path):
     result = subprocess.run(command, capture_output=True, timeout=10, check=False)
     assert result.returncode == 0, (result.stdout + result.stderr).decode(errors="replace")
     assert b"PASS managed menu" in result.stdout
-
-
-@pytest.mark.parametrize("eol", [b"\n", b"\r\n"])
-def test_owned_menu_adapter_is_hashed_validated_and_reversible(tmp_path: Path, eol: bytes):
-    game, profile, user = fixture(tmp_path)
-    source = b"function begin() end\nfunction update() end\n".replace(b"\n", eol)
-    original = game.root / "rom_0" / MENU_PATH
-    original.parent.mkdir(parents=True)
-    original.write_bytes(source)
-    luac = (
-        shutil.which("luac5.3")
-        or shutil.which("luac53")
-        or shutil.which("luac")
-        or str(Path(__file__).parents[1] / "cc2_mce/tools_data/lua/luac.exe")
-    )
-    if not Path(luac).is_file():
-        pytest.skip("Lua 5.3 validator unavailable; CI builds the pinned interpreter and validator")
-    tools = Toolchain(Path(shutil.which("git") or "git"), Path(luac), digest(b"fixture"))
-    scan = discover([tmp_path / "workshop"])
-    plan = analyze(game, scan, ["b", "a"], profile=profile, tools=tools)
-    names = {mod.id: mod.name for mod in scan.mods}
-    decorated = decorate(source, (names["b"], names["a"]))
-    assert not plan.blockers
-    assert plan.payload[MENU_PATH] == decorated
-    assert plan.report["mod_order"] == ["b", "a"]
-    assert plan.report["managed_menu"]["adapter_sha256"] == digest(ADAPTER)
-    assert plan.report["managed_menu"]["input_sha256"] == digest(source)
-    assert plan.report["managed_menu"]["output_sha256"] == digest(decorated)
-    assert plan.report["managed_menu"]["policy"] == "modloader-main-menu-v3"
-    package = apply_plan(plan, user, game_running=lambda: False)
-    assert (package / "content" / MENU_PATH).read_bytes() == decorated
-    assert original.read_bytes() == source
-    restore_previous(user, game_running=lambda: False)
-    assert original.read_bytes() == source
-    assert not package.exists()
 
 
 def test_empty_selection_does_not_lock_the_game_menu(tmp_path: Path):

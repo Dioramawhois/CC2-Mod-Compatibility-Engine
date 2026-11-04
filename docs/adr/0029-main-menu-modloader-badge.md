@@ -4,6 +4,10 @@ Status: accepted following the owner's request, 2026-11-04. Extends ADR-0028's
 disabled Mods entry and navigation guard. Direct launch, refresh, reversible
 activation and native/source safety rules remain in effect.
 
+Delivery superseded by [ADR-0030](0030-sdk-screen-extension-delivery.md): the
+real main menu clears ordinary mod overlays, so the generated resource alone
+does not display this label there. The requested UI behavior below is retained.
+
 ## Problem
 
 The disabled Mods entry does not itself tell the player that CC2 ModLoader

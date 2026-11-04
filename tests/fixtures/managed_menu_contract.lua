@@ -1,11 +1,20 @@
 -- Owned synthetic UI; no game/mod Lua is executed by this fixture.
 local window = {is_active=true}
 local items, rows, buttons, notices, writes, updates = {}, {}, {}, 0, 0, 0
+local headers, texts = {}, {}
+local selected_names = 'AI Bridge + Island Airfields'
 local labels = {[20]='Disable all', [21]='Mods', [22]='New game'}
 local function make_ui()
     return {
         get_window=function() return window end,
-        text_basic=function(_, text) assert(text=='CC2 ModLoader');notices=notices+1 end,
+        header=function(_, label, extra)
+            headers[#headers+1]={label=label,extra=extra}
+            return 'header-result',extra
+        end,
+        text_basic=function(_, text, color)
+            if text=='CC2 ModLoader' then notices=notices+1
+            else assert(text==selected_names);texts[#texts+1]={label=text,color=color} end
+        end,
         spacer=function() end,
         list_item=function(_, label, hover, enabled, extra)
             items[#items+1]={label=label,hover=hover,enabled=enabled,extra=extra}
@@ -42,6 +51,16 @@ env.update=function(marker)
     assert(env.g_screen_index==env.g_screens.main)
     assert(env.g_selected_mod_id==0 and not env.g_selected_mod_confirm and not env.g_disable_mods_confirm)
     local ui=env.g_ui
+    local header_count,text_count=#headers,#texts
+    local header_result,header_extra=ui:header('Singleplayer','original-extra')
+    assert(header_result=='header-result' and header_extra=='original-extra')
+    ui:header('Multiplayer')
+    assert(#headers==header_count+3)
+    assert(headers[header_count+1].label=='CC2 ModLoader')
+    assert(headers[header_count+2].label=='Singleplayer' and headers[header_count+2].extra=='original-extra')
+    assert(headers[header_count+3].label=='Multiplayer')
+    assert(#texts==text_count+1 and texts[#texts].label==selected_names)
+    assert(texts[#texts].color==env.color_grey_mid)
     assert(not ui:list_item(labels[21],true,true,'mods-extra'))
     local result,extra=ui:list_item(labels[22],false,true,'new-extra')
     assert(result and extra=='item-result')
@@ -52,7 +71,8 @@ env.update=function(marker)
     env.update_set_is_mod_enabled(2,true) -- stale confirmation / keyboard path
     return marker
 end
-POLICY(env)
+env.color_grey_mid='fixture-grey'
+POLICY(env,selected_names)
 
 env.begin()
 assert(env.g_screen_index==env.g_screens.main and #env.g_screen_nav_stack==0)
@@ -68,6 +88,10 @@ assert(navigation_calls==0 and env.g_screen_index==0 and env.g_screen_nav_stack=
 local result,extra=env.nav_set_screen(env.g_screens.join,'preserved')
 assert(result=='navigation-result' and extra=='preserved' and navigation_calls==1)
 assert(env.g_screen_index==3 and #stack==1 and stack[1]==0)
+local other_headers,other_texts=#headers,#texts
+local other_result,other_extra=env.g_ui:header('Join game','join-extra')
+assert(other_result=='header-result' and other_extra=='join-extra')
+assert(#headers==other_headers+1 and headers[#headers].label=='Join game' and #texts==other_texts)
 -- The label has no special meaning outside the main menu.
 assert(env.g_ui:list_item(labels[21],false,true))
 assert(items[#items].enabled and items[#items].hover==false)
@@ -95,6 +119,8 @@ local before=#items
 assert(env.update('localized')=='localized')
 assert(#items==before+2 and items[before+1].label=='Modifications')
 local wrapped_item=env.g_ui.list_item
+local wrapped_header=env.g_ui.header
 env.update('repeated')
 assert(env.g_ui.list_item==wrapped_item)
-print('PASS managed menu: disabled localized Mods entry, preserved hover/other items, blocked navigation, stale recovery, read-only fallback, recreated UI')
+assert(env.g_ui.header==wrapped_header)
+print('PASS managed menu: visible ModLoader identity and ordered names once per frame, disabled localized Mods entry, preserved callbacks/other screens, blocked navigation, stale recovery, recreated UI')

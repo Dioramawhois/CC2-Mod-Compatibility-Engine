@@ -3,10 +3,13 @@
 The owned managed-menu decorator is appended only after the ordinary menu
 resource merge succeeds. Validate the resulting Lua and record both adapter
 and input/output hashes. Never replace a rejected menu merge with stock.
-New outputs use `managed_menu.policy = locked-mods-menu-v2` to identify the
-disabled main-menu Mods entry and blocked Mods navigation. Retain schema support
-for `read-only-mod-list-v1` manifests. No selected mods means no decorator.
-See ADR-0025/0028 and the optional `managed_menu` package provenance contract.
+New outputs use `managed_menu.policy = modloader-main-menu-v3` for the main-menu
+brand/selected-mod label and existing disabled Mods entry/navigation guard.
+The name line follows source order, normalizes control characters and is bounded
+to 140 Unicode characters before safe Lua escaping. Retain schema support for
+`read-only-mod-list-v1` and `locked-mods-menu-v2`. No selected mods means no
+decorator. See [ADR-0029](adr/0029-main-menu-modloader-badge.md) and the optional
+`managed_menu` package provenance contract; ordinary merge rules are unchanged.
 
 Lua framework requirements are capability checks, not merge priority: a source
 declaring `lua_api` requires a reviewed matching runtime before activation.

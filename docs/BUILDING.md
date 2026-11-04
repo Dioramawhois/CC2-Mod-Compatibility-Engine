@@ -55,8 +55,8 @@ for the same self-build route.
 ### Clone the release tag
 
 ```powershell
-git clone --branch v0.4.0b5 --depth 1 https://github.com/Dioramawhois/CC2-ModLoader.git
-Set-Location CC2-Mod-Compatibility-Engine
+git clone --branch v0.4.0b6 --depth 1 https://github.com/Dioramawhois/CC2-ModLoader.git
+Set-Location CC2-ModLoader
 ```
 
 The tag fixes the application source used by the release. A normal Git clone
@@ -65,8 +65,8 @@ require initializing Git submodules.
 
 ### Download the release source ZIP
 
-From the [same release page](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b5),
-download **CC2ModLoader-0.4.0b5-source.zip**. Extract it, open its extracted root
+From the [same release page](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b6),
+download **CC2ModLoader-0.4.0b6-source.zip**. Extract it, open its extracted root
 folder, and open PowerShell there. The root contains `pyproject.toml`,
 `build_windows.bat`, `cc2_mce`, `tests` and `tools`.
 
@@ -168,7 +168,7 @@ The file must match the expected reviewed runtime hash; an incompatible or
 unknown file is rejected. These environment variables apply only to the current
 PowerShell session unless you deliberately persist them.
 
-The matching `CC2ModLoader-0.4.0b5-sdk-runtime.zip` can also restore the native
+The matching `CC2ModLoader-0.4.0b6-sdk-runtime.zip` can also restore the native
 dependency: extract its directory structure into the application source root,
 so the files appear under `cc2_mce\runtime_data\<reviewed-hash>\`. Do not put
 the DLL at the application source root or in `tools_data`.

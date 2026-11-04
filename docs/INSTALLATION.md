@@ -22,8 +22,8 @@ this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 directly. This permanent link is updated when a newer beta is published.
 
-Alternatively, open the [0.4.0 beta 5 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b5)
-and download **CC2ModLoader-0.4.0b5-windows-x64.zip** for the complete package with
+Alternatively, open the [0.4.0 beta 6 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b6)
+and download **CC2ModLoader-0.4.0b6-windows-x64.zip** for the complete package with
 its README, notices and metadata.
 
 Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links
@@ -150,13 +150,15 @@ open it also checks for changed sources periodically. If the game is running,
 changes wait for it to close.
 
 **Launch** starts `carrier_command.exe` directly from the selected installation.
-Only the generated build is enabled. The game's main-menu **Mods** entry is
-gray and disabled while this set is active. This also prevents opening the
-game's Workshop uploader through that entry. Use ModLoader to change your
-selection with the game closed, then restart the game. Other menus and gameplay
-remain available. The guard requires readable game menu resources and lives
-only in the generated build. Restoring or disabling that build removes the
-guard and restores the ordinary menu; an empty selection adds no guard.
+Only the generated build is enabled. The game's main menu shows a
+**CC2 ModLoader** heading and a compact line of selected mod names in merge
+order; long lists are shortened. This label is informational. The **Mods**
+entry remains gray and disabled, including access to its Workshop uploader.
+Use ModLoader to change your selection with the game closed, then restart the
+game. Other menus and gameplay remain available. These menu changes require
+readable game menu resources and live only in the generated build. Undo restores
+the prior build's menu behavior; disabling the generated set removes its menu
+changes. An empty selection adds neither the label nor the guard.
 
 Open **Load order** to change the merge order. Drag a selected package, or use
 **Alt+Up** and **Alt+Down**. Each change rebuilds the result automatically and
@@ -208,8 +210,9 @@ new Windows release. Do not copy the developer source archive into the game.
 
 To undo the last applied change, close the game and choose **Menu > Restore
 previous selection...**. The app restores its recorded previous package and
-activation state. A supported SDK installation or upgrade participates in the
-recorded rollback; externally changed files are preserved for review.
+activation state, including that build's menu behavior. A supported SDK
+installation or upgrade participates in the recorded rollback; externally
+changed files are preserved for review.
 
 To disable all selected mods, clear their checkboxes and wait for completion.
 To remove the application afterwards, close it and remove its executable.

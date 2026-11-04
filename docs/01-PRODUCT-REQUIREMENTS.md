@@ -1,11 +1,13 @@
 # 01. Product Requirements (PRD)
 
-Owner correction 2026-11-04 (0.4.0b5): while the generated set is active, the
-main-menu Mods entry must be gray and disabled, with direct navigation and stale
-Mods-screen state blocked. The Workshop uploader behind that entry is unavailable;
-other menus and gameplay remain available. Changes stay in ModLoader. Undo or
-unloading the generated set restores the ordinary menu; an empty selection adds
-no guard. ADR-0028 supersedes ADR-0025's reachable read-only list behavior.
+Owner update 2026-11-04 (0.4.0b6): the active generated set visibly identifies
+CC2 ModLoader on the game's main menu, above its first ordinary header, with a
+compact selected-mod line in source order. Both are noninteractive and appear
+only on that menu, once per frame. Names are normalized, bounded and safely Lua
+escaped. The gray Mods entry and navigation guard from ADR-0028 remain. Undo
+restores the prior build's menu behavior; an empty selection adds no label or
+guard. Brand and mod names preserve all 14 offline catalogs. See
+[ADR-0029](adr/0029-main-menu-modloader-badge.md).
 
 User feedback 2026-11-04: discover custom packages in the game's standard
 user-data `mods` folder automatically, alongside Workshop and game-folder

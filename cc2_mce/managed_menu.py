@@ -1,12 +1,12 @@
-"""An owned Lua decorator disabling the generated package's game Mods entry."""
+"""An owned Lua decorator identifying the managed set and locking game Mods."""
 
 MENU_PATH = "scripts/screen_menu_main.lua"
-POLICY = "locked-mods-menu-v2"
+POLICY = "modloader-main-menu-v3"
 
 # This wraps published menu callbacks after resource merging. It does not parse
 # or rewrite another mod's Lua, and contains no copied vanilla script.
 ADAPTER = r"""
-return function(env)
+return function(env, selection_label)
     local function is_screen(index, name)
         return type(env.g_screens) == "table" and env.g_screens[name] ~= nil
             and index == env.g_screens[name]
@@ -25,10 +25,25 @@ return function(env)
     end
     local wrapped_ui = nil
     local notice_shown = false
+    local badge_shown = false
     local function wrap_ui()
         local ui = env.g_ui
         if type(ui) ~= "table" or ui == wrapped_ui then return end
         wrapped_ui = ui
+        local header = ui.header
+        if type(header) == "function" then
+            ui.header = function(self, ...)
+                if is_screen(env.g_screen_index, "main") and not badge_shown then
+                    badge_shown = true
+                    header(self, "CC2 ModLoader")
+                    if type(selection_label) == "string" and selection_label ~= "" then
+                        self:text_basic(selection_label, env.color_grey_mid)
+                    end
+                    self:spacer(3)
+                end
+                return header(self, ...)
+            end
+        end
         local list_item = ui.list_item
         if type(list_item) == "function" then
             ui.list_item = function(self, label, select_on_hover, enabled, ...)
@@ -88,6 +103,7 @@ return function(env)
     if type(update_original) == "function" then
         env.update = function(...)
             notice_shown = false
+            badge_shown = false
             wrap_ui()
             leave_mods()
             return update_original(...)
@@ -100,11 +116,25 @@ end
 """.strip().encode("utf-8")
 
 
-def decorate(source: bytes) -> bytes:
+def selection_label(selected_names: tuple[str, ...]) -> str:
+    label = " + ".join(
+        " ".join("".join(char if char.isprintable() else " " for char in name).split())
+        for name in selected_names
+    )
+    return label if len(label) <= 140 else label[:137] + "..."
+
+
+def decorate(source: bytes, selected_names: tuple[str, ...] = ()) -> bytes:
+    # Decimal byte escapes are valid Lua 5.3, including UTF-8 and quote/backslash
+    # characters. Mod names never become executable code or Lua escape syntax.
+    label = selection_label(selected_names).encode("utf-8")
+    literal = b'"' + b"".join(f"\\{byte:03d}".encode("ascii") for byte in label) + b'"'
     suffix = (
         b"\n\n-- CC2 ModLoader: managed mod selection\ndo\nlocal install = (function()\n"
         + ADAPTER
-        + b"\nend)()\ninstall(_G)\nend\n"
+        + b"\nend)()\ninstall(_G, "
+        + literal
+        + b")\nend\n"
     )
     # Preserve every source byte and use its newline convention for owned code.
     return source + (suffix.replace(b"\n", b"\r\n") if b"\r\n" in source else suffix)

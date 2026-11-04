@@ -4,11 +4,11 @@ Choose the Carrier Command 2 mods you want to play. ModLoader combines their
 files into one local mod, merges changes where possible, and starts the game
 with that build selected.
 
-**Windows x64 beta · 0.4.0 beta 5**
+**Windows x64 beta · 0.4.0 beta 6**
 
 [**Download CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 
-[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b5)
+[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b6)
 · [Build from source](docs/BUILDING.md) · [Detailed help](docs/INSTALLATION.md)
 
 ## Start here
@@ -80,9 +80,10 @@ untick a mod if needed. **Menu → Later patches take priority** controls this p
 - **One result:** ModLoader maintains one generated `mods/CC2-MCE` package.
   Source mod files stay in place. The previous applied set is kept if a change
   is rejected; **Menu → Restore previous selection…** offers the recorded undo.
-- **In the game:** the main menu's **Mods** entry is gray and disabled while
-  the generated set is active. Change the set in ModLoader with the game closed.
-  Other menus and gameplay remain available.
+- **In the game:** the main menu shows **CC2 ModLoader** and a compact line of
+  selected mod names while the generated set is active. Its **Mods** entry is
+  gray and disabled. Change the set in ModLoader with the game closed.
+  Other menus and gameplay remain available; an empty selection adds no label.
 - **Your language:** the UI follows the system language. Choose another in
   **Menu → Language**; 14 offline languages are included.
 

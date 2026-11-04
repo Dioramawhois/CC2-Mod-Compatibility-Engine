@@ -4,6 +4,23 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b6 - Windows beta 6 (2026-11-04)
+
+- Identify the active generated set on the game's main menu with a
+  noninteractive **CC2 ModLoader** header and compact selected-mod line above
+  the first ordinary header, once per frame. Names follow source order, with
+  control-character normalization, a 140-Unicode-character limit and safe Lua
+  escaping. Other screens keep their ordinary headers.
+- Retain the gray, disabled **Mods** entry and navigation guard. The decorator
+  lives only in the generated merged menu resource; source mods, vanilla and
+  the SDK remain untouched. Undo restores the prior build's menu behavior;
+  an empty selection adds no label or guard. The 14 offline catalogs are unchanged.
+- Record `modloader-main-menu-v3` in new package provenance while accepting both
+  earlier policies. Retain final Lua validation and input/adapter/output hashes.
+  See [ADR-0029](docs/adr/0029-main-menu-modloader-badge.md).
+- Add owned synthetic Lua and package regressions. No fresh in-game visual or
+  gameplay acceptance is claimed; existing beta 4 screenshot provenance is unchanged.
+
 ## 0.4.0b5 - Windows beta 5 (2026-11-04)
 
 - Distribution addendum: accept verified LF/CRLF standalone checksums without

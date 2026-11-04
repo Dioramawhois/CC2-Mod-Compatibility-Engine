@@ -20,7 +20,9 @@ jobs:
       matrix:
         os: [windows-latest, macos-15]
         python: ["3.12", "3.13"]
-    runs-on: ${{ matrix.os }}
+    # Select macOS 15 Intel explicitly rather than the generic label's arm64 pool.
+    # The required check names and full Windows/macOS Python matrix remain unchanged.
+    runs-on: ${{ matrix.os == 'macos-15' && 'macos-15-intel' || matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

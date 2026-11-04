@@ -208,6 +208,12 @@ formatting, type checks, real Git fixtures and golden dry run. A skipped Tk
 display test does not demonstrate GUI support, and core CI does not certify a
 packaged macOS application or native SDK support on macOS.
 
+The macOS 15 jobs explicitly use the `macos-15-intel` x86_64 runner. The generic
+`macos-15` label selects arm64; its hosted capacity prevented the beta 9 jobs
+from starting. The explicit Intel selection retains the full tests and both
+Python versions, and does not certify an Apple Silicon package. Runner labels
+are documented in the [GitHub-hosted runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+
 ## Build and release troubleshooting
 
 | Failure | Check |

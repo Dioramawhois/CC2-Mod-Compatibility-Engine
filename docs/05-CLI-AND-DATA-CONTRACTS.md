@@ -1,10 +1,13 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
-ADR-0028: new schema-v2 `managed_menu` records use policy
-`locked-mods-menu-v2`. The schema continues to accept `read-only-mod-list-v1`
-for existing packages. The optional object's logical path, input/adapter/output
-SHA-256 fields and package inventory remain required when it is present.
-No selected mods means no menu decorator or `managed_menu` record.
+ADR-0029: new schema-v2 `managed_menu` records use policy
+`modloader-main-menu-v3` for the main-menu brand/selected-mod label and existing
+Mods entry/navigation guard. The schema continues to accept
+`read-only-mod-list-v1` and `locked-mods-menu-v2`. The optional object's logical
+path, input/adapter/output SHA-256 fields and package inventory remain required
+when it is present; its field structure is unchanged. No selected mods means
+no menu decorator or `managed_menu` record. See
+[ADR-0029](adr/0029-main-menu-modloader-badge.md).
 
 **0.3.3:** `.glsl` имеет kind=text, `.txtr` с magic TXTR kind=binary; другие/неверные header остаются unknown/needs_review. Report schemas не меняются. GUI Unknown resource type теперь объясняет отсутствие поддержки и показывает путь; missing/wrong Lua validator объясняет встроенный инструмент, raw diagnostic остаётся в подробностях.
 

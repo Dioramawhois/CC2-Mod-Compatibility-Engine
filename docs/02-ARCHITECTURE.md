@@ -1,11 +1,14 @@
 # 02. Архитектура
 
-ADR-0028 updates the generated `managed_menu` decorator: intercept only the
-main menu's localized Mods `ui:list_item` and pass `false` as its third, enabled
-argument. Reject `nav_set_screen(g_screens.mods)` and return stale Mods state to
-the main menu before updating it. Other list items, screens and gameplay keep
-their ordinary callbacks. New provenance uses `locked-mods-menu-v2`; schema v2
-still accepts the earlier `read-only-mod-list-v1` policy.
+ADR-0029 extends the owned post-merge `managed_menu` decorator with a
+noninteractive CC2 ModLoader header and selected source names above the main
+menu's first ordinary header, once per frame. Normalize control characters,
+bound the name line to 140 Unicode characters and escape it as a Lua literal.
+Keep ADR-0028's disabled localized Mods entry, rejected navigation and stale
+state handling; unrelated screens and callbacks retain their behavior. New
+provenance uses `modloader-main-menu-v3`; schema v2 retains both older policies.
+No SDK, vanilla or author files are changed. See
+[ADR-0029](adr/0029-main-menu-modloader-badge.md).
 
 GUI source-root refresh includes the existing game-user `mods` directory on
 every scan, using the same `game_user_dir()` location as activation. Optional

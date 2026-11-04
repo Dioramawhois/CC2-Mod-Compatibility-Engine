@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -55,15 +56,18 @@ def test_owned_menu_adapter_is_hashed_validated_and_reversible(tmp_path: Path, e
         pytest.skip("Lua 5.3 validator unavailable; CI builds the pinned interpreter and validator")
     tools = Toolchain(Path(shutil.which("git") or "git"), Path(luac), digest(b"fixture"))
     scan = discover([tmp_path / "workshop"])
-    plan = analyze(game, scan, ["a"], profile=profile, tools=tools)
+    plan = analyze(game, scan, ["b", "a"], profile=profile, tools=tools)
+    names = {mod.id: mod.name for mod in scan.mods}
+    decorated = decorate(source, (names["b"], names["a"]))
     assert not plan.blockers
-    assert plan.payload[MENU_PATH] == decorate(source)
+    assert plan.payload[MENU_PATH] == decorated
+    assert plan.report["mod_order"] == ["b", "a"]
     assert plan.report["managed_menu"]["adapter_sha256"] == digest(ADAPTER)
     assert plan.report["managed_menu"]["input_sha256"] == digest(source)
-    assert plan.report["managed_menu"]["output_sha256"] == digest(decorate(source))
-    assert plan.report["managed_menu"]["policy"] == "locked-mods-menu-v2"
+    assert plan.report["managed_menu"]["output_sha256"] == digest(decorated)
+    assert plan.report["managed_menu"]["policy"] == "modloader-main-menu-v3"
     package = apply_plan(plan, user, game_running=lambda: False)
-    assert (package / "content" / MENU_PATH).read_bytes() == decorate(source)
+    assert (package / "content" / MENU_PATH).read_bytes() == decorated
     assert original.read_bytes() == source
     restore_previous(user, game_running=lambda: False)
     assert original.read_bytes() == source
@@ -97,7 +101,9 @@ def test_unresolved_menu_conflict_is_not_replaced_by_stock_menu(tmp_path: Path):
     assert MENU_PATH not in plan.payload
 
 
-@pytest.mark.parametrize("policy", ["read-only-mod-list-v1", "locked-mods-menu-v2"])
+@pytest.mark.parametrize(
+    "policy", ["read-only-mod-list-v1", "locked-mods-menu-v2", "modloader-main-menu-v3"]
+)
 def test_menu_schema_accepts_existing_and_current_policy(policy: str):
     schema = json.loads(
         (Path(__file__).parents[1] / "cc2_mce/schemas/package.schema.json").read_text("utf-8")
@@ -115,3 +121,34 @@ def test_menu_schema_accepts_existing_and_current_policy(policy: str):
     validator.validate(metadata)
     metadata["policy"] = "unknown-policy"
     assert list(validator.iter_errors(metadata))
+
+
+def test_menu_selection_label_keeps_order_unicode_and_normalizes_controls():
+    from cc2_mce.managed_menu import selection_label
+
+    assert selection_label(("  AI\nBridge\x00\t", "\u5c9b\u5c7f \u041c\u043e\u0434")) == (
+        "AI Bridge + \u5c9b\u5c7f \u041c\u043e\u0434"
+    )
+    assert selection_label(()) == ""
+    label = selection_label(("\u03a9" * 160, "Last"))
+    assert len(label) == 140 and label.endswith("...")
+    assert label[:-3] == "\u03a9" * 137
+
+
+@pytest.mark.parametrize("eol", [b"\n", b"\r\n"])
+def test_menu_name_is_lua_data_and_cannot_inject_code(eol: bytes):
+    from cc2_mce.managed_menu import selection_label
+
+    names = ('"]]; _G.fixture_should_not_run=true; --\\123\n\x00', "\u5c9b\u5c7f")
+    source = b"function begin() end\nfunction update() end\n".replace(b"\n", eol)
+    decorated = decorate(source, names)
+    assert decorated.startswith(source)
+    suffix = decorated[len(source) :]
+    match = re.search(rb'install\(_G, "((?:\\[0-9]{3})*)"\)', suffix)
+    assert match is not None
+    encoded = match[1]
+    decoded = bytes(int(encoded[index + 1 : index + 4]) for index in range(0, len(encoded), 4))
+    assert decoded.decode("utf-8") == selection_label(names)
+    assert b"_G.fixture_should_not_run" not in suffix
+    if eol == b"\r\n":
+        assert b"\n" not in suffix.replace(b"\r\n", b"")

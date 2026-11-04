@@ -1,11 +1,19 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0029 adds owned Lua fixtures for the noninteractive brand/selected-mod label
+above the main menu's first ordinary header, once per frame and absent from
+other screens. Cover source order, Unicode truncation to at most 140 characters,
+control-character normalization, Lua escaping, repeated/recreated UI objects,
+empty selection and restoration of prior build behavior. Verify final Lua
+syntax, input/adapter/output hashes and all three accepted policy values.
+These fixtures do not establish fresh in-game visual or gameplay acceptance.
+
 ADR-0028 fixtures require the main-menu Mods list item's third (enabled)
 argument to be false for the current localized label, even if a synthetic UI
 reports a click. Direct Mods navigation is rejected; stale Mods state returns
 to main before update. Unrelated list items/screens and ordinary callbacks
 retain their arguments and behavior. Cover recreated UI objects, real Lua
-syntax validation, adapter/input/output hashes, both package policy values,
+syntax validation, adapter/input/output hashes, historical package policy values,
 and empty-selection/Undo behavior. Execute only the owned synthetic Lua fixture,
 never a user's mod Lua. These checks are not fresh in-game visual acceptance.
 

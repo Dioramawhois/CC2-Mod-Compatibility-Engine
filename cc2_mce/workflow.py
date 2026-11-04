@@ -387,7 +387,7 @@ def analyze(
                     break
         # Never replace a rejected source menu with the vanilla version.
         if menu_source is not None:
-            decorated = decorate(menu_source)
+            decorated = decorate(menu_source, tuple(mod.name for mod in chosen))
             status, diagnostic = validate_content(
                 menu_logical, decorated, luac=str(tools.luac) if tools else None
             )

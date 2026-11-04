@@ -1,6 +1,6 @@
 # Compatibility and verification
 
-CC2 ModLoader 0.4.0 beta 5 is a Windows x64 desktop beta. A successful file
+CC2 ModLoader 0.4.0 beta 6 is a Windows x64 desktop beta. A successful file
 merge is useful evidence about files; it does not establish gameplay compatibility.
 
 ## What the application checks
@@ -41,12 +41,14 @@ belong to separately selected mods.
 Remote multiplayer, dedicated-server profile/bootstrap, full custom-aircraft
 flight/island landing, changed-catalog save migration, clean-machine acceptance,
 a packaged macOS app and native macOS runtime are not certified by this beta.
-The generated menu disables the main-menu **Mods** entry while the owned set
-is active, including access to its Workshop uploader. Other menus and gameplay
-remain available. Undo or disabling the generated set restores the ordinary
-menu. The guard has owned synthetic Lua coverage and real Lua syntax checks;
-the beta 5 gray entry has no fresh in-game visual acceptance. Historical beta 4
-GUI screenshots do not verify this game-menu behavior.
+The generated main menu shows **CC2 ModLoader** and a compact selected-mod line
+while the owned set is active. The **Mods** entry remains disabled, including
+access to its Workshop uploader. Other menus and gameplay remain available.
+Undo restores the prior build's menu behavior; disabling the generated set
+removes its menu changes. An empty selection adds no label or guard. The menu
+decorator has owned synthetic Lua coverage and real Lua syntax checks; the
+beta 6 label and disabled entry have no fresh in-game visual acceptance.
+Historical beta 4 GUI screenshots do not verify this game-menu behavior.
 
 Mod authors can create gameplay conflicts even when file merging succeeds.
 Use the warning details and test your own selected set. Keep save backups when

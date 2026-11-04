@@ -1,12 +1,15 @@
 # 13. Обязательный UX/UI пользовательского приложения
 
-**0.4.0b5, owner correction:** while ModLoader's generated set is active, the
-game's main-menu Mods entry is gray and disabled. Changes are made in ModLoader
-with the game closed; ordinary menus and gameplay remain available. The Workshop
-uploader behind Mods is also unavailable. Undo or unloading the generated set
-restores the ordinary menu; selecting no mods adds no guard. Preserve the game's
-localized Mods label and ModLoader's 14 offline catalogs. ADR-0028 supersedes
-the earlier reachable read-only mod list; visual game acceptance is separate.
+**0.4.0b6, owner update:** while ModLoader's generated set is active, the game's
+main menu shows a noninteractive CC2 ModLoader header and compact selected-mod
+line above its first ordinary header, once per frame. Names retain source order
+and are safely normalized, shortened and Lua escaped. The localized Mods entry
+remains gray and disabled under ADR-0028, including its Workshop uploader.
+Changes stay in ModLoader with the game closed; other menus and gameplay remain
+available. Undo restores the prior build's menu behavior; an empty selection
+adds no label or guard. Brand and mod names need no catalog changes; preserve
+all 14 offline languages. Visual game acceptance remains separate. See
+[ADR-0029](adr/0029-main-menu-modloader-badge.md).
 
 **0.4.0b2, уточнение владельца:** ModLoader не показывает информацию о тестовой
 сборке SDK и границах его приёмки. Эти сведения относятся к SDK и сохраняются

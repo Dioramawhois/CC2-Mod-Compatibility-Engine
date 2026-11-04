@@ -8,13 +8,14 @@ discovery, with no author-file copies or automatic selection. The owned
 
 ADR-0025 replaces Steam URL launch with the local executable and game working
 directory. Startup refresh restores only the verified remembered selection.
-Its activation enables exactly the generated package. ADR-0028 changes its
-generated menu decorator to gray and disable the main-menu Mods entry, reject
-Mods navigation and clear stale Mods-screen state. The Workshop uploader behind
-that entry is also inaccessible while this set is active. Other menus and
-gameplay remain available. Vanilla, Workshop, SDK and author files stay unchanged;
-undo or unloading the generated set restores the ordinary menu. An empty
-selection does not install a guard.
+Its activation enables exactly the generated package. ADR-0029 adds a
+noninteractive CC2 ModLoader header and compact selected-mod line to the main
+menu, retaining ADR-0028's gray Mods entry, navigation guard and stale-state
+handling. The Workshop uploader behind that entry remains inaccessible; other
+menus and gameplay remain available. Vanilla, Workshop, SDK and author files
+stay unchanged. Undo restores the prior build's menu behavior; unloading the
+generated set removes its menu changes. An empty selection adds no label or
+guard. See [ADR-0029](adr/0029-main-menu-modloader-badge.md).
 
 New Lua-only package contract: `<cc2mce schema="1" type="mod" id="example"
 sdk="cc2x" api="8" lua_api="2"><requires id="cc2x.runtime"/></cc2mce>`.

@@ -8,17 +8,61 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
 import tempfile
 import urllib.request
+import zipfile
 from pathlib import Path
 
 URL = "https://www.lua.org/ftp/lua-5.3.6.tar.gz"
 SHA256 = "fc5fd69bb8736323f026672b1b7235da613d7177e72558893a0bdcd320466d60"
+SOURCE_BYTES = 303770
+SOURCE_MEMBER = "tools_data/notices/lua-5.3.6.tar.gz"
+
+
+def _fallback_source(root: Path) -> bytes:
+    lock = json.loads((root / "distribution/windows-build-tools.json").read_text(encoding="utf-8"))
+    expected_bytes = lock["bytes"]
+    if type(expected_bytes) is not int or not 0 < expected_bytes <= 32 * 1024 * 1024:
+        raise ValueError("Invalid pinned tool archive size")
+    with urllib.request.urlopen(lock["url"], timeout=45) as response:
+        payload = response.read(expected_bytes + 1)
+    if len(payload) != expected_bytes or hashlib.sha256(payload).hexdigest() != lock["sha256"]:
+        raise ValueError("Pinned tool archive size/checksum mismatch")
+    # Read just the original Lua source archive, never extract or execute the tool binaries.
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        members = [entry for entry in archive.infolist() if entry.orig_filename == SOURCE_MEMBER]
+        if len(members) != 1:
+            raise ValueError("Expected exactly one Lua source member in pinned tool archive")
+        member = members[0]
+        mode = (member.external_attr >> 16) & 0o170000
+        if (
+            member.is_dir()
+            or member.external_attr & 0x10
+            or mode not in (0, stat.S_IFREG)
+            or member.file_size != SOURCE_BYTES
+        ):
+            raise ValueError("Invalid Lua source member type/size in pinned tool archive")
+        with archive.open(member) as stream:
+            return stream.read(SOURCE_BYTES + 1)
+
+
+def fetch_source(root: Path) -> bytes:
+    try:
+        with urllib.request.urlopen(URL, timeout=45) as response:
+            payload = response.read(SOURCE_BYTES + 1)
+    except OSError:
+        # URLError and TimeoutError are OSError subclasses. Integrity failures never retry.
+        payload = _fallback_source(root)
+    if len(payload) != SOURCE_BYTES or hashlib.sha256(payload).hexdigest() != SHA256:
+        raise ValueError("Official Lua source size/checksum mismatch")
+    return payload
 
 
 def main() -> None:
@@ -26,10 +70,7 @@ def main() -> None:
     build = root / "build"
     build.mkdir(exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="ci-lua53-", dir=build))
-    with urllib.request.urlopen(URL, timeout=45) as response:
-        payload = response.read(303771)
-    if len(payload) != 303770 or hashlib.sha256(payload).hexdigest() != SHA256:
-        raise ValueError("Official Lua source size/checksum mismatch")
+    payload = fetch_source(root)
     # Read only bounded, flat regular source files; no archive extraction.
     with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as archive:
         for member in archive.getmembers():

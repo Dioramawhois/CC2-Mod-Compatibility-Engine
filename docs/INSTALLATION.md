@@ -22,8 +22,8 @@ this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 directly. This permanent link is updated when a newer beta is published.
 
-Alternatively, open the [0.4.0 beta 9 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b9)
-and download **CC2ModLoader-0.4.0b9-windows-x64.zip** for the complete package with
+Alternatively, open the [0.4.0 beta 10 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b10)
+and download **CC2ModLoader-0.4.0b10-windows-x64.zip** for the complete package with
 its README, notices and metadata.
 
 Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links
@@ -108,7 +108,7 @@ a valid library declaration. A folder name alone does not turn a mod into a
 library. Declared dependencies are included automatically when they can be
 resolved.
 
-Beta 9 includes the reviewed CC2X SDK **0.8.1-client-beta.1** runtime for its
+The app includes the reviewed CC2X SDK **0.8.1-client-beta.1** runtime for its
 supported native profile. A known older installed runtime can be upgraded
 through the same automatic apply transaction, with backup and Undo. An older
 reviewed SDK source package does not downgrade the chosen runtime. An unknown
@@ -136,6 +136,20 @@ ModLoader waits for it to close before applying the pending change.
 ModLoader maintains one generated local mod. Its name in the game includes
 **CC2 ModLoader** and the selected mod names. The generated files are rebuilt as
 a complete set, so files from removed mods are not left in the result.
+
+**Disable all** clears both the mods and libraries, including automatically
+required libraries, and applies the empty selection once. Keep ModLoader open
+if it is waiting for the game to close. The action cancels a pending automatic
+launch and does not delete downloaded packages, saves or the SDK DLL.
+**Menu > Restore previous selection...** returns to the recorded previous set;
+that command is unavailable when no usable history exists.
+
+An unreadable package does not hide the valid mod list. The notice identifies
+its folder; **Menu > Problem details...** and **Save report...** retain the exact
+cause. A quarantined mod or unavailable dependency cannot enter a new build.
+After repairing the package, refresh the list; its obsolete discovery notice
+clears. Specific launch refusals remain visible until a successful check or
+restoration establishes a usable set again.
 
 The generated game mod is stored under your Carrier Command 2 user-data folder:
 

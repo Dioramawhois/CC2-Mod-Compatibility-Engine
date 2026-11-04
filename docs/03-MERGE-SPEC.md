@@ -1,5 +1,13 @@
 # 03. Спецификация движка слияния
 
+ADR-0035 preserves ordinary resource merging while improving refusal reports.
+Managed-menu ownership collisions name their owners; SDK screen limits include
+the measured entry/descriptor/source count, maximum and contributors. Typed
+metadata still passes its exact safety gates. Partial inventory cannot supply
+an unavailable checked package or required dependency. **Disable all** uses the
+existing empty-selection transaction, not a new merge policy or implicit native
+uninstaller. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
 SDK screen-extension schemas 1/2 are typed metadata, not ordinary resource
 merges or native DLLs. Compose distinct targets in selected order, preserve
 profile edits, namespace byte-identical helpers and reject duplicate targets.

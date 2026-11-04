@@ -107,6 +107,7 @@ def review_profile(game: Installation) -> dict[str, Any]:
 def resolve_selection(
     scan: Scan, selected: list[str], *, provided_dependencies: frozenset[str] = frozenset()
 ) -> tuple[ModRef, ...]:
+    scan.require_available(selected)
     by_id: dict[str, ModRef] = {}
     versions: dict[str, list[ModRef]] = {}
     ambiguous = "Выберите одну версию мода: Workshop или локальную."
@@ -299,9 +300,26 @@ def analyze(
     baseline_budget = Budget(RESOURCE_LIMITS)
     baseline_text_budget = Budget(Limits(max_total_bytes=RESOURCE_LIMITS.max_total_bytes))
     baseline_directories: dict[Path, tuple[Path, ...]] = {}
+    manages_menu = bool(
+        chosen and "screen-extensions-v1" in profile.get("runtime_capabilities", [])
+    )
     for key, variants in sorted(groups.items()):
         logical = variants[0][1].logical_path
         source_hashes = {mod.id: item.sha256 for mod, item in variants}
+        if manages_menu and key in {SCREEN_DESCRIPTOR.casefold(), SCREEN_SOURCE.casefold()}:
+            # This is an owned-policy collision, not an unreviewed DLL. Nothing is copied.
+            files.append(
+                {
+                    "logical_path": logical,
+                    "status": "managed_menu_collision",
+                    "strategy": "blocked",
+                    "source_sha256": source_hashes,
+                    "baseline_sha256": None,
+                    "output_sha256": None,
+                    "diagnostics": ["Source replaces a ModLoader-managed menu resource"],
+                }
+            )
+            continue
         if key in {name.casefold() for name in screens.payload}:
             blockers.append(
                 {
@@ -416,7 +434,7 @@ def analyze(
                 }
             )
     managed_menu = None
-    if chosen and "screen-extensions-v1" in profile.get("runtime_capabilities", []):
+    if manages_menu:
         # CC2 deliberately disables ordinary mod resource roots in the front menu.
         # Only a reviewed SDK screen extension can run the owned policy there.
         needs_runtime = True
@@ -436,7 +454,10 @@ def analyze(
             for name in (SCREEN_DESCRIPTOR, SCREEN_SOURCE)
             if name.casefold() in groups or name in payload
         ]
-        if any(item["screen"] == MENU_PATH for item in screens.extensions):
+        target_collisions = [
+            item for item in screens.extensions if item["screen"].casefold() == MENU_PATH.casefold()
+        ]
+        if target_collisions:
             collisions.append(MENU_PATH)
         status, diagnostic = validate_content(
             SCREEN_SOURCE, owned_menu, luac=str(tools.luac) if tools else None
@@ -444,19 +465,48 @@ def analyze(
         if screens.blockers:
             pass  # No partial descriptor is installable when an input package was rejected.
         elif collisions:
-            blockers.append({"code": "managed_menu_collision", "message": ", ".join(collisions)})
+            owners = {mod.id for name in collisions for mod, _ in groups.get(name.casefold(), [])}
+            for file_record in files:
+                if file_record["logical_path"].casefold() in {
+                    name.casefold() for name in collisions
+                } or any(
+                    file_record["logical_path"] == entry["source"] for entry in target_collisions
+                ):
+                    owners.update(file_record["source_sha256"])
+            collision_blocker: dict[str, Any] = {
+                "code": "managed_menu_collision",
+                "file": collisions[0],
+                "participants": [mod.id for mod in chosen if mod.id in owners],
+                "message": "Source collides with the main menu managed by ModLoader: "
+                + ", ".join(collisions),
+            }
+            blockers.append(collision_blocker)
         elif (
             len(extensions) > MAX_EXTENSIONS
             or len(descriptor) > MAX_MANIFEST_BYTES
             or screens.source_bytes + len(owned_menu) > MAX_TOTAL_BYTES
         ):
-            blockers.append(
-                {
+            for kind, actual, maximum in (
+                ("entries", len(extensions), MAX_EXTENSIONS),
+                ("descriptor_bytes", len(descriptor), MAX_MANIFEST_BYTES),
+                ("source_bytes", screens.source_bytes + len(owned_menu), MAX_TOTAL_BYTES),
+            ):
+                if actual <= maximum:
+                    continue
+                limit_blocker: dict[str, Any] = {
                     "code": "screen_extension_limits",
                     "file": SCREEN_DESCRIPTOR,
-                    "message": "Combined screen extensions exceed the reviewed SDK limits",
+                    "limit_kind": kind,
+                    "actual": actual,
+                    "maximum": maximum,
+                    "participants": [
+                        mod.id
+                        for mod in chosen
+                        if any(mod.id in record["source_sha256"] for record in screens.files)
+                    ],
+                    "message": f"Combined screen extension {kind}: {actual}; maximum {maximum}",
                 }
-            )
+                blockers.append(limit_blocker)
         elif status != "valid":
             blockers.append({"code": status, "file": SCREEN_SOURCE, "message": diagnostic})
         else:

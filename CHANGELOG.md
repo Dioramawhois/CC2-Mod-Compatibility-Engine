@@ -4,7 +4,7 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
-## Unreleased
+## 0.4.0b10 - Windows beta 10 (2026-11-04)
 
 - Keep a committed apply successful when optional settings-cache cleanup raises
   an OS error. Preserve pre-commit rollback and unknown-loader protection.
@@ -15,6 +15,25 @@ for installation, self-build and support information.
 - Reconstruct dependency notes from the restored package after Undo, including
   when the current source metadata has changed. See ADR-0034. These owned
   regressions do not establish new frozen-binary or game acceptance.
+- Keep valid GUI inventory visible when another package is unreadable or
+  ambiguous. Quarantine failed sources explicitly, preserve strict discovery
+  by default, and block unavailable selected sources or dependencies. Retain
+  bounded source-aware diagnostics and export them even without a merge plan.
+- Preserve specific launch-guard reasons and require refresh/revalidation after
+  a refusal. Report managed-menu ownership and screen-extension budget failures
+  with supported actions, owners and actual/maximum values. Keep package schema
+  2; add the non-installable `schema_kind=diagnostics`, version-1 envelope.
+- Preserve surviving checkbox rows and scroll position on inventory changes,
+  label libraries by actual DLL resources, and enable Undo only with available
+  checked history, rechecking when invoked.
+- Add **Disable all** beside Launch. Clear mods and required libraries in one
+  normal empty-set transaction, retain Undo and running-game deferral, and
+  cancel the current automatic launch request. Do not implicitly uninstall the
+  SDK, delete source mods or start an unmodded game. Deferred-change wording
+  explicitly asks the user to keep ModLoader open. See ADR-0035.
+- Implement all ten original UX/state findings with focused source regressions.
+  Final full-suite/frozen-build results and user game acceptance are separate;
+  this entry does not certify new gameplay, multiplayer or clean-machine use.
 
 ## 0.4.0b9 - Windows beta 9 (2026-11-04)
 

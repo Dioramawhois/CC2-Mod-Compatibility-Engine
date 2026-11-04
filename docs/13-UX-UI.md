@@ -1,13 +1,25 @@
 # 13. Обязательный UX/UI пользовательского приложения
 
-**Unreleased state recovery:** an optional settings-cache unlink failure after
+**Beta 10:** the original ten-item UX/state audit is implemented in source.
+The main window exposes **Launch game** and **Disable all**; clearing both mods
+and libraries submits one reversible empty selection and cancels the current
+automatic launch request. While the game runs, keep the actual applied state
+and explicitly ask the user to leave ModLoader open until the change applies.
+Do not uninstall the SDK implicitly. Valid inventory survives source quarantine;
+named localized diagnostics can be exported without a plan. Launch errors,
+screen ownership/limits, stable rows, library labels and Undo availability use
+the real state. These contracts supersede the older one-button-only description
+below, without adding Check/Apply buttons. See
+[ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
+**Beta 10 state recovery:** an optional settings-cache unlink failure after
 activation commits leaves the committed selection successful; pre-commit
 rollback remains unchanged. A reviewed bundled SDK can supply a dependency
 without a selectable library row. Reopening restores the verified owned merge
 order, while first adoption retains native order. Undo rebuilds dependency notes
 from the restored package's recorded sources, including when Workshop metadata
-has changed. These changes do not close the separate recovery/launch feedback
-audit items or establish new game acceptance. See
+has changed. ADR-0035 adds the remaining original audit fixes; these source
+changes do not establish new game acceptance. See
 [ADR-0034](adr/0034-committed-activation-and-gui-state.md).
 
 **0.4.0b6, owner update:** while ModLoader's generated set is active, the game's

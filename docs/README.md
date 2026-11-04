@@ -11,6 +11,7 @@ application and its two distribution routes.
 | Understand development checks and contribute changes | [Contributing](../CONTRIBUTING.md) |
 | Report a security problem or understand repository policy | [Security](../SECURITY.md) |
 | Read release changes | [Changelog](../CHANGELOG.md) |
+| Read the UX findings and regression evidence | [UX state audit](reviews/2026-11-04-ux-state-audit.md) |
 | Check supported platforms and verification limits | [Compatibility and verification](COMPATIBILITY.md) |
 | Check exact native-library source and compatibility | [Pinned CC2X SDK release](https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/tag/0.8.1-client-beta.1) |
 | Reuse screenshots or the English announcement | [Announcement kit](announcements/README.md) |

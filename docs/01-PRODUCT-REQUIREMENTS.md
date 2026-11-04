@@ -1,5 +1,13 @@
 # 01. Product Requirements (PRD)
 
+Beta 10 completes the ten original UX/state fixes and adds **Disable all**.
+Keep valid inventory visible with named, exportable diagnostics for quarantined
+sources; never silently omit a selected source or dependency. Preserve specific
+launch refusals, actionable screen-owner/limit messages, stable row navigation
+and checked Undo availability. Clearing mods and libraries is one reversible
+empty-set apply, deferred while the game runs, with no automatic game launch or
+implicit SDK removal. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
 Beta 9 synchronizes the reviewed provider with SDK 0.8.1. A source-library DLL
 mismatch must identify that SDK separately from an incompatible installed
 loader, including when the attempted checkbox action removes another mod.

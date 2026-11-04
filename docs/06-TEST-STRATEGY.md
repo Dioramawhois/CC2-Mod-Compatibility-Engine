@@ -1,5 +1,15 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0035 fixtures cover explicit partial versus default-strict discovery,
+quarantine of ambiguous/unsafe sources, required unavailable dependencies,
+bounded diagnostic export, specific launch summaries and screen-owner/size
+refusals. GUI controls cover stable surviving rows/scroll, actual DLL labels,
+available/stale Undo history and one **Disable all** apply including required
+libraries, running-game deferral, automatic-launch cancellation and Undo.
+Validate all 14 catalogs. Keep existing native/path/snapshot/transaction gates
+and separate source fixtures from final full-suite, frozen-build and user-game
+acceptance. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
 ADR-0034 regressions distinguish a committed update with a denied optional
 settings-cache unlink from a pre-commit activation failure. Verify successful
 return and the new package/activation/settings/runtime, mock guarded launch,

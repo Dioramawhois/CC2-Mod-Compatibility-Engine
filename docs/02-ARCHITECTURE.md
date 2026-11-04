@@ -1,5 +1,13 @@
 # 02. Архитектура
 
+ADR-0035 makes partial discovery explicit for the GUI while keeping strict
+core/developer discovery as the default. Inventory issues carry bounded source
+context, participate in fingerprints and block unavailable selected sources or
+dependencies. A separate non-installable diagnostic envelope supports details
+and export before any package plan exists. Row reconciliation and control
+availability consume that state; native approval and transaction boundaries do
+not change. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
 ADR-0032 promotes the reviewed SDK 0.8.1 provider, bundled binary and dependency
 restore pin together. Preserve earlier reviewed hashes only as previous
 versions for supported upgrades/source recognition; they do not override the

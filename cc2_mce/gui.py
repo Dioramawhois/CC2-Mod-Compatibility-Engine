@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import queue
+import re
 import sys
 import textwrap
 import threading
@@ -13,10 +15,11 @@ from tkinter import filedialog, messagebox, ttk
 
 from cc2_mce import APP_NAME
 from cc2_mce.baseline import Baseline
+from cc2_mce.diagnostics import Diagnostic, diagnostic_envelope, error_diagnostic
 from cc2_mce.discovery import ModRef, Scan, discover
 from cc2_mce.errors import InputError, MCEError
-from cc2_mce.filesystem import Budget, Limits, input_root, read_regular
-from cc2_mce.game_launch import launch_game
+from cc2_mce.filesystem import Budget, Limits, digest, input_root, read_regular
+from cc2_mce.game_launch import launch_game, validate_launch
 from cc2_mce.i18n import LANGUAGES, Translator
 from cc2_mce.installation import (
     Installation,
@@ -98,6 +101,8 @@ class App(tk.Tk):
         self.translator = Translator(self.language_choice)
         self.extra_roots = [Path(value) for value in self.preferences.extra_roots]
         self._activation_known = False
+        self._launch_refused = False
+        self._post_restore_diagnostic: Diagnostic | None = None
         self.checks: dict[str, ttk.Checkbutton] = {}
         self.row_status: dict[str, tk.StringVar] = {}
         self.row_labels: dict[str, ttk.Label] = {}
@@ -105,9 +110,15 @@ class App(tk.Tk):
         self._applied_warning: OverrideWarning | None = None
         self._required_notes: dict[str, str] = {}
         self.row_origins: dict[str, str] = {}
+        self._row_frames: dict[str, ttk.Frame] = {}
+        self._empty_rows: dict[ttk.Frame, ttk.Label] = {}
+        self._undo_error: str | None = None
         self._scroll_canvases: dict[ttk.Frame, tk.Canvas] = {}
         self.problem_details = ""
         self.problem_report: PackagePlan | None = None
+        self._diagnostic_report: dict[str, object] | None = None
+        self._inventory_details = ""
+        self._notice_source = ""
         self.auto_enabled = False
         self.protocol("WM_DELETE_WINDOW", self.request_close)
         self._generation = 0
@@ -200,6 +211,9 @@ class App(tk.Tk):
         self.actions_menu.add_command(
             label=self.tr("Вернуть предыдущий набор…"), command=self.restore
         )
+        undo_index = self.actions_menu.index("end")
+        assert undo_index is not None
+        self._undo_index = undo_index
         self.actions_menu.add_command(
             label=self.tr("Подробности проблемы…"), command=self.show_problem
         )
@@ -303,9 +317,16 @@ class App(tk.Tk):
         bottom = ttk.Frame(frame)
         self.bottom = bottom
         bottom.pack(fill="x")
-        ttk.Label(bottom, textvariable=self.status, wraplength=535).pack(
-            side="left", fill="x", expand=True
+        bottom.columnconfigure(0, weight=1)
+        status_label = ttk.Label(bottom, textvariable=self.status, width=1, wraplength=300)
+        status_label.grid(row=0, column=0, sticky="ew")
+        status_label.bind(
+            "<Configure>", lambda event: status_label.configure(wraplength=max(1, event.width))
         )
+        self.disable_all_button = ttk.Button(
+            bottom, text=self.tr("Выключить все"), command=self.disable_all, state="disabled"
+        )
+        self.disable_all_button.grid(row=0, column=1, padx=(12, 0))
         self.launch_button = ttk.Button(
             bottom,
             text=self.tr("Запустить игру"),
@@ -313,7 +334,7 @@ class App(tk.Tk):
             style="Launch.TButton",
             state="disabled",
         )
-        self.launch_button.pack(side="right", padx=(14, 0))
+        self.launch_button.grid(row=0, column=2, padx=(12, 0))
         if discover_on_start:
             self.after(0, self.search)
             self.after(3000, self._watch_sources)
@@ -446,6 +467,34 @@ class App(tk.Tk):
         text.configure(state="disabled")
         text.focus_set()
 
+    def _history_available(self) -> bool:
+        self._undo_error = None
+        if self.game is None:
+            return False
+        state_path = game_user_dir() / "cc2-mce/activation.json"
+        if not state_path.exists() and not state_path.is_symlink():
+            return False
+        try:
+            state_dir = input_root(state_path.parent)
+            state = json.loads(read_regular(state_path, state_dir, Budget(Limits())))
+            if not isinstance(state, dict) or state.get("owner") != "cc2-mce":
+                raise InputError("Invalid activation history owner")
+            backup = state.get("backup")
+            expected = state.get("backup_sha256")
+            if (
+                not isinstance(backup, str)
+                or not re.fullmatch(r"mods-[0-9a-f]{32}\.xml", backup)
+                or not isinstance(expected, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", expected)
+            ):
+                raise InputError("Invalid activation history backup")
+            if digest(read_regular(state_dir / backup, state_dir, Budget(Limits()))) != expected:
+                raise InputError("Activation history backup checksum mismatch")
+            return True
+        except (OSError, MCEError, ValueError, RecursionError) as exc:
+            self._undo_error = str(exc)[:1024]
+            return False
+
     def _refresh_controls(self) -> None:
         pending = (game_user_dir() / "cc2-mce/pending.json").exists()
         ready = (
@@ -453,12 +502,34 @@ class App(tk.Tk):
             and (not self.needs_placement)
             and (self.scan is not None)
             and self._activation_known
+            and not self._launch_refused
             and (not self.selection_dirty)
             and (not self.applying)
             and (not pending)
         )
         self.launch_button.state(["!disabled"] if ready else ["disabled"])
         self.menu_button.state(["disabled"] if self.applying else ["!disabled"])
+        self.actions_menu.entryconfigure(
+            self._undo_index,
+            state="normal"
+            if not self.applying and not pending and self._history_available()
+            else "disabled",
+        )
+        can_clear = (
+            self.game is not None
+            and not self.needs_placement
+            and self.scan is not None
+            and not self.applying
+            and not pending
+            and (
+                bool(self._desired_ids)
+                or any(value.get() for value in (*self.vars.values(), *self.library_vars.values()))
+            )
+        )
+        self.disable_all_button.state(["!disabled"] if can_clear else ["disabled"])
+        if pending:
+            for check in self.checks.values():
+                check.state(["disabled"])
         if self.selection_dirty or self.applying or (self.busy and self.scan is None):
             if not self.progress.winfo_manager():
                 self.progress.pack(fill="x", before=self.bottom, pady=(0, 10))
@@ -536,10 +607,45 @@ class App(tk.Tk):
         self._row_errors.clear()
         self.problem_details = ""
         self.problem_report = None
+        self._diagnostic_report = None
+        self._inventory_details = ""
+        self._notice_source = ""
         self._show_applied_warning()
+
+    def _show_diagnostics(
+        self, items: tuple[Diagnostic, ...], *, stage: str, preserve_notice: bool = False
+    ) -> None:
+        if not items:
+            return
+        self._diagnostic_report = diagnostic_envelope(items, stage=stage)
+        details = "\n\n".join(item.details(self.tr) for item in items[:20])
+        if preserve_notice and self.notice_title.get() and self._notice_source != "inventory":
+            previous = "\n\n" + self._inventory_details if self._inventory_details else ""
+            if previous and self.problem_details.endswith(previous):
+                self.problem_details = self.problem_details[: -len(previous)]
+            self.problem_details += "\n\n" + details
+            self._inventory_details = details
+            return
+        self.problem_report = None
+        self.problem_details = details
+        self._inventory_details = ""
+        self._notice_source = "inventory" if stage == "discovery" else "diagnostic"
+        if stage == "discovery":
+            self.notice_title.set(
+                self.tr("Некоторые моды недоступны: {p0}. Они не будут включены.", p0=len(items))
+            )
+            self.notice_text.set("\n".join(item.summary(self.tr) for item in items[:3]))
+        else:
+            self.notice_title.set(items[0].summary(self.tr))
+            self.notice_text.set(
+                self.tr("Меню") + " → " + self.tr("Обновить список") if stage == "launch" else ""
+            )
+        self.notice_frame.pack(fill="x", before=self.tabs, pady=(4, 4))
+        self.status.set(items[0].summary(self.tr))
 
     def _show_applied_warning(self) -> None:
         if warning := self._applied_warning:
+            self._notice_source = "override"
             self.notice_title.set(warning.title)
             self.notice_text.set(warning.message)
             self.problem_details = warning.details
@@ -561,6 +667,8 @@ class App(tk.Tk):
         for key, variable in {**self.vars, **self.library_vars}.items():
             variable.set(key in self._applied_ids)
         self._row_errors = rejection.rows
+        self._inventory_details = ""
+        self._notice_source = "rejection"
         self.problem_details = self.tr(rejection.details)
         self.notice_title.set(self.tr(rejection.title))
         self.notice_text.set(self.tr(rejection.message))
@@ -588,31 +696,19 @@ class App(tk.Tk):
         receive: Callable[[T], None],
         *,
         reject_selection: bool = False,
+        stage: str = "operation",
     ) -> None:
         self._generation += 1
         generation = self._generation
-        results: queue.Queue[tuple[T | None, str | None]] = queue.Queue()
+        results: queue.Queue[tuple[T | None, Diagnostic | None]] = queue.Queue()
         self.busy = True
         self._refresh_controls()
 
         def worker() -> None:
             try:
                 results.put((action(), None))
-            except MCEError as exc:
-                results.put((None, str(exc)))
-            except (OSError, ValueError):
-                results.put(
-                    (None, self.tr("Не удалось безопасно прочитать или записать выбранные папки."))
-                )
-            except Exception:
-                results.put(
-                    (
-                        None,
-                        self.tr(
-                            "Операция прервалась. Повторите проверку или верните прежний набор."
-                        ),
-                    )
-                )
+            except Exception as exc:
+                results.put((None, error_diagnostic(exc, stage=stage)))
 
         def poll() -> None:
             if generation != self._generation:
@@ -626,10 +722,15 @@ class App(tk.Tk):
                 self.busy = False
                 self._set_applying(False)
                 self.package_plan = None
-                self.status.set(self.tr(error))
-                if self.selection_dirty and ("Игра запущена" in error or "Закройте игру" in error):
+                self._show_diagnostics((error,), stage=stage)
+                if self.selection_dirty and (
+                    "Игра запущена" in error.cause or "Закройте игру" in error.cause
+                ):
                     self.status.set(
-                        self.tr("Закройте игру — выбранные моды применятся автоматически.")
+                        self.tr(
+                            "Закройте игру — выбранные моды применятся автоматически. "
+                            "Оставьте ModLoader открытым."
+                        )
                     )
                     self._queue_rebuild(1000)
                 elif reject_selection:
@@ -637,9 +738,12 @@ class App(tk.Tk):
                     self._reject_change(
                         Rejection(
                             self.tr("Изменение отменено"),
-                            error,
-                            error,
-                            {key: self.tr("Не включён: ") + self.tr(error) for key in added},
+                            error.summary(self.tr),
+                            error.details(self.tr),
+                            {
+                                key: self.tr("Не включён: ") + error.summary(self.tr)
+                                for key in added
+                            },
                         )
                     )
                 self._refresh_controls()
@@ -675,6 +779,8 @@ class App(tk.Tk):
         self.mod_order.clear()
         self._applied_order.clear()
         self._activation_known = False
+        self._launch_refused = False
+        self._post_restore_diagnostic = None
         self.active_package = None
         self.selection_dirty = False
         for frame in (self.list_frame, self.library_frame):
@@ -686,6 +792,8 @@ class App(tk.Tk):
         self.row_status.clear()
         self.row_labels.clear()
         self.row_origins.clear()
+        self._row_frames.clear()
+        self._empty_rows.clear()
         self._required_notes.clear()
         self._applied_warning = None
         self._clear_notice()
@@ -799,6 +907,7 @@ class App(tk.Tk):
                 preserve_selection
                 and previous_scan is not None
                 and (combined.fingerprint == previous_scan.fingerprint)
+                and not (self._notice_source == "inventory" and not combined.issues)
             ):
                 return
             self.scan = combined
@@ -819,8 +928,6 @@ class App(tk.Tk):
                     ).is_file():
                         self.active_package = path
                         self.auto_enabled = True
-                        import json
-
                         package_root = input_root(path)
                         saved = json.loads(
                             read_regular(path / "mce-manifest.json", package_root, Budget(Limits()))
@@ -876,8 +983,19 @@ class App(tk.Tk):
                 self._applied_warning = (
                     explain_overrides(active_report, self.tr) if active_report else None
                 )
-                if not preserve_selection or not self.notice_title.get() or showing_warning:
+                if (
+                    not preserve_selection
+                    or not self.notice_title.get()
+                    or showing_warning
+                    or self._notice_source == "inventory"
+                ):
                     self._clear_notice()
+                elif not combined.issues and self._inventory_details:
+                    suffix = "\n\n" + self._inventory_details
+                    if self.problem_details.endswith(suffix):
+                        self.problem_details = self.problem_details[: -len(suffix)]
+                    self._inventory_details = ""
+                    self._diagnostic_report = None
             except (MCEError, OSError, ValueError):
                 self._activation_known = False
                 self.activation_status.set(self.tr("Не удалось прочитать текущую активацию игры."))
@@ -953,6 +1071,14 @@ class App(tk.Tk):
                 self.selection_dirty = True
                 self._queue_rebuild()
             self._refresh_controls()
+            if combined.issues:
+                self._show_diagnostics(
+                    combined.issues, stage="discovery", preserve_notice=preserve_selection
+                )
+            if self._post_restore_diagnostic is not None:
+                diagnostic = self._post_restore_diagnostic
+                self._post_restore_diagnostic = None
+                self._show_diagnostics((diagnostic,), stage="launch")
             self._maybe_play()
 
         def scan() -> Scan:
@@ -965,9 +1091,9 @@ class App(tk.Tk):
                     )
                 ) from exc
             recover_interrupted(game_user_dir())
-            return discover([*roots, *library_roots])
+            return discover([*roots, *library_roots], collect_issues=True)
 
-        self._background(scan, receive)
+        self._background(scan, receive, stage="discovery")
 
     def _display_items(
         self,
@@ -977,25 +1103,55 @@ class App(tk.Tk):
         *,
         library: bool = False,
     ) -> None:
-        for child in frame.winfo_children():
-            child.destroy()
-        for key in variables:
-            self.checks.pop(key, None)
+        canvas = self._scroll_canvases[frame]
+        self.update_idletasks()
+        view_y = canvas.canvasy(0)  # type: ignore[no-untyped-call]
+        anchor = next(
+            (
+                (key, view_y - row.winfo_y())
+                for key, row in sorted(
+                    ((key, self._row_frames[key]) for key in variables if key in self._row_frames),
+                    key=lambda item: item[1].winfo_y(),
+                )
+                if row.winfo_y() + row.winfo_height() > view_y
+            ),
+            None,
+        )
+        wanted = {mod.id for mod in mods}
+        for key in list(variables):
+            if key in wanted and key in self._row_frames:
+                continue
+            row = self._row_frames.pop(key, None)
+            check = self.checks.pop(key, None)
+            label = self.row_labels.pop(key, None)
+            if row is not None:
+                row.destroy()
+            else:
+                if check is not None:
+                    check.destroy()
+                if label is not None:
+                    label.destroy()
+            variables.pop(key)
             self.row_status.pop(key, None)
-            self.row_labels.pop(key, None)
             self.row_origins.pop(key, None)
-        variables.clear()
+        placeholder = self._empty_rows.pop(frame, None)
+        if placeholder is not None:
+            placeholder.destroy()
+        previous_row: ttk.Frame | None = None
         for mod in sorted(
             mods, key=lambda item: (item.id not in self._applied_ids, item.name.casefold())
         ):
-            variable = tk.BooleanVar(value=False)
-            variables[mod.id] = variable
             if library:
                 kinds = []
                 if any(item.logical_path.casefold().endswith(".lua") for item in mod.files):
                     kinds.append("Lua")
-                if any(item.kind == "native" for item in mod.files):
+                files = (*mod.files, *mod.root_files)
+                if any(item.logical_path.casefold().endswith(".dll") for item in files):
                     kinds.append(self.tr("DLL-плагин"))
+                elif any(item.key == "cc2x/screen_extensions.json" for item in mod.files):
+                    kinds.append(self.tr("SDK-расширения экранов"))
+                elif any(item.kind == "native" for item in files):
+                    kinds.append(self.tr("Нативные файлы"))
                 origin = ", ".join(kinds) or self.tr("ресурсы")
             else:
                 origin = (
@@ -1005,25 +1161,41 @@ class App(tk.Tk):
                     )
                     else self.tr("локальный")
                 )
-            row = ttk.Frame(frame, style="List.TFrame", padding=(6, 6))
-            row.pack(fill="x")
-            check = ttk.Checkbutton(
-                row,
-                text=textwrap.fill(mod.name, width=64),
-                variable=variable,
-                command=self.selection_changed,
-                style="List.TCheckbutton",
-            )
-            check.pack(anchor="w", fill="x")
-            self.checks[mod.id] = check
+            if mod.id in variables:
+                row = self._row_frames[mod.id]
+                self.checks[mod.id].configure(text=textwrap.fill(mod.name, width=64))
+            else:
+                variable = tk.BooleanVar(value=False)
+                variables[mod.id] = variable
+                row = ttk.Frame(frame, style="List.TFrame", padding=(6, 6))
+                self._row_frames[mod.id] = row
+                check = ttk.Checkbutton(
+                    row,
+                    text=textwrap.fill(mod.name, width=64),
+                    variable=variable,
+                    command=self.selection_changed,
+                    style="List.TCheckbutton",
+                )
+                check.pack(anchor="w", fill="x")
+                self.checks[mod.id] = check
+                self.row_status[mod.id] = tk.StringVar()
+                label = ttk.Label(
+                    row, textvariable=self.row_status[mod.id], style="Row.TLabel", wraplength=710
+                )
+                label.pack(anchor="w", padx=(25, 0))
+                self.row_labels[mod.id] = label
+            if previous_row is not None:
+                row.pack(fill="x", after=previous_row)
+            else:
+                packed = frame.pack_slaves()
+                if packed and packed[0] is not row:
+                    row.pack(fill="x", before=packed[0])
+                else:
+                    row.pack(fill="x")
+            previous_row = row
             self.row_origins[mod.id] = origin
-            self.row_status[mod.id] = tk.StringVar(value=origin + self.tr(" · Выключен"))
-            label = ttk.Label(
-                row, textvariable=self.row_status[mod.id], style="Row.TLabel", wraplength=710
-            )
-            label.pack(anchor="w", padx=(25, 0))
-            self.row_labels[mod.id] = label
-            canvas = self._scroll_canvases[frame]
+            label = self.row_labels[mod.id]
+            check = self.checks[mod.id]
 
             def scroll(event: tk.Event, target: tk.Canvas = canvas) -> str:
                 steps = (
@@ -1040,7 +1212,7 @@ class App(tk.Tk):
                 for sequence in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
                     widget.bind(sequence, scroll)
         if not mods:
-            ttk.Label(
+            placeholder = ttk.Label(
                 frame,
                 text=self.tr("Библиотек пока нет.")
                 if library
@@ -1049,7 +1221,14 @@ class App(tk.Tk):
                 ),
                 style="Row.TLabel",
                 wraplength=700,
-            ).pack(anchor="w", pady=6)
+            )
+            placeholder.pack(anchor="w", pady=6)
+            self._empty_rows[frame] = placeholder
+        self.update_idletasks()
+        if anchor is not None and anchor[0] in self._row_frames:
+            view_y = self._row_frames[anchor[0]].winfo_y() + anchor[1]
+        canvas.yview_moveto(max(0, view_y) / max(1, frame.winfo_reqheight()))
+        self._update_rows()
 
     def display_scan(self, scan: Scan) -> None:
         self.scan = scan
@@ -1083,6 +1262,19 @@ class App(tk.Tk):
         self._render_order()
         self._refresh_controls()
 
+    def disable_all(self) -> None:
+        if self.applying or self.game is None or self.scan is None or self.needs_placement:
+            return
+        if (game_user_dir() / "cc2-mce/pending.json").exists():
+            return
+        variables = (*self.vars.values(), *self.library_vars.values())
+        if not self._desired_ids and not any(value.get() for value in variables):
+            return
+        self._play_requested = False
+        for variable in variables:
+            variable.set(False)
+        self.selection_changed()
+
     def _queue_rebuild(self, delay: int = 250) -> None:
         if self._auto_timer is not None:
             self.after_cancel(self._auto_timer)
@@ -1095,10 +1287,24 @@ class App(tk.Tk):
         try:
             running = _running()
         except MCEError as exc:
-            self._reject_change(Rejection(self.tr("Изменение отменено"), str(exc), str(exc), {}))
+            diagnostic = error_diagnostic(exc, stage="operation")
+            self._show_diagnostics((diagnostic,), stage="operation")
+            self._reject_change(
+                Rejection(
+                    self.tr("Изменение отменено"),
+                    diagnostic.summary(self.tr),
+                    diagnostic.details(self.tr),
+                    {},
+                )
+            )
             return
         if running:
-            self.status.set(self.tr("Закройте игру — выбранные моды применятся автоматически."))
+            self.status.set(
+                self.tr(
+                    "Закройте игру — выбранные моды применятся автоматически. "
+                    "Оставьте ModLoader открытым."
+                )
+            )
             self._update_rows(self.tr("После закрытия игры"))
             self._queue_rebuild(1000)
             return
@@ -1148,7 +1354,8 @@ class App(tk.Tk):
         selected_game = self.game
 
         def check() -> PackagePlan:
-            scan = discover(roots)
+            scan = discover(roots, collect_issues=True)
+            scan.require_available(selected)
             chosen = [mod for mod in scan.mods if mod.id in selected]
             if {mod.id for mod in chosen} != set(selected):
                 raise InputError(
@@ -1178,7 +1385,7 @@ class App(tk.Tk):
                     )
                 )
 
-        self._background(check, receive, reject_selection=True)
+        self._background(check, receive, reject_selection=True, stage="selection")
 
     def apply_selected(self) -> None:
         if self.applying:
@@ -1195,6 +1402,8 @@ class App(tk.Tk):
         def receive(path: Path) -> None:
             self.active_package = path
             self._activation_known = True
+            self._launch_refused = False
+            self._post_restore_diagnostic = None
             self.selection_dirty = False
             self._applied_ids = {mod.id for mod in current.selected}
             self._applied_patch_priority = current.report.get("merge_policy") == "ordered-patches"
@@ -1235,6 +1444,8 @@ class App(tk.Tk):
                     )
             self._applied_warning = explain_overrides(current.report, self.tr)
             self._clear_notice()
+            if current.scan.issues:
+                self._show_diagnostics(current.scan.issues, stage="discovery", preserve_notice=True)
             overridden = sum(item["status"] == "overridden" for item in current.report["files"])
             if overridden:
                 self.status.set(self.tr("Готово. Замен по порядку: {p0}.", p0=overridden))
@@ -1251,7 +1462,10 @@ class App(tk.Tk):
             self._maybe_play()
 
         self._background(
-            lambda: apply_plan(current, game_user_dir()), receive, reject_selection=True
+            lambda: apply_plan(current, game_user_dir()),
+            receive,
+            reject_selection=True,
+            stage="operation",
         )
 
     def _maybe_play(self) -> None:
@@ -1263,25 +1477,58 @@ class App(tk.Tk):
     def restore(self) -> None:
         if self.applying:
             return
+        if (game_user_dir() / "cc2-mce/pending.json").exists():
+            self.status.set(self.tr("Сначала дождитесь восстановления незавершённой сборки."))
+            self._refresh_controls()
+            return
+        if not self._history_available():
+            self._play_requested = False
+            if self._undo_error:
+                diagnostic = error_diagnostic(
+                    InputError(self._undo_error),
+                    stage="restore",
+                    source_path=game_user_dir() / "cc2-mce/activation.json",
+                )
+                self._show_diagnostics((diagnostic,), stage="restore")
+            else:
+                self.status.set(self.tr("Нет предыдущего набора для восстановления."))
+            self._refresh_controls()
+            return
         if not messagebox.askyesno(
             self.tr("Вернуть прежние моды"), self.tr("Восстановить набор до последнего применения?")
         ):
             return
 
-        def action() -> bool:
-            restore_previous(game_user_dir())
-            return True
+        selected_game = self.game
+        assert selected_game is not None
+        self._play_requested = False
 
-        def receive(_: bool) -> None:
+        def action() -> tuple[Diagnostic | None]:
+            user = game_user_dir()
+            restore_previous(user)
+            try:
+                paths = active_paths(user)
+                if not paths or paths == (user / "mods/CC2-MCE",):
+                    validate_launch(
+                        selected_game, user, paths[0] if paths else None, game_running=_running
+                    )
+                return (None,)
+            except (OSError, MCEError) as exc:
+                # Undo already succeeded; expose a separate launch refusal, never a failed rollback.
+                return (error_diagnostic(exc, stage="launch", source_path=selected_game.root),)
+
+        def receive(result: tuple[Diagnostic | None]) -> None:
             self.active_package = None
             self.selection_dirty = False
             self.package_plan = None
+            self._launch_refused = result[0] is not None
+            self._post_restore_diagnostic = result[0]
             self.activation_status.set(self.tr("Прежний набор модов восстановлен."))
             self.status.set(self.tr("Прежний набор восстановлен."))
             self.scan_sources(rebuild_after_scan=False)
 
         self._set_applying(True)
-        self._background(action, receive)
+        self._background(action, receive, stage="restore")
 
     def _set_applying(self, value: bool) -> None:
         self.applying = value
@@ -1301,7 +1548,16 @@ class App(tk.Tk):
 
     def export_report(self) -> None:
         plan = self.problem_report or self.package_plan
-        if plan is None:
+        report = (
+            self.problem_report.report
+            if self.problem_report is not None
+            else self._diagnostic_report
+            if self._diagnostic_report is not None
+            else plan.report
+            if plan is not None
+            else None
+        )
+        if report is None:
             self.show_problem()
             return
         name = filedialog.asksaveasfilename(
@@ -1309,11 +1565,16 @@ class App(tk.Tk):
         )
         if name:
             try:
-                write_report(plan.report, Path(name), list(plan.scan.roots))
+                protected = list(plan.scan.roots) if plan is not None else list(self.mod_roots)
+                if self.game is not None:
+                    protected.extend([self.game.root, self.game.libraries_dir])
+                write_report(report, Path(name), protected)
             except (MCEError, OSError):
                 self.status.set(self.tr("Отчёт не сохранён: выберите новый файл вне исходников."))
 
     def launch(self) -> bool:
+        if self._launch_refused:
+            return False
         if self.applying:
             self.status.set(self.tr("Дождитесь завершения применения модов."))
             return False
@@ -1341,8 +1602,20 @@ class App(tk.Tk):
                 self.game, game_user_dir(), self.active_package if self._applied_ids else None
             )
             return True
-        except (OSError, MCEError):
-            self.status.set(self.tr("Не удалось запустить игру."))
+        except (OSError, MCEError) as exc:
+            self._play_requested = False
+            self._launch_refused = True
+            self._activation_known = False
+            diagnostic = error_diagnostic(
+                exc,
+                stage="launch",
+                source_path=self.active_package or self.game.root,
+                resource_path=self.game.root / "dinput8.dll"
+                if str(exc) == "Installed runtime changed since activation"
+                else self.game.executable,
+            )
+            self._show_diagnostics((diagnostic,), stage="launch")
+            self._refresh_controls()
             return False
 
 

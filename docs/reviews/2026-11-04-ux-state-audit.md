@@ -1,10 +1,18 @@
 # ModLoader UX and state audit — 2026-11-04
 
-Scope: the staged **0.4.0 beta 9** sources at
-`dabb60e649245e0f54e41a5f80b717c390ea8960`. This is a read-only engineering
-audit after packaging, covering selection truthfulness, recovery, dependency
+Original assessment: the staged **0.4.0 beta 9** sources at
+`dabb60e649245e0f54e41a5f80b717c390ea8960`. The read-only engineering audit
+after packaging covered selection truthfulness, recovery, dependency
 messages, discovery, runtime errors and the 14 offline languages. It does not
 certify publication status, game-menu behavior, gameplay or multiplayer.
+
+Resolution update: **beta 10 implements all ten original findings in source**,
+with the focused regressions listed below, and adds **Disable all**. See
+[ADR-0034](../adr/0034-committed-activation-and-gui-state.md) and
+[ADR-0035](../adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+Implementation closure is separate from the final full-suite/frozen build and
+the user's real-game acceptance. Historical reproductions and line references
+below describe the original beta 9 snapshot, not the corrected source.
 
 No live game, installed runtime, Workshop package or player save was changed by
 this audit. Reproductions used owned temporary game/mod fixtures. Synthetic DLL
@@ -40,22 +48,23 @@ EXE or provide clean-machine/gameplay acceptance.
   regressions cover normal rejection, launch of the intact set, persistent
   notices and mandatory dependency rechecking.
 
-These fixes do not close the remaining findings below.
+Those pre-audit fixes did not close the findings below. The beta 10 follow-up
+now supplies the implementation and regression coverage shown in the table.
 
-## Priorities
+## Original priorities and beta 10 source closure
 
-| ID | Priority | Remaining issue | Evidence |
+| ID | Priority | Original issue | Beta 10 implementation and focused evidence |
 | --- | --- | --- | --- |
-| UX-01 | P1 | A committed update can be displayed as rejected after cache cleanup fails | Hidden Tk + real owned transaction + mock launch |
-| UX-02 | P1 | Built-in SDK dependency crashes the successful-apply callback | Valid service plan + actual callback through a controlled port |
-| UX-03 | P1 | External native activation silently replaces saved merge order | Hidden Tk + real owned transactions |
-| UX-04 | P1 | A broken discovered package hides the list and produces empty diagnostics | Hidden Tk + owned malformed metadata |
-| UX-05 | P2 | Launch refusals discard their actionable cause | Static GUI/guard control flow |
-| UX-06 | P2 | Undo leaves dependency explanations from the discarded set | Hidden Tk + real owned Undo |
-| UX-07 | P2 | Some screen-extension refusals remain technical or unattributed | Presenter reproduction + workflow review |
-| UX-08 | P2 | Lua-only screen libraries are labeled as DLL plugins | Hidden Tk + owned Lua/JSON library |
-| UX-09 | P2 | Changed inventory destroys existing checkbox widgets | Hidden Tk widget lifecycle; focus consequence inferred |
-| UX-10 | P2 | Undo is offered without an available history record | Static menu/journal lifecycle |
+| UX-01 | P1 | Committed update displayed as rejected after cleanup failure | Implemented: nonfatal post-commit housekeeping; [transaction fault injection](../../tests/test_post_commit_settings_cleanup.py). |
+| UX-02 | P1 | Built-in SDK dependency crashes the success callback | Implemented: supplied provider needs no checkbox row; [GUI dependency recovery](../../tests/test_gui_state_recovery.py). |
+| UX-03 | P1 | Native activation replaces saved merge order | Implemented: verified owned order takes precedence; [GUI order/adoption controls](../../tests/test_gui_state_recovery.py). |
+| UX-04 | P1 | Broken source hides inventory and leaves empty diagnostics | Implemented: explicit partial inventory, quarantine and no-plan export; [domain diagnostics](../../tests/test_discovery_diagnostics.py) and [owned GUI fixtures](../../tests/test_gui_diagnostics.py). |
+| UX-05 | P2 | Launch refusals discard their cause | Implemented: specific notice/export and refused readiness until explicit revalidation; [owned GUI launch guards with mock spawns](../../tests/test_gui_diagnostics.py). |
+| UX-06 | P2 | Undo leaves stale dependency explanations | Implemented: notes follow restored source metadata; [GUI Undo regression](../../tests/test_gui_state_recovery.py). |
+| UX-07 | P2 | Screen ownership/limit refusals lack explanation or attribution | Implemented: owner/action and measured limits with contributors; [report/presenter/workflow regressions](../../tests/test_screen_extension_refusals.py). |
+| UX-08 | P2 | Lua-only screen library labeled as a DLL plugin | Implemented: actual `.dll` resource determines the label; [GUI library-label controls](../../tests/test_gui_controls_recovery.py). |
+| UX-09 | P2 | Changed inventory replaces checkbox widgets | Implemented: surviving rows/variables and scroll remain stable; [GUI inventory and scroll fixtures](../../tests/test_gui_controls_recovery.py). |
+| UX-10 | P2 | Undo offered without usable history | Implemented: checked availability and recheck on use; [fresh/consumed/stale history controls](../../tests/test_gui_controls_recovery.py). |
 
 P1 means an ordinary state boundary can misrepresent the applied set, change
 patch priority unexpectedly, or prevent a usable recovery/support workflow.
@@ -64,6 +73,10 @@ is misleading. These priorities are engineering follow-up, not a claim that
 every user encounters every trigger.
 
 ## UX-01 — A housekeeping failure reverses the displayed result after commit
+
+**Beta 10 status: implemented.** An optional cache-unlink `OSError` after commit
+does not reject the applied set. Fault injection verifies new package/runtime,
+guarded mock launch and subsequent Undo; pre-commit failure still rolls back.
 
 **Reproduction:** apply text mod A, then select a synthetic reviewed native
 provider with a reviewed settings default. Deny only `Path.unlink` for the
@@ -93,6 +106,10 @@ silently use a different set from the displayed one.
 
 ## UX-02 — An available built-in SDK is missing from the row-note lookup
 
+**Beta 10 status: implemented.** The GUI completes apply with a runtime-provided
+dependency and no library row. The owned GUI regression checks applied IDs,
+Ready state and absence of a fabricated selectable provider.
+
 **Reproduction:** use the existing runtime-upgrade fixture with a mod requiring
 `cc2x.runtime`, a reviewed provider available to the service, and no separate
 SDK `ModRef`. Analysis returns `selected = [app]`, dependency
@@ -117,6 +134,10 @@ state, correct checkboxes and a truthful dependency explanation.
 
 ## UX-03 — Restoring the owned selection can still reverse its saved order
 
+**Beta 10 status: implemented.** The recorded owned order is restored with its
+selection. GUI regressions distinguish this from first adoption of native
+order and verify the resulting merged bytes/preferences.
+
 **Reproduction:** prepare and save `[a, b]`, externally set native `mods.xml`
 to `[b, a]` in the owned fixture, and rescan as on reopening. The GUI restores
 the owned mod IDs but rebuilds and saves order `[b, a]`. Only the generated
@@ -136,6 +157,12 @@ bytes. Reverse native activation externally, reopen, and assert the saved
 loader order, resulting bytes and persisted preference order are unchanged.
 
 ## UX-04 — Discovery failure has neither source identity nor useful details
+
+**Beta 10 status: implemented.** The GUI uses explicit partial inventory with
+named quarantine issues. Strict discovery remains the default for core callers.
+Domain fixtures cover malformed/ambiguous/unsafe inputs and budgets; owned GUI
+fixtures retain valid rows, export without a plan, and preserve an already
+applied set when its selected source becomes invalid.
 
 **Reproduction:** startup with one valid package and one unselected package
 containing invalid `mod.xml`. Actual hidden Tk ended with status
@@ -167,6 +194,11 @@ of any previously verified applied output.
 
 ## UX-05 — Launch guards work, but their reason is discarded
 
+**Beta 10 status: implemented.** Specific localized diagnoses and export survive
+the GUI boundary, with no spawn and no Ready state until explicit revalidation.
+The GUI fixture exercises the actual changed-game-hash guard with a mock process
+port and keeps it refused through an unchanged passive inventory scan.
+
 `game_launch.py:33–47` distinguishes changed activation, tampered output,
 changed game/runtime and a running/unavailable game. `gui.py:1312–1314`
 catches these conditions and shows only “Could not launch game.” Details may
@@ -185,6 +217,10 @@ feedback and a readiness state that agrees with the required revalidation.
 
 ## UX-06 — Undo restores files but leaves a stale dependency explanation
 
+**Beta 10 status: implemented.** Dependency notes follow the restored package's
+recorded metadata. The GUI regression changes current source metadata before
+Undo and verifies that disabled/current-source dependents are not shown.
+
 **Reproduction:** B requires A; apply `[a, b]`. C also requires A; apply
 `[a, c]`. Undo correctly restores `[a, b]` and unchecks C, but A still says
 “Required by Dependent C”. This was reproduced through real hidden Tk and
@@ -200,6 +236,11 @@ names the now-disabled C. Do not rebuild new source versions merely to refresh
 these labels.
 
 ## UX-07 — Screen ownership and aggregate-budget refusals need specific feedback
+
+**Beta 10 status: implemented.** Managed-menu collisions identify exact owners
+and a disable/update action. Screen refusals distinguish entry, descriptor and
+source limits with actual/maximum values and contributors, including the owned
+menu. Fixtures also retain ordinary Git merging and unrelated-DLL refusal.
 
 For `managed_menu_collision`, `workflow.py:443–447` emits only a list of paths,
 without owner IDs or a mapped user explanation. The presenter reproduction
@@ -220,6 +261,10 @@ fixed attribution for invalid descriptors and duplicate SDK screen owners.
 
 ## UX-08 — A Lua-only library is labeled “DLL plugin”
 
+**Beta 10 status: implemented.** GUI fixtures distinguish a typed Lua/JSON screen
+library from a library containing an actual DLL. Native review policy is
+unchanged by this display correction.
+
 **Reproduction:** discover an unselected library containing only
 `cc2x/screen_extensions.json` and `cc2x/ui/helper.lua`. Actual hidden Tk showed
 `Lua, DLL plugin`; the package contained zero `.dll` files.
@@ -234,6 +279,10 @@ screen library does not claim to contain a DLL, while unhandled `cc2x`
 resources keep their native safety checks.
 
 ## UX-09 — Inventory changes replace all existing checkbox widgets
+
+**Beta 10 status: implemented.** Changed-inventory fixtures retain surviving
+widgets, variables and selection on add/rename, plus scroll position in a hidden
+list. This is source/Tk evidence, not general OS keyboard/accessibility acceptance.
 
 **Reproduction:** keep the existing checkbox widget for A, add a new unchecked
 package C, then passively rescan. Hidden Tk confirmed A's old widget was
@@ -253,6 +302,10 @@ every-three-seconds failure.
 
 ## UX-10 — Undo remains available without an available history record
 
+**Beta 10 status: implemented.** The menu reflects checked history availability;
+the action rechecks a stale record before confirmation or transaction. GUI
+fixtures cover fresh history, consumed Undo and externally removed history.
+
 The menu always offers Undo (`gui.py:200–202`); control refresh disables only
 the whole menu during apply. A first run or consumed activation journal can
 therefore offer an action whose missing file becomes a generic folder-access
@@ -263,7 +316,7 @@ failure reproduction.
 “no previous selection” independently from actual I/O failure. Test fresh
 startup, consumed Undo, ordinary available history and interrupted recovery.
 
-## Recovery and wording checks requiring follow-up evidence
+## Scope beyond the ten original findings
 
 - **Partial native Undo refusal:** an existing backend regression proves that
   resources may be restored before external-runtime rollback refuses. The
@@ -273,40 +326,48 @@ startup, consumed Undo, ordinary available history and interrupted recovery.
   `test_external_runtime_does_not_prevent_resource_rollback`; a new Tk recovery
   regression is required before calling the UI symptom freshly reproduced.
   Show recovery-required state and retain the unknown external loader.
-- **Deferred changes and closing:** the wait text says changes apply after
-  the game closes, but should say ModLoader must remain open. This is a P3
-  expectation gap, **not** a proven pending-selection persistence defect.
-  ADR-0025 restores the last applied selection on reopening; ADR-0012's pending
-  preservation is specific to language-window recreation. A durable pending
-  queue would be a separate product decision.
+- **Deferred changes and closing:** beta 10 now explicitly says ModLoader must
+  remain open. The Disable-all GUI fixture defers writes while the game runs
+  and cancels the requested automatic launch. A durable pending queue is a
+  separate product decision: reopening restores the last applied owned set,
+  while language-window recreation retains its existing in-process request.
 
-## Proposed follow-up sequence
+## Disable all
 
-1. Fix and regress the state-truthfulness boundaries first: post-commit
-   housekeeping, built-in dependency success, and saved merge-order recovery.
-2. Make every discovery/launch/recovery refusal identify the real cause and
-   retain an exportable diagnostic; close the 14-language dynamic-error gap.
-3. Reconcile restored dependency labels, screen-limit/ownership messages,
-   library labels, changed-inventory focus and Undo availability.
+The new main-window action clears mods and libraries, including required
+libraries, in one ordinary empty-selection apply. It cancels the current
+automatic launch request, respects running-game deferral and retains Undo.
+It does not uninstall the SDK DLL, delete source packages/saves or launch an
+unmodded game implicitly. `test_gui_controls_recovery.py` covers one apply,
+dependent-library clearing, disabled states, deferred writes and restoration.
 
-Keep these changes in a separate reviewed UX PR. The audit itself changes no
-application behavior. The user will perform game acceptance; synthetic GUI,
-fault-injection and source-archive checks do not replace that acceptance.
+## Implementation coverage and remaining acceptance
 
-## Isolated source follow-up
+The separate `codex/ux-state-recovery` follow-up implements UX-01 through UX-10
+and Disable all for beta 10. The original beta 9 executable is not retroactively
+changed. Contracts and acceptance boundaries are recorded in ADR-0034/0035.
 
-The separate `codex/ux-state-recovery` branch implements UX-01, UX-02, UX-03
-and UX-06. The staged/published beta 9 binary does not include this follow-up;
-the installed EXE remains available for the user's independent test.
+The first four-finding intermediate source check had 497 passing tests and
+23 environment/dependency skips; restoring bundled tools then covered 62
+menu-delivery/screen cases. Those historical counts are not final beta 10
+full-suite or frozen-binary results.
 
-Seven new regressions cover post-commit cache cleanup, real pre-commit failure,
-unknown loader preservation, runtime-provided dependencies, owned merge order,
-first adoption of native order and historical dependency notes after Undo.
-The complete source suite passed with 497 tests and 23 environment/dependency
-skips. After restoring the pinned bundled tools, all 62 menu-delivery and
-screen-extension cases passed, including the 14 previously skipped validator
-checks. Ruff, formatting and strict mypy passed. No new binary, game or
-multiplayer acceptance is claimed for this branch.
+Current focused evidence consists of owned transaction/fault fixtures,
+domain/presenter checks and hidden Tk controls. The diagnostic GUI suite covers
+partial discovery and zero-plan export, selected-source failure with preserved
+output, a real guard with zero mock spawns, and localized guard/OS-error exports.
+The 14 offline catalogs have dedicated coverage for the added summaries and
+controls. Record final aggregate checks and release-artifact verification
+separately once performed.
 
-The other six findings and the explicitly labeled recovery/wording follow-ups
-remain open; this report does not present the UX audit as a completed redesign.
+No live-game action or new UI handoff was performed for this follow-up. The user
+will perform real-game acceptance. Source closure of these ten findings does
+not certify clean-machine behavior, general platform accessibility, full native
+rollback dialog acceptance, gameplay, multiplayer or a packaged macOS app.
+
+Final local beta 10 source validation: **603 passed, 10 skipped**. The skips
+were unavailable Windows symlink operations, the optional full Lua interpreter
+and the build-only bundle test. Ruff, formatting and strict mypy passed.
+All 49 raw application/schema/profile/runtime/tool-manifest inputs embedded in
+the frozen candidate matched this source tree exactly. Frozen GUI/tool and
+public-download verification are recorded in the release evidence separately.

@@ -349,7 +349,8 @@ def test_apply_failure_reverts_checkbox_and_keeps_launch_available(auto_pair, mo
     monkeypatch.setattr("cc2_mce.gui.apply_plan", fail)
     window.vars["b"].set(True)
     window.selection_changed()
-    pump_until(window, lambda: "записать" in window.notice_text.get())
+    pump_until(window, lambda: "записать" in window.problem_details)
+    assert window.notice_text.get()
     assert window.vars["a"].get()
     assert not window.vars["b"].get()
     assert not window.selection_dirty
@@ -415,14 +416,14 @@ def test_required_dependency_explains_why_it_cannot_be_unchecked(auto_pair, tmp_
     assert "нужна" in window.status.get()
 
 
-def test_main_screen_has_only_launch_action_and_one_menu(window):
+def test_main_screen_has_launch_disable_all_and_one_menu(window):
     def descendants(widget):
         for child in widget.winfo_children():
             yield child
             yield from descendants(child)
 
     buttons = [child.cget("text") for child in descendants(window) if isinstance(child, ttk.Button)]
-    assert buttons == ["Запустить игру"]
+    assert buttons == ["Выключить все", "Запустить игру"]
     labels = [
         window.actions_menu.entrycget(index, "label")
         for index in range(window.actions_menu.index("end") + 1)

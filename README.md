@@ -4,11 +4,11 @@ Choose the Carrier Command 2 mods you want to play. ModLoader combines their
 files into one local mod, merges changes where possible, and starts the game
 with that build selected.
 
-**Windows x64 beta · 0.4.0 beta 9**
+**Windows x64 beta · 0.4.0 beta 10**
 
 [**Download CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 
-[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b9)
+[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b10)
 · [Build from source](docs/BUILDING.md) · [Detailed help](docs/INSTALLATION.md)
 
 ## Start here
@@ -33,6 +33,11 @@ Carrier Command 2/
 Ticking a box checks, combines and applies that selection automatically.
 Unticking a box rebuilds the result without that mod.
 
+Use **Disable all** to clear mods and libraries together. ModLoader applies the
+empty selection automatically; **Menu → Restore previous selection…** can undo
+the change. If the game is open, keep ModLoader open until the game closes.
+This action leaves downloaded mods and saves in place.
+
 ![Choose mods with checkboxes, wait for Ready, then select Launch game.](docs/images/01-choose-mods.png)
 
 *Example workspace: two Workshop mods selected; two local demonstration mods left off.*
@@ -54,7 +59,7 @@ these packages. Declared dependencies are included automatically when available;
 you can also select a library here. The SDK supplies tools for mods; gameplay
 features come from the separate mods you choose.
 
-Beta 9 includes the reviewed CC2X SDK 0.8.1 runtime matching the current supported
+The app includes the reviewed CC2X SDK 0.8.1 runtime matching the current supported
 Workshop package. Supported older installations are upgraded with backup and
 Undo. If a downloaded SDK version is unsupported, the warning identifies that
 library separately from an incompatible loader already installed in the game.

@@ -1,5 +1,13 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Beta 10 keeps startup usable when an unselected package fails discovery, with
+explicit source quarantine and diagnostics; it grants no additional DLL or
+path approval. Launch refusals retain their real cause and require revalidation.
+**Disable all** clears mods/libraries through the normal closed-game transaction;
+running-game changes wait with an instruction to keep ModLoader open. Undo can
+restore the prior set; clearing does not uninstall an installed SDK runtime or
+touch source mods/saves. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
 Schema-2 addon screen declarations and the owned main menu share one validated
 SDK descriptor. Referenced Lua helpers remain byte-identical in owner namespaces;
 profile hashes/edits are preserved. Other cc2x resources retain native review.

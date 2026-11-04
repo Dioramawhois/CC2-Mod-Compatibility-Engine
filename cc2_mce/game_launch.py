@@ -13,14 +13,14 @@ from cc2_mce.installation import Installation
 from cc2_mce.workflow import _running, _verified_package, active_paths
 
 
-def launch_game(
+def validate_launch(
     game: Installation,
     user_dir: Path,
     package: Path | None,
     *,
-    spawn: Callable[..., Any] = subprocess.Popen,
     game_running: Callable[[], bool] = _running,
 ) -> None:
+    """Check the real pre-spawn guards without starting a process or changing files."""
     root = input_root(game.root)
     executable = game.executable
     if executable not in (
@@ -45,4 +45,15 @@ def launch_game(
             runtime_hash
         ):
             raise InputError("Installed runtime changed since activation")
-    spawn([str(executable)], cwd=str(root), shell=False)
+
+
+def launch_game(
+    game: Installation,
+    user_dir: Path,
+    package: Path | None,
+    *,
+    spawn: Callable[..., Any] = subprocess.Popen,
+    game_running: Callable[[], bool] = _running,
+) -> None:
+    validate_launch(game, user_dir, package, game_running=game_running)
+    spawn([str(game.executable)], cwd=str(input_root(game.root)), shell=False)

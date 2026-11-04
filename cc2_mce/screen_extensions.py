@@ -49,11 +49,17 @@ class _Rejected(ValueError):
         code: str = "screen_extension_invalid",
         path: str = DESCRIPTOR,
         participants: tuple[str, ...] = (),
+        limit_kind: str | None = None,
+        actual: int | None = None,
+        maximum: int | None = None,
     ):
         super().__init__(message)
         self.code = code
         self.path = path
         self.participants = participants
+        self.limit_kind = limit_kind
+        self.actual = actual
+        self.maximum = maximum
 
 
 def _pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -180,7 +186,13 @@ def prepare_screen_extensions(
             if descriptor.logical_path != DESCRIPTOR:
                 raise ValueError("Screen descriptor path has noncanonical spelling")
             if descriptor.size > MAX_MANIFEST_BYTES:
-                raise ValueError("Screen extension descriptor exceeds 64 KiB")
+                raise _Rejected(
+                    "Screen extension descriptor exceeds 64 KiB",
+                    code="screen_extension_limits",
+                    limit_kind="descriptor_bytes",
+                    actual=descriptor.size,
+                    maximum=MAX_MANIFEST_BYTES,
+                )
             raw = descriptor.content
             if digest(raw) != descriptor.sha256:
                 raise InputError("Screen descriptor changed since scan")
@@ -189,6 +201,15 @@ def prepare_screen_extensions(
             if type(value.get("schema")) is not int or value["schema"] not in {1, 2}:
                 raise ValueError("Unsupported screen extension schema")
             result.schema = max(result.schema, value["schema"])
+            entries = value.get("extensions")
+            if isinstance(entries, list) and len(entries) > MAX_EXTENSIONS:
+                raise _Rejected(
+                    "Screen extension entries exceed the per-package limit",
+                    code="screen_extension_limits",
+                    limit_kind="entries",
+                    actual=len(entries),
+                    maximum=MAX_EXTENSIONS,
+                )
             if not validator.is_valid(value):
                 raise ValueError("Invalid screen extension descriptor structure")
             capabilities = profile.get("runtime_capabilities", [])
@@ -197,7 +218,16 @@ def prepare_screen_extensions(
             if value["schema"] == 2 and EDIT_CAPABILITY not in capabilities:
                 raise _Rejected(f"Requires SDK capability {EDIT_CAPABILITY}", code="sdk_api")
             if len(result.extensions) + len(value["extensions"]) > MAX_EXTENSIONS:
-                raise ValueError("Combined screen extensions exceed 16 entries")
+                raise _Rejected(
+                    "Combined screen extensions exceed 16 entries",
+                    code="screen_extension_limits",
+                    participants=tuple(
+                        dict.fromkeys([owner.id for owner in targets.values()] + [mod.id])
+                    ),
+                    limit_kind="entries",
+                    actual=len(result.extensions) + len(value["extensions"]),
+                    maximum=MAX_EXTENSIONS,
+                )
             pending_extensions: list[dict[str, Any]] = []
             pending_sources: dict[str, tuple[FileRef, bytes]] = {}
             local_targets: set[str] = set()
@@ -220,9 +250,16 @@ def prepare_screen_extensions(
                 item = available.get(source_key)
                 if item is None or item.logical_path != source:
                     raise ValueError("Missing or case-mismatched screen helper: " + source)
-                if not 0 < item.size <= MAX_SOURCE_BYTES:
+                if item.size == 0:
+                    raise _Rejected("Screen helper must be nonempty", path=source)
+                if item.size > MAX_SOURCE_BYTES:
                     raise _Rejected(
-                        "Screen helper must be nonempty and at most 256 KiB", path=source
+                        "Screen helper exceeds 256 KiB",
+                        code="screen_extension_limits",
+                        path=source,
+                        limit_kind="source_bytes",
+                        actual=item.size,
+                        maximum=MAX_SOURCE_BYTES,
                     )
                 renamed = _path(
                     SOURCE_PREFIX
@@ -248,7 +285,16 @@ def prepare_screen_extensions(
                     pending_sources[source] = item, data
                 pending_bytes += item.size + _profile_bytes(entry)
                 if result.source_bytes + pending_bytes > MAX_TOTAL_BYTES:
-                    raise ValueError("Combined screen source/read budget exceeds 4 MiB")
+                    raise _Rejected(
+                        "Combined screen source/read budget exceeds 4 MiB",
+                        code="screen_extension_limits",
+                        participants=tuple(
+                            dict.fromkeys([owner.id for owner in targets.values()] + [mod.id])
+                        ),
+                        limit_kind="source_bytes",
+                        actual=result.source_bytes + pending_bytes,
+                        maximum=MAX_TOTAL_BYTES,
+                    )
                 pending_extensions.append({**entry, "source": renamed})
             for source, (item, data) in pending_sources.items():
                 renamed = (
@@ -286,6 +332,8 @@ def prepare_screen_extensions(
                 "message": mod.name + ": " + str(exc),
             }
             blocker["participants"] = list(exc.participants or (mod.id,))
+            if exc.limit_kind is not None:
+                blocker.update(limit_kind=exc.limit_kind, actual=exc.actual, maximum=exc.maximum)
             result.blockers.append(blocker)
         except (ValueError, UnicodeError, RecursionError, InputError) as exc:
             result.blockers.append(

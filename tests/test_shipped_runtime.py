@@ -19,6 +19,10 @@ def test_client_candidate_runtime_matches_reviewed_profile_and_pe_architecture()
     assert profile["runtime_review"]["stage"] == "client-candidate"
     assert not profile["runtime_review"]["multiplayer_verified"]
     folder = ROOT / "runtime_data" / profile["runtime_sha256"]
+    # Carry one runtime: every bundled executable needs matching source/build inputs.
+    assert {path.name for path in (ROOT / "runtime_data").iterdir() if path.is_dir()} == {
+        profile["runtime_sha256"]
+    }
     data = (folder / "dinput8.dll").read_bytes()
     assert digest(data) == profile["runtime_sha256"]
     pe = struct.unpack_from("<I", data, 0x3C)[0]

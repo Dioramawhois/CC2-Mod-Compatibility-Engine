@@ -964,7 +964,12 @@ def _apply_plan_locked(
     except (OSError, InputError):
         _recover_pending(user)
         raise
-    sdk_settings.cleanup(user, state_dir, config_created, remove_targets=False)
+    try:
+        sdk_settings.cleanup(user, state_dir, config_created, remove_targets=False)
+    except OSError:
+        # Activation is committed. Retain an inaccessible own cache link rather than
+        # reporting failure and making the GUI restore checkboxes for the old set.
+        pass
     # Keep only the current undo payload; never prune source or unrecognized directories.
     obsolete = [state.get("package_backup", "")]
     obsolete += [move["cache"] for move in state.get("legacy_moves", [])]

@@ -4,6 +4,18 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## Unreleased
+
+- Keep a committed apply successful when optional settings-cache cleanup raises
+  an OS error. Preserve pre-commit rollback and unknown-loader protection.
+- Complete GUI apply when the reviewed bundled SDK supplies a dependency without
+  a selected library package or row; do not create a synthetic mod reference.
+- Retain verified owned merge order on reopening after native activation paths
+  change, while preserving first adoption of the game's native order.
+- Reconstruct dependency notes from the restored package after Undo, including
+  when the current source metadata has changed. See ADR-0034. These owned
+  regressions do not establish new frozen-binary or game acceptance.
+
 ## 0.4.0b9 - Windows beta 9 (2026-11-04)
 
 - Package validated SDK screen-extension descriptors and referenced Lua helpers

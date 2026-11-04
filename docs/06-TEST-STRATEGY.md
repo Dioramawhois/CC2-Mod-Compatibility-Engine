@@ -1,5 +1,17 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0034 regressions distinguish a committed update with a denied optional
+settings-cache unlink from a pre-commit activation failure. Verify successful
+return and the new package/activation/settings/runtime, mock guarded launch,
+and subsequent Undo; retain rollback and unknown-loader refusal fixtures.
+GUI fixtures cover a runtime-provided SDK dependency with no library row,
+verified owned order despite reversed native activation, first native import,
+and dependency notes reconstructed after Undo from recorded metadata even if
+current Workshop metadata differs. Use owned temporary inputs and never execute
+fixture DLLs or mod Lua. These checks do not certify a new frozen binary,
+clean machine, game session or multiplayer. See
+[ADR-0034](adr/0034-committed-activation-and-gui-state.md).
+
 SDK screen-extension regressions cover schemas 1/2, exact profile preservation,
 namespace/shared-helper behavior, bounded/path/syntax/capability failures,
 duplicate targets, the managed menu and removal/Undo. Record final real GUI

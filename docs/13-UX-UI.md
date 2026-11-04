@@ -1,5 +1,15 @@
 # 13. Обязательный UX/UI пользовательского приложения
 
+**Unreleased state recovery:** an optional settings-cache unlink failure after
+activation commits leaves the committed selection successful; pre-commit
+rollback remains unchanged. A reviewed bundled SDK can supply a dependency
+without a selectable library row. Reopening restores the verified owned merge
+order, while first adoption retains native order. Undo rebuilds dependency notes
+from the restored package's recorded sources, including when Workshop metadata
+has changed. These changes do not close the separate recovery/launch feedback
+audit items or establish new game acceptance. See
+[ADR-0034](adr/0034-committed-activation-and-gui-state.md).
+
 **0.4.0b6, owner update:** while ModLoader's generated set is active, the game's
 main menu shows a noninteractive CC2 ModLoader header and compact selected-mod
 line above its first ordinary header, once per frame. Names retain source order

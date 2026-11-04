@@ -494,6 +494,41 @@ class App(tk.Tk):
                 else "#526174"
             )
 
+    def _refresh_dependency_notes(self, sources: object) -> None:
+        records = (
+            [source for source in sources if isinstance(source, dict)]
+            if isinstance(sources, list)
+            else []
+        )
+        selected = [
+            source
+            for source in records
+            if isinstance(source.get("id"), str) and source["id"] in self._applied_ids
+        ]
+        by_id = {
+            key: source
+            for source in selected
+            for key in (source["id"], source.get("package_id"))
+            if isinstance(key, str) and key
+        }
+        required: dict[str, list[str]] = {}
+        for source in selected:
+            dependencies = source.get("dependencies", [])
+            if not isinstance(dependencies, list):
+                continue
+            for dependency in dependencies:
+                target = by_id.get(dependency) if isinstance(dependency, str) else None
+                if target is None:
+                    continue  # A built-in provider has no selectable package row.
+                name = source.get("name", source["id"])
+                required.setdefault(target["id"], []).append(
+                    (name if isinstance(name, str) else source["id"])[:256]
+                )
+        self._required_notes = {
+            key: self.tr("Требуется для ") + ", ".join(f"«{name}»" for name in names[:2])
+            for key, names in required.items()
+        }
+
     def _clear_notice(self) -> None:
         self.notice_frame.pack_forget()
         self.notice_title.set("")
@@ -771,6 +806,7 @@ class App(tk.Tk):
             mods = tuple(mod for mod in combined.mods if mod.package_kind == "mod")
             libraries = tuple(mod for mod in combined.mods if mod.package_kind == "library")
             self.active_package = None
+            remembered_order: list[str] | None = None
             try:
                 paths = active_paths(game_user_dir())
                 applied: set[str] = set()
@@ -826,7 +862,13 @@ class App(tk.Tk):
                     remembered = remembered_package(selected_game, game_user_dir())
                     if remembered is not None:
                         desired = set(remembered["mod_order"])
+                        remembered_order = list(remembered["mod_order"])
                         self.auto_enabled = True
+                self._refresh_dependency_notes(
+                    active_report.get("sources", [])
+                    if active_report
+                    else [mod.report() for mod in combined.mods]
+                )
                 showing_warning = (
                     self._applied_warning is not None
                     and self.notice_title.get() == self._applied_warning.title
@@ -850,15 +892,14 @@ class App(tk.Tk):
                     self.auto_enabled = True
                     self._resume_request = None
             self._desired_ids = desired
-            saved_order = (
-                resumed_order
-                if resumed_order is not None
-                else (
-                    self.mod_order
-                    if preserve_selection
-                    else self._applied_order or self.preferences.order(selected_game.root)
-                )
-            )
+            if resumed_order is not None:
+                saved_order = resumed_order
+            elif preserve_selection:
+                saved_order = self.mod_order
+            elif remembered_order is not None:
+                saved_order = remembered_order
+            else:
+                saved_order = self._applied_order or self.preferences.order(selected_game.root)
             self.mod_order = list(dict.fromkeys([*saved_order, *(mod.id for mod in combined.mods)]))
             old_sources = (
                 {mod.id: mod.sha256 for mod in previous_scan.mods} if previous_scan else {}
@@ -1161,16 +1202,7 @@ class App(tk.Tk):
             self.mod_order = self._applied_order + [
                 key for key in self.mod_order if key not in self._applied_ids
             ]
-            by_id = {key: mod for mod in current.selected for key in {mod.id, mod.package_id}}
-            required: dict[str, list[str]] = {}
-            for mod in current.selected:
-                for dependency in mod.dependencies:
-                    target = by_id[dependency]
-                    required.setdefault(target.id, []).append(mod.name)
-            self._required_notes = {
-                key: self.tr("Требуется для ") + ", ".join(f"«{name}»" for name in names[:2])
-                for key, names in required.items()
-            }
+            self._refresh_dependency_notes(current.report["sources"])
             self.activation_status.set(
                 self.tr("В игре включены: ")
                 + (

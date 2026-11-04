@@ -183,6 +183,7 @@ def native_runtime_assets(
         generated = {
             "build/unified/generated/sdk_data.h",
             "build/unified/generated/ui_library_shim_source.h",
+            "build/unified/generated/waypoint_origin_profile.h",
             "build/unified/generated/world_constants.inc",
         }
         for name, digest in provenance["source_sha256"].items():

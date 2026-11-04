@@ -72,6 +72,28 @@ def test_release_sdk_sources_match_certified_crlf_and_generated_inputs(reviewed_
         assert not any(name.endswith(".dll") for name in archive.namelist())
 
 
+@pytest.mark.parametrize("changed", [False, True])
+def test_release_keeps_exact_generated_waypoint_profile(reviewed_native_source, changed):
+    from tools.package_release import native_runtime_assets, sha
+
+    root, sdk, folder, _ = reviewed_native_source
+    logical = "build/unified/generated/waypoint_origin_profile.h"
+    data = b"/* generated from the reviewed profile */\n"
+    (sdk / logical).write_bytes(data)
+    metadata = folder / "dinput8.build.json"
+    report = json.loads(metadata.read_text())
+    report["source_sha256"][logical] = sha(data)
+    metadata.write_text(json.dumps(report))
+    if changed:
+        (sdk / logical).write_bytes(b"unreviewed generated header\n")
+        with pytest.raises(ValueError, match="Corresponding SDK source mismatch"):
+            native_runtime_assets(root, sdk)
+    else:
+        _, _, source = native_runtime_assets(root, sdk)
+        with zipfile.ZipFile(io.BytesIO(source)) as archive:
+            assert archive.read("CC2X-source/" + logical) == data
+
+
 @pytest.mark.parametrize(
     "corruption", ["runtime", "generated", "dirty", "commit", "source", "license"]
 )

@@ -1,5 +1,14 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
+ADR-0032 retains package schema 2 and adds `runtime_source_conflict` to the
+existing string status/code fields. A blocked source DLL has an ordinary
+`files` entry with `logical_path = dinput8.dll`, strategy `blocked`, participant
+`source_sha256`, null baseline/output hashes and diagnostics; the blocker uses
+the same file and code. `runtime_conflict` continues to mean the installed
+loader is incompatible. `runtime_inputs` still records reviewed current or
+previous source hashes separately from the chosen `runtime_sha256`. See
+[ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 ADR-0031 changes resource storage/read budgets without changing JSON schemas.
 File `size` and SHA-256 fields still describe the full resource bytes, even
 when discovery retains a deferred file snapshot. Source/mod fingerprints and

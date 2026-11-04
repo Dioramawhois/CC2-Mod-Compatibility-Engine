@@ -53,6 +53,7 @@ EN: dict[str, str] = {
     "Готово. Можно запускать игру.": "Ready. You can launch the game.",
     "Готово. Необходимые библиотеки подключены автоматически.": "Ready. Required libraries were enabled automatically.",
     "Для этой библиотеки нужна другая версия SDK.": "This library requires a different SDK version.",
+    "Эта версия выбранной библиотеки SDK пока не поддерживается. Обновите ModLoader.": "This version of the selected SDK library is not supported yet. Update ModLoader.",
     "Добавить папку модов…": "Add mod folder…",
     "Дождитесь завершения применения модов.": "Wait until the mod update finishes.",
     "Дополнительная папка модов": "Additional mod folder",

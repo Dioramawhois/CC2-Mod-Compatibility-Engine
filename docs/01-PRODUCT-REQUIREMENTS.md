@@ -1,5 +1,12 @@
 # 01. Product Requirements (PRD)
 
+Beta 9 synchronizes the reviewed provider with SDK 0.8.1. A source-library DLL
+mismatch must identify that SDK separately from an incompatible installed
+loader, including when the attempted checkbox action removes another mod.
+Keep the applied selection intact on refusal and use the existing reversible
+transaction for a reviewed previous-runtime upgrade. See
+[ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 Beta 8 startup fix: discovering large installed collections must not require
 retaining every unchecked resource in memory. Stream resource hashes with
 separate bounded collection and selected-build budgets; preserve source

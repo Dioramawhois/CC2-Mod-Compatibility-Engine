@@ -1,5 +1,13 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Beta 9 pins reviewed SDK 0.8.1 and preserves the existing framework/menu
+capabilities, adding `waypoint-origin-v1` and `screen-source-edits-v1`. A known
+older installed runtime is eligible for the existing closed-game upgrade with
+backup and Undo. A newer unsupported Workshop source is identified as a source
+library mismatch, not blamed on a correct installed loader. Unknown installed
+loaders stay untouched and blocked. This pin does not certify new real-game
+acceptance; see [ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 Beta 8 streams discovery of Workshop and local resource files without retaining
 unchecked content. Use the same bounded resource policy through selected-input
 reads, installed originals, staging and activation/reuse verification. A larger

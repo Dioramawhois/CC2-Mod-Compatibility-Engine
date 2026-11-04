@@ -298,11 +298,25 @@ def analyze(
             runtime_inputs.update(source_hashes)
             allowed = {profile.get("runtime_sha256"), *profile.get("previous_runtime_sha256", [])}
             if not set(source_hashes.values()).issubset(allowed):
+                message = "Unsupported SDK library runtime: " + ", ".join(
+                    mod.name for mod, item in variants if item.sha256 not in allowed
+                )
                 blockers.append(
                     {
-                        "code": "runtime_conflict",
+                        "code": "runtime_source_conflict",
                         "file": logical,
-                        "message": "Неизвестная версия загрузчика dinput8.dll",
+                        "message": message,
+                    }
+                )
+                files.append(
+                    {
+                        "logical_path": logical,
+                        "status": "runtime_source_conflict",
+                        "strategy": "blocked",
+                        "source_sha256": source_hashes,
+                        "baseline_sha256": None,
+                        "output_sha256": None,
+                        "diagnostics": [message],
                     }
                 )
             continue

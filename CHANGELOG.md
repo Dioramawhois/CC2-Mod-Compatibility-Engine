@@ -4,6 +4,25 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b9 - Windows beta 9 (2026-11-04)
+
+- Synchronize the reviewed native profile, bundled provider and source-archive
+  restore pin with CC2X SDK **0.8.1-client-beta.1**, exact source
+  `f322938094bf7ea9e30f3be841b3c744687385b8`. Preserve existing capabilities and
+  recognize `waypoint-origin-v1` and `screen-source-edits-v1`. See ADR-0032.
+- Keep the reviewed 0.7.1 runtime eligible for journaled upgrade with backup
+  and Undo. A known older SDK source does not downgrade the current provider;
+  an unknown installed loader remains a blocking, preserved external file.
+- Distinguish `runtime_source_conflict` for an unsupported DLL in a selected
+  SDK package from `runtime_conflict` for the installed game-folder loader.
+  Record the blocked source file and participants so the GUI identifies the
+  actual library, including when the attempted action removes another mod.
+  All 14 offline catalogs include the source-library diagnostic.
+- Add offline regressions for source updates, removing a gameplay mod,
+  reversible provider upgrades, previous-source handling and unknown-loader
+  protection. These changes do not establish fresh exact-binary beta 9
+  game-menu, gameplay or multiplayer acceptance.
+
 ## 0.4.0b8 - Windows beta 8 (2026-11-04)
 
 - Fix startup failure `Input byte limit exceeded` for large installed mods and

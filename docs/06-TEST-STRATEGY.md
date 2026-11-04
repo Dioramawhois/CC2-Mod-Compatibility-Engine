@@ -1,5 +1,15 @@
 # 06. Стратегия тестирования и Definition of Done
 
+ADR-0032 fixtures exercise a Workshop SDK source update while removing a
+gameplay mod, reversible previous-to-current runtime installation, a current
+installed provider with an unsupported source DLL, an unknown installed loader
+and an older reviewed source that must not downgrade the provider. Verify the
+source/installed diagnostic codes separately, blocked participant provenance,
+SDK row feedback and all 14 offline catalogs. Never execute fixture DLL bytes.
+SDK provenance/ABI review, upstream offline tests and these synthetic checks
+do not replace fresh exact-binary game-menu/gameplay acceptance. See
+[ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 ADR-0031 regressions cover a resource above the former 16 MiB limit and an
 installed collection above 256 MiB without retaining every resource in memory.
 Exercise streamed discovery, lazy-content size/hash revalidation, explicit

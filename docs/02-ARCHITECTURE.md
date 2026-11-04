@@ -1,5 +1,13 @@
 # 02. Архитектура
 
+ADR-0032 promotes the reviewed SDK 0.8.1 provider, bundled binary and dependency
+restore pin together. Preserve earlier reviewed hashes only as previous
+versions for supported upgrades/source recognition; they do not override the
+chosen provider. Separate source-package runtime diagnostics from installed
+loader approval. Native approval, source integrity and transactional recovery
+remain distinct from resource merge policy. See
+[ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 ADR-0031 separates streamed discovery from materialized selected inputs.
 Resource snapshots retain paths, byte sizes, type headers and SHA-256 rather
 than whole unchecked mod contents. Default resource bounds are 512 MiB/file,

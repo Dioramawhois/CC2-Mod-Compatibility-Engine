@@ -59,7 +59,7 @@
     "scripts/vr_bindings_oculus_touch.json": "bd4ef597d848300eb029eade0eab1c1d3d88cb8390a85401f91e568fff374341",
     "scripts/vr_bindings_vive_controller.json": "ff0e507562fe7ca7e8d669e2c401956d00bf7d378a5e4af9bf8e3dadf905270f"
   },
-  "runtime_sha256": "c741ed111cdb186463c01f6e9e189fb80ee15b43bc52e6bacdd92fe88ee95d12",
+  "runtime_sha256": "98ba9bfbc217767ecc5a30aaa3cd5de8d3d7de1f9e8a9164cd0e0e32a6bed085",
   "runtime_api": 8,
   "native_plugins": {
     "60383f2845a5d5dc601f6196fb3716340aa0ca21437052ad1bbd7681b384591d": {
@@ -122,7 +122,8 @@
   "previous_runtime_sha256": [
     "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba",
     "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
-    "ed27641315e3957e991bb5fb00de8481c4a5ba7432d48a2638dee1d939110ff0"
+    "ed27641315e3957e991bb5fb00de8481c4a5ba7432d48a2638dee1d939110ff0",
+    "c741ed111cdb186463c01f6e9e189fb80ee15b43bc52e6bacdd92fe88ee95d12"
   ],
   "runtime_capabilities": [
     "independent-lua-v1",
@@ -130,15 +131,20 @@
     "session-query-v1",
     "lua-mod-api-v2",
     "framework-c-api-v1",
-    "screen-extensions-v1"
+    "waypoint-origin-v1",
+    "screen-extensions-v1",
+    "screen-source-edits-v1"
   ],
   "runtime_review": {
     "stage": "client-candidate",
-    "source_commit": "59a8f9a48e51e8559d7c32deac2677c8f2059bee",
-    "runtime_version": "0.7.1-client-beta.1",
-    "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/59a8f9a48e51e8559d7c32deac2677c8f2059bee",
+    "source_commit": "f322938094bf7ea9e30f3be841b3c744687385b8",
+    "runtime_version": "0.8.1-client-beta.1",
+    "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/f322938094bf7ea9e30f3be841b3c744687385b8",
     "verified_scope": [
-      "screen-extension-offline-contract"
+      "screen-extension-offline-contract",
+      "unchanged-c-api-prefix",
+      "published-binary-source-provenance",
+      "native-offline-regressions"
     ],
     "unverified_scope": [
       "full-gameplay",
@@ -151,7 +157,7 @@
     ],
     "multiplayer_verified": false,
     "dedicated_verified": false,
-    "evidence_log_sha256": "da1eec4107a7c72eaab120c3a63b2226261cb19929dd5f4fb133462d1a877624"
+    "evidence_log_sha256": "9bbb31e8ea00b6c8bf01b25be18aa514185326e515b5a6bca2a6b503675d4678"
   },
   "runtime_lua_api": 2,
   "runtime_framework_api": 1

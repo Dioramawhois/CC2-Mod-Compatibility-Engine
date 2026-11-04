@@ -1,5 +1,13 @@
 # 03. Спецификация движка слияния
 
+Runtime DLLs are never text-merged. Under ADR-0032, an unsupported selected
+source runtime yields `runtime_source_conflict`, a blocked `dinput8.dll` file
+record with participant hashes and null output, and a matching blocker. A
+reviewed previous source can be recorded while the current provider is used;
+it cannot downgrade that provider. An incompatible installed loader retains
+the separate `runtime_conflict` refusal. Ordinary data merge rules are unchanged.
+See [ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 Resource input is deferred after streamed discovery. Before selected resources
 reach the merge adapter, enforce their aggregate budget and verify their bytes
 against the recorded size/SHA-256. Text-processing inputs retain 16 MiB/file,

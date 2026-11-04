@@ -40,6 +40,7 @@ def test_client_candidate_runtime_matches_reviewed_profile_and_pe_architecture()
     assert b"cc2x_query_framework_v1" in data
     assert "screen-extensions-v1" in profile["runtime_capabilities"]
     assert "screen-extensions-v1" in provenance["capabilities"]
+    assert {"waypoint-origin-v1", "screen-source-edits-v1"} <= set(provenance["capabilities"])
     assert "screen-extension-offline-contract" in profile["runtime_review"]["verified_scope"]
     assert "full-gameplay" in profile["runtime_review"]["unverified_scope"]
     assert b"GNU GENERAL PUBLIC LICENSE" in (folder / "LICENSE").read_bytes()
@@ -65,4 +66,5 @@ def test_only_tested_native_bytes_receive_client_settings_defaults():
         "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba",
         "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
         "ed27641315e3957e991bb5fb00de8481c4a5ba7432d48a2638dee1d939110ff0",
+        "c741ed111cdb186463c01f6e9e189fb80ee15b43bc52e6bacdd92fe88ee95d12",
     ]

@@ -112,3 +112,76 @@ def test_override_banner_is_bounded_but_details_keep_all_paths():
     assert len(warning.message) < 550
     assert "99" in warning.message
     assert all(item["logical_path"] in warning.details for item in value["files"])
+
+
+def runtime_source_report():
+    return {
+        "sources": [{"id": "sdk", "name": "CC2X SDK 0.8.1"}],
+        "files": [
+            {
+                "logical_path": "dinput8.dll",
+                "status": "runtime_source_conflict",
+                "strategy": "blocked",
+                "source_sha256": {"sdk": "unsupported-sdk-hash"},
+            }
+        ],
+        "blockers": [
+            {
+                "code": "runtime_source_conflict",
+                "file": "dinput8.dll",
+                "message": "CC2X SDK 0.8.1: unsupported-sdk-hash",
+            }
+        ],
+    }
+
+
+def test_sdk_source_conflict_names_provider_when_unrelated_mod_is_removed():
+    from cc2_mce.i18n import Translator
+
+    feedback = explain_rejection(
+        runtime_source_report(),
+        {"sdk", "islands"},
+        {"sdk"},
+        {"islands": "Island Airfields"},
+        Translator("en"),
+    )
+    assert "disable «Island Airfields»" in feedback.title
+    assert "CC2X SDK 0.8.1" in feedback.message
+    assert "Update ModLoader." in feedback.message
+    assert "installed" not in feedback.message.lower()
+    assert "Island Airfields" not in feedback.message
+    assert set(feedback.rows) == {"sdk"}
+    assert "CC2X SDK 0.8.1" in feedback.rows["sdk"]
+    assert "unsupported-sdk-hash" in feedback.details
+
+
+def test_unknown_installed_runtime_retains_distinct_existing_diagnostic():
+    from cc2_mce.i18n import Translator
+
+    value = runtime_source_report()
+    value["blockers"] = [{"code": "runtime_conflict", "message": "Unknown installed DLL"}]
+    feedback = explain_rejection(value, set(), {"sdk"}, translate=Translator("en"))
+    assert feedback.message == "The installed CC2X loader does not support this selection."
+    assert "Update ModLoader." not in feedback.message
+    assert "Unknown installed DLL" in feedback.details
+
+
+def test_sdk_source_conflict_message_is_complete_in_all_offline_languages():
+    from cc2_mce.i18n import LANGUAGES, Translator
+    from cc2_mce.language_packs import PACKS
+    from cc2_mce.translations import EN
+
+    key = "Эта версия выбранной библиотеки SDK пока не поддерживается. Обновите ModLoader."
+    assert key in EN
+    assert set(LANGUAGES) == {"ru", "en", *PACKS}
+    for language in LANGUAGES:
+        if language not in {"ru", "en"}:
+            assert key in PACKS[language], language
+            assert set(PACKS[language]) == set(EN), language
+        feedback = explain_rejection(
+            runtime_source_report(), {"sdk"}, {"sdk"}, translate=Translator(language)
+        )
+        assert "CC2X SDK 0.8.1" in feedback.message
+        assert "ModLoader" in feedback.message
+        assert "CC2X SDK 0.8.1" in feedback.rows["sdk"]
+        assert Translator(language)(key) in feedback.message

@@ -22,8 +22,8 @@ this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 directly. This permanent link is updated when a newer beta is published.
 
-Alternatively, open the [0.4.0 beta 8 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b8)
-and download **CC2ModLoader-0.4.0b8-windows-x64.zip** for the complete package with
+Alternatively, open the [0.4.0 beta 9 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b9)
+and download **CC2ModLoader-0.4.0b9-windows-x64.zip** for the complete package with
 its README, notices and metadata.
 
 Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links
@@ -108,6 +108,18 @@ a valid library declaration. A folder name alone does not turn a mod into a
 library. Declared dependencies are included automatically when they can be
 resolved.
 
+Beta 9 includes the reviewed CC2X SDK **0.8.1-client-beta.1** runtime for its
+supported native profile. A known older installed runtime can be upgraded
+through the same automatic apply transaction, with backup and Undo. An older
+reviewed SDK source package does not downgrade the chosen runtime. An unknown
+installed loader is preserved and blocks activation.
+
+If Steam updates an SDK package beyond the versions your loader supports,
+update ModLoader before changing the selected set. The diagnostic names the
+unsupported source library; it does not mean the installed game-folder loader
+is unknown. Merely removing a gameplay mod still rebuilds and checks the
+remaining libraries, so a pending SDK mismatch can affect that action too.
+
 If Workshop and local versions of the same package are listed, select the
 version you want. Switching the checkbox replaces the selected version; it does
 not enable two versions together or overwrite the Workshop download.
@@ -159,8 +171,8 @@ entry is gray and disabled. Other menus retain their ordinary navigation.
 The policy belongs to the generated package. An empty selection adds no
 extension; removing it restores the ordinary menu on the next start.
 See [beta 7 exact-build menu verification](verification/main-menu-v4.md) for that
-binary's acceptance status and limits. Beta 8 changes resource handling and
-does not claim a fresh exact-binary game-menu test.
+binary's acceptance status and limits. Beta 9 changes the pinned runtime;
+these historical checks do not establish fresh acceptance of that binary pair.
 
 Beta 6's generated menu-file change did not reach the initial menu because the
 game clears ordinary resource overlays there. Beta 7 uses the SDK boundary
@@ -264,10 +276,11 @@ plugin approval. A rejected build preserves the previously applied set.
 | Game not found or portable placement requested | Put the executable beside the intended `carrier_command.exe`; use **Menu > Choose game folder...** where available. |
 | A subscribed mod is missing | Finish Steam downloads, check the selected game, then refresh the list. |
 | `Input byte limit exceeded` immediately after opening an older loader | Update to beta 8 or later. The old scanner limited all installed mods to 256 MiB and each file to 16 MiB, including unchecked mods. |
-| A file or aggregate resource limit is exceeded in beta 8 | Read the named file, actual size and limit. Reduce a selected set if its build exceeds 1 GiB; otherwise include those details in a bug report. See [resource limits](#large-mods-and-resource-limits). |
+| A file or aggregate resource limit is exceeded in beta 8 or later | Read the named file, actual size and limit. Reduce a selected set if its build exceeds 1 GiB; otherwise include those details in a bug report. See [resource limits](#large-mods-and-resource-limits). |
 | A local package is missing | Check its `mod.xml` and `content` layout, or add its parent folder through the menu. |
 | A library cannot be unchecked | A selected mod may require it. Disable the dependent mod first. |
 | Unknown or incompatible DLL | Use a supported release of the mod/SDK; do not rename a DLL to bypass review. |
+| A downloaded SDK library contains an unsupported runtime | Update ModLoader to the release supporting that SDK package. Beta 9 supports the reviewed 0.8.1 runtime. The message identifies the source library; the installed loader can still be correct. |
 | An existing `dinput8.dll` blocks activation | Identify the installed loader. Preserve it and check compatibility instead of overwriting it blindly. |
 | Update is waiting | Close the game and allow the pending change or recovery to finish. |
 | A change is rejected | Read the named mod/file in the result and open problem details; the previous set is retained. |

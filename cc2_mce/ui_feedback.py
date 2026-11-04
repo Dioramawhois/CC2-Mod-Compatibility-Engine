@@ -112,6 +112,9 @@ def explain_rejection(
         "encoding_conflict": tr("Файлы используют несовместимые кодировки."),
         "runtime_missing": tr("Не найден поддерживаемый загрузчик CC2X."),
         "runtime_conflict": tr("Установленный загрузчик CC2X не подходит этому набору."),
+        "runtime_source_conflict": tr(
+            "Эта версия выбранной библиотеки SDK пока не поддерживается. Обновите ModLoader."
+        ),
         "sdk_api": tr("Для этой библиотеки нужна другая версия SDK."),
     }
     details: list[str] = []
@@ -147,6 +150,8 @@ def explain_rejection(
             reason = messages.get(
                 blocker["code"], blocker.get("message", tr("Проверка не пройдена."))
             )
+            if blocker["code"] == "runtime_source_conflict" and named:
+                reason = named + ": " + reason
         if not first_message:
             first_message = (logical[:160] + ": " if logical else "") + reason
         details.append(

@@ -12,7 +12,7 @@ application and its two distribution routes.
 | Report a security problem or understand repository policy | [Security](../SECURITY.md) |
 | Read release changes | [Changelog](../CHANGELOG.md) |
 | Check supported platforms and verification limits | [Compatibility and verification](COMPATIBILITY.md) |
-| Check exact native-library source and compatibility | [Pinned CC2X SDK maintenance release](https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/tag/0.7.1-client-beta.1) |
+| Check exact native-library source and compatibility | [Pinned CC2X SDK release](https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/tag/0.8.1-client-beta.1) |
 | Reuse screenshots or the English announcement | [Announcement kit](announcements/README.md) |
 
 The application UI includes 14 offline languages. The language of a technical
@@ -43,6 +43,7 @@ ADRs together; they are not an alternative set of player installation steps.
 - [Library metadata contract](17-LIBRARY-SDK.md)
 - [Steam distribution audit](19-STEAM-DISTRIBUTION-AUDIT.md)
 - [Common SDK and separate gameplay mods](22-UNIFIED-SDK-AND-MOD-SPLIT.md)
+- [Reviewed SDK provider synchronization and source/installed-runtime diagnostics](adr/0032-reviewed-sdk-provider-synchronization.md)
 - [Streamed resource discovery and separate collection/build budgets](adr/0031-streamed-resource-discovery-and-budgets.md)
 - [SDK screen-extension delivery and the beta 6 menu defect](adr/0030-sdk-screen-extension-delivery.md)
 - [Beta 7 exact-build Windows menu verification](verification/main-menu-v4.md)

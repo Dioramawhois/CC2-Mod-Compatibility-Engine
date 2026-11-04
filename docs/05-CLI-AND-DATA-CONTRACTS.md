@@ -1,5 +1,11 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
+The screen-extension input schema accepts the released SDK schemas 1/2 with
+additional bounded semantic checks. Package schema 2 is unchanged: the composed
+descriptor records original descriptor hashes, and namespaced helper copies
+record their source/output hashes. Distinct screen_extension_invalid and
+screen_extension_conflict blockers identify rejected providers. See ADR-0033.
+
 ADR-0032 retains package schema 2 and adds `runtime_source_conflict` to the
 existing string status/code fields. A blocked source DLL has an ordinary
 `files` entry with `logical_path = dinput8.dll`, strategy `blocked`, participant

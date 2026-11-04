@@ -1,5 +1,10 @@
 # 06. Стратегия тестирования и Definition of Done
 
+SDK screen-extension regressions cover schemas 1/2, exact profile preservation,
+namespace/shared-helper behavior, bounded/path/syntax/capability failures,
+duplicate targets, the managed menu and removal/Undo. Record final real GUI
+on/off and exact-runtime game smoke separately; see ADR-0033.
+
 ADR-0032 fixtures exercise a Workshop SDK source update while removing a
 gameplay mod, reversible previous-to-current runtime installation, a current
 installed provider with an unsupported source DLL, an unknown installed loader

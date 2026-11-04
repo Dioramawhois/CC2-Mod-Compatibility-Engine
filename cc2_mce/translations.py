@@ -54,6 +54,8 @@ EN: dict[str, str] = {
     "Готово. Необходимые библиотеки подключены автоматически.": "Ready. Required libraries were enabled automatically.",
     "Для этой библиотеки нужна другая версия SDK.": "This library requires a different SDK version.",
     "Эта версия выбранной библиотеки SDK пока не поддерживается. Обновите ModLoader.": "This version of the selected SDK library is not supported yet. Update ModLoader.",
+    "Изменения игрового экрана в этом моде не прошли проверку. Подробности — в меню.": "The changes this mod makes to a game screen did not pass validation. See details in the menu.",
+    "В сборке несколько SDK-расширений одного экрана. Такое сочетание пока не поддерживается. Отключите один из модов.": "The build contains multiple SDK extensions for the same screen. This combination is not supported yet. Disable one of the mods.",
     "Добавить папку модов…": "Add mod folder…",
     "Дождитесь завершения применения модов.": "Wait until the mod update finishes.",
     "Дополнительная папка модов": "Additional mod folder",

@@ -115,6 +115,19 @@ def explain_rejection(
         "runtime_source_conflict": tr(
             "Эта версия выбранной библиотеки SDK пока не поддерживается. Обновите ModLoader."
         ),
+        "screen_extension_invalid": tr(
+            "Изменения игрового экрана в этом моде не прошли проверку. Подробности — в меню."
+        ),
+        "screen_extension_conflict": tr(
+            "В сборке несколько SDK-расширений одного экрана. "
+            "Такое сочетание пока не поддерживается. Отключите один из модов."
+        ),
+        "screen_extension_limits": tr(
+            "Изменения игрового экрана в этом моде не прошли проверку. Подробности — в меню."
+        ),
+        "screen_extension_collision": tr(
+            "Изменения игрового экрана в этом моде не прошли проверку. Подробности — в меню."
+        ),
         "sdk_api": tr("Для этой библиотеки нужна другая версия SDK."),
     }
     details: list[str] = []
@@ -130,6 +143,13 @@ def explain_rejection(
             ),
             set(),
         )
+        declared_participants = blocker.get("participants")
+        if (
+            isinstance(declared_participants, list)
+            and declared_participants
+            and all(isinstance(key, str) for key in declared_participants)
+        ):
+            participants = set(declared_participants)
         named = display(participants)
         if blocker["code"] == "conflict":
             reason = tr("Несовместимые изменения") + (": " + named if named else "") + "."
@@ -150,7 +170,15 @@ def explain_rejection(
             reason = messages.get(
                 blocker["code"], blocker.get("message", tr("Проверка не пройдена."))
             )
-            if blocker["code"] == "runtime_source_conflict" and named:
+            if (
+                blocker["code"]
+                in {
+                    "runtime_source_conflict",
+                    "screen_extension_invalid",
+                    "screen_extension_conflict",
+                }
+                and named
+            ):
                 reason = named + ": " + reason
         if not first_message:
             first_message = (logical[:160] + ": " if logical else "") + reason

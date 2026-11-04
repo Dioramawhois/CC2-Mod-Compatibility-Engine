@@ -1,5 +1,10 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Schema-2 addon screen declarations and the owned main menu share one validated
+SDK descriptor. Referenced Lua helpers remain byte-identical in owner namespaces;
+profile hashes/edits are preserved. Other cc2x resources retain native review.
+See [ADR-0033](adr/0033-validated-screen-extension-packaging.md).
+
 Beta 9 pins reviewed SDK 0.8.1 and preserves the existing framework/menu
 capabilities, adding `waypoint-origin-v1` and `screen-source-edits-v1`. A known
 older installed runtime is eligible for the existing closed-game upgrade with

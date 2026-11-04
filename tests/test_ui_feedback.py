@@ -185,3 +185,99 @@ def test_sdk_source_conflict_message_is_complete_in_all_offline_languages():
         assert "ModLoader" in feedback.message
         assert "CC2X SDK 0.8.1" in feedback.rows["sdk"]
         assert Translator(language)(key) in feedback.message
+
+
+def screen_extension_report(code="screen_extension_conflict"):
+    return {
+        "sources": [
+            {"id": "sdk", "name": "CC2X SDK"},
+            {"id": "map", "name": "Tactical Map"},
+        ],
+        "files": [],
+        "blockers": [
+            {
+                "code": code,
+                "file": "cc2x/screen_extensions.json",
+                "participants": ["sdk", "map"],
+                "message": "Duplicate SDK extensions for scripts/screen_holomap.lua",
+            }
+        ],
+    }
+
+
+def test_duplicate_sdk_screen_extensions_name_owners_when_other_mod_is_removed():
+    from cc2_mce.i18n import Translator
+
+    feedback = explain_rejection(
+        screen_extension_report(),
+        {"sdk", "map", "islands"},
+        {"sdk", "map"},
+        {"islands": "Island Airfields"},
+        Translator("en"),
+    )
+    assert "disable «Island Airfields»" in feedback.title
+    assert "CC2X SDK" in feedback.message
+    assert "Tactical Map" in feedback.message
+    assert "Island Airfields" not in feedback.message
+    assert "SDK extensions" in feedback.message
+    assert "not supported" in feedback.message
+    assert "DLL" not in feedback.message and "installed" not in feedback.message.lower()
+    assert set(feedback.rows) == {"sdk", "map"}
+    assert "scripts/screen_holomap.lua" in feedback.details
+
+
+def test_explicit_extension_owners_take_priority_over_merged_descriptor_sources():
+    value = screen_extension_report()
+    value["sources"].append({"id": "other", "name": "Unrelated Screens"})
+    value["files"] = [
+        {
+            "logical_path": "cc2x/screen_extensions.json",
+            "source_sha256": {"sdk": "a", "map": "b", "other": "c"},
+        }
+    ]
+    feedback = explain_rejection(value, {"sdk", "map", "other"}, {"sdk", "map", "other"})
+    assert "Unrelated Screens" not in feedback.message
+    assert set(feedback.rows) == {"sdk", "map"}
+
+
+def test_invalid_screen_extension_names_provider_and_preserves_technical_details():
+    from cc2_mce.i18n import Translator
+
+    value = screen_extension_report("screen_extension_invalid")
+    value["blockers"][0].update(participants=["map"], message="Unsafe screen helper path")
+    feedback = explain_rejection(value, {"sdk", "map"}, {"sdk", "map"}, translate=Translator("en"))
+    assert "Tactical Map" in feedback.message
+    assert "validation" in feedback.message
+    assert "DLL" not in feedback.message
+    assert "Unsafe screen helper path" in feedback.details
+    assert set(feedback.rows) == {"map"}
+
+
+def test_screen_extension_messages_are_complete_in_all_offline_languages():
+    from cc2_mce.i18n import LANGUAGES, Translator
+    from cc2_mce.language_packs import PACKS
+    from cc2_mce.translations import EN
+
+    keys = {
+        "screen_extension_invalid": (
+            "Изменения игрового экрана в этом моде не прошли проверку. Подробности — в меню."
+        ),
+        "screen_extension_conflict": (
+            "В сборке несколько SDK-расширений одного экрана. "
+            "Такое сочетание пока не поддерживается. Отключите один из модов."
+        ),
+    }
+    for code, key in keys.items():
+        assert key in EN
+        for language in LANGUAGES:
+            if language not in {"ru", "en"}:
+                assert key in PACKS[language], (code, language)
+                assert set(PACKS[language]) == set(EN), language
+            feedback = explain_rejection(
+                screen_extension_report(code),
+                {"sdk", "map"},
+                {"sdk", "map"},
+                translate=Translator(language),
+            )
+            assert Translator(language)(key) in feedback.message
+            assert "CC2X SDK" in feedback.message and "Tactical Map" in feedback.message

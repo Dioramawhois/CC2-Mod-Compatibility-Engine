@@ -1,5 +1,10 @@
 # 03. Спецификация движка слияния
 
+SDK screen-extension schemas 1/2 are typed metadata, not ordinary resource
+merges or native DLLs. Compose distinct targets in selected order, preserve
+profile edits, namespace byte-identical helpers and reject duplicate targets.
+The SDK retains in-memory hash checks; see ADR-0033.
+
 Runtime DLLs are never text-merged. Under ADR-0032, an unsupported selected
 source runtime yields `runtime_source_conflict`, a blocked `dinput8.dll` file
 record with participant hashes and null output, and a matching blocker. A

@@ -47,6 +47,12 @@ from cc2_mce.merge import GitMergeAdapter, MergeInput, merge_file
 from cc2_mce.module_bundles import prepare_modules
 from cc2_mce.reports import engine_hash
 from cc2_mce.resources import validate_selection_resources
+from cc2_mce.screen_extensions import (
+    MAX_EXTENSIONS,
+    MAX_MANIFEST_BYTES,
+    MAX_TOTAL_BYTES,
+    prepare_screen_extensions,
+)
 from cc2_mce.toolchain import Toolchain
 from cc2_mce.validation import validate_content
 
@@ -260,11 +266,14 @@ def analyze(
     chosen = resolve_selection(scan, selected, provided_dependencies=provided)
     validate_selection_resources(chosen, limits=RESOURCE_LIMITS)
     groups: dict[str, list[tuple[ModRef, Any]]] = defaultdict(list)
+    screens = prepare_screen_extensions(chosen, profile, luac=str(tools.luac) if tools else None)
     bundle = prepare_modules(chosen, profile, luac=str(tools.luac) if tools else None)
-    blockers: list[dict[str, str]] = list(bundle.blockers)
-    files: list[dict[str, Any]] = list(bundle.files)
-    payload: dict[str, bytes] = dict(bundle.payload)
-    needs_runtime = bool(bundle.modules) or any(mod.sdk == "cc2x" for mod in chosen)
+    blockers: list[dict[str, str]] = [*screens.blockers, *bundle.blockers]
+    files: list[dict[str, Any]] = [*screens.files, *bundle.files]
+    payload: dict[str, bytes] = {**screens.payload, **bundle.payload}
+    needs_runtime = bool(bundle.modules or screens.handled) or any(
+        mod.sdk == "cc2x" for mod in chosen
+    )
     for mod in chosen:
         if mod.api > profile.get("runtime_api", 0):
             blockers.append({"code": "sdk_api", "message": f"{mod.name}: нужна новая версия SDK"})
@@ -280,7 +289,7 @@ def analyze(
         ):
             blockers.append({"code": "sdk_api", "message": f"{mod.name}: нужна новая версия SDK"})
         for item in mod.files:
-            if (mod.id, item.key) in bundle.handled:
+            if (mod.id, item.key) in bundle.handled or (mod.id, item.key) in screens.handled:
                 continue
             groups[item.key].append((mod, item))
     native_names: dict[str, str] = {}
@@ -293,6 +302,15 @@ def analyze(
     for key, variants in sorted(groups.items()):
         logical = variants[0][1].logical_path
         source_hashes = {mod.id: item.sha256 for mod, item in variants}
+        if key in {name.casefold() for name in screens.payload}:
+            blockers.append(
+                {
+                    "code": "screen_extension_collision",
+                    "file": logical,
+                    "message": "Source resource collides with a generated screen helper",
+                }
+            )
+            continue
         if logical.casefold() == "dinput8.dll":
             needs_runtime = True
             runtime_inputs.update(source_hashes)
@@ -403,10 +421,13 @@ def analyze(
         # Only a reviewed SDK screen extension can run the owned policy there.
         needs_runtime = True
         owned_menu = screen_source(tuple(mod.name for mod in chosen))
+        extensions = [*screens.extensions, {"screen": MENU_PATH, "source": SCREEN_SOURCE}]
         descriptor = (
             json.dumps(
-                {"schema": 1, "extensions": [{"screen": MENU_PATH, "source": SCREEN_SOURCE}]},
+                {"schema": screens.schema, "extensions": extensions},
                 sort_keys=True,
+                ensure_ascii=False,
+                separators=(",", ":"),
             ).encode("utf-8")
             + b"\n"
         )
@@ -415,11 +436,27 @@ def analyze(
             for name in (SCREEN_DESCRIPTOR, SCREEN_SOURCE)
             if name.casefold() in groups or name in payload
         ]
+        if any(item["screen"] == MENU_PATH for item in screens.extensions):
+            collisions.append(MENU_PATH)
         status, diagnostic = validate_content(
             SCREEN_SOURCE, owned_menu, luac=str(tools.luac) if tools else None
         )
-        if collisions:
+        if screens.blockers:
+            pass  # No partial descriptor is installable when an input package was rejected.
+        elif collisions:
             blockers.append({"code": "managed_menu_collision", "message": ", ".join(collisions)})
+        elif (
+            len(extensions) > MAX_EXTENSIONS
+            or len(descriptor) > MAX_MANIFEST_BYTES
+            or screens.source_bytes + len(owned_menu) > MAX_TOTAL_BYTES
+        ):
+            blockers.append(
+                {
+                    "code": "screen_extension_limits",
+                    "file": SCREEN_DESCRIPTOR,
+                    "message": "Combined screen extensions exceed the reviewed SDK limits",
+                }
+            )
         elif status != "valid":
             blockers.append({"code": status, "file": SCREEN_SOURCE, "message": diagnostic})
         else:
@@ -428,9 +465,15 @@ def analyze(
                 files.append(
                     {
                         "logical_path": logical,
-                        "status": "copied",
-                        "strategy": "managed-menu",
-                        "source_sha256": {},
+                        "status": "clean" if logical == SCREEN_DESCRIPTOR else "copied",
+                        "strategy": (
+                            "sdk-screen-descriptors"
+                            if logical == SCREEN_DESCRIPTOR
+                            else "managed-menu"
+                        ),
+                        "source_sha256": (
+                            screens.descriptor_inputs if logical == SCREEN_DESCRIPTOR else {}
+                        ),
                         "baseline_sha256": None,
                         "output_sha256": digest(content),
                         "diagnostics": [],

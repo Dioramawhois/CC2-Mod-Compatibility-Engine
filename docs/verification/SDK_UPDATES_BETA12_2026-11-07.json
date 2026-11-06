@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "date": "2026-11-07",
+  "version": "0.4.0b12",
+  "status": "published-and-installed",
+  "source_commit": "ff1d16222ce68bde1f522479d73f4d85426e18b0",
+  "artifact_sha256": "d16bc3a3003e7ae1c9c95c8307d2f48c041b3be00031f03eb08624148c3fa4e6",
+  "source_regressions": {
+    "tests": 640,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 9,
+    "passed": 631
+  },
+  "windows_macos_ci": "all four Python 3.12/3.13 jobs passed",
+  "frozen_gui_opened_and_closed": true,
+  "installed_executable_signature_positive_and_negative_controls_passed": true,
+  "two_future_sdk_updates_with_one_executable_and_undo_tested": true,
+  "older_selected_library_with_official_downloaded_backend_tested": true,
+  "real_game_sdk_analysis_read_only": true,
+  "game_started_by_agent": false,
+  "runtime_and_mod_activation_unchanged_during_executable_install": true,
+  "previous_executable_backup_preserved": true,
+  "public_release_download": {
+    "version": "0.4.0b12",
+    "release": "https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b12",
+    "assets_verified": 10,
+    "rolling_channel_verified": true,
+    "exe_sha256": "d16bc3a3003e7ae1c9c95c8307d2f48c041b3be00031f03eb08624148c3fa4e6",
+    "sha256": {
+      "CC2ModLoader-0.4.0b1-build-tools.zip": "48397514e7bf0b1bc0483e617def9b22bdc527844de367a662cad853480df9ef",
+      "CC2ModLoader-0.4.0b12-sdk-runtime.zip": "e9d47769266763e3ed2f5472accbe2157562a8c995d27ce0ab9c48899fe98ff6",
+      "CC2ModLoader-0.4.0b12-sdk-source.zip": "1e9c4e54137a7d3e4a5507b1e48465b1d7f65681da690aa568017fe2eb5861e4",
+      "CC2ModLoader-0.4.0b12-sdk-toolchain-sources.zip": "ecc4c673e002ecbf211676438a69db6c50c9ad62cbb6c4605f304b163dc3dbae",
+      "CC2ModLoader-0.4.0b12-source.zip": "35536d7f7c6b6ba8e400c6bdc17d2220a2c566c380fe0162e02fcbc1d42ef6cc",
+      "CC2ModLoader-0.4.0b12-tool-sources.zip": "0196e4424184531a3aa9c6504c5021df39bb03fc4712b64f6e9c78cf9ebb58aa",
+      "CC2ModLoader-0.4.0b12-windows-x64.zip": "7a419dd32425940eee1f50d26a20de9b3a1d976083d9d800f1cd0b74ee6b5aa5",
+      "CC2ModLoader.exe": "d16bc3a3003e7ae1c9c95c8307d2f48c041b3be00031f03eb08624148c3fa4e6",
+      "CC2ModLoader.exe.sha256": "76dbc30a1cf5ec64da1c8cc19d45832cefc8123275544f20e81fb0aa79088ff1",
+      "SHA256SUMS.txt": "838c7eef60be95fa5143bc0f369949938a42be8812b9914ecbc01dc2f97fea51"
+    }
+  },
+  "sdk_workshop_download": {
+    "workshop_item": "3833014670",
+    "file_count": 13,
+    "all_payload_hashes_match": true,
+    "publisher_signature_verified": true,
+    "runtime_sha256": "2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5",
+    "native_dll_unchanged": true
+  },
+  "publisher_key_id": "cc2x-f8ce319b31317318",
+  "scope": "SDK delivery and verification. No new gameplay, remote multiplayer, clean-machine or native macOS runtime acceptance."
+}

@@ -54,7 +54,7 @@ and the ModLoader release metadata identify the current dependency:
 | --- | --- |
 | Runtime version | `0.10.0-dev` |
 | DLL SHA-256 | `2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5` |
-| Source revision | `50f197b406314c52ac53148bdddd599eeb1a0007` |
+| Source revision | `4c9520608ec613280c95c8054227fdc0ecccaad4` |
 | APIs | C 8 / Lua 2 / framework 1, with optional docking, recovery, settings, equipment and carrier motion |
 
 The reviewed 0.7.1 runtime (`c741ed11…`) remains a previous version eligible for

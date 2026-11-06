@@ -9,7 +9,7 @@ Synchronize the bundled DLL, reviewed profile and source-build restore lock.
 The C API 8 prefix, framework API 1 and Lua API 2 remain supported. New optional
 engine interfaces do not move gameplay policy into ModLoader.
 
-The source snapshot is SDK commit `50f197b406314c52ac53148bdddd599eeb1a0007`.
+The source snapshot is SDK commit `4c9520608ec613280c95c8054227fdc0ecccaad4`.
 The owner accepted Carrier: Autopilot Waypoints alpha.4 in the ordinary Steam
 installation with Revolution through the existing ModLoader GUI transaction.
 This is scoped SDK/gameplay evidence; it does not certify the newly frozen

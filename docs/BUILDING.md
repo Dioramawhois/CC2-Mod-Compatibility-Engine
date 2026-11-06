@@ -243,7 +243,7 @@ an existing numbered beta. See [ADR-0027](adr/0027-standalone-exe-and-rolling-be
 The normal application build packages the reviewed SDK DLL; it does not compile
 that C/C++ dependency from its source. If you also want to rebuild the SDK, use
 the corresponding `-sdk-source.zip` and `-sdk-toolchain-sources.zip` assets and
-the [exact SDK source revision](https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/50f197b406314c52ac53148bdddd599eeb1a0007).
+the [exact SDK source revision](https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/4c9520608ec613280c95c8054227fdc0ecccaad4).
 The exact native source revision, compiler hash and input hashes are recorded
 in its `dinput8.build.json`.
 

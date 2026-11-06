@@ -1,8 +1,8 @@
 {
   "stage": "client-candidate",
-  "source_commit": "50f197b406314c52ac53148bdddd599eeb1a0007",
+  "source_commit": "4c9520608ec613280c95c8054227fdc0ecccaad4",
   "runtime_version": "0.10.0-dev",
-  "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/50f197b406314c52ac53148bdddd599eeb1a0007",
+  "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/4c9520608ec613280c95c8054227fdc0ecccaad4",
   "verified_scope": [
     "screen-extension-offline-contract",
     "unchanged-c-api-prefix",
@@ -24,6 +24,6 @@
   "multiplayer_verified": false,
   "dedicated_verified": false,
   "evidence_log_sha256": "c872f0d172d584d9144d744c8e69853c044c40339da7243445dc6f510bddc90c",
-  "source_snapshot_manifest_sha256": "d616d66796bde898fd1e7ef2af72a86e40a1542f6a8211a88246de252ba62ae7",
+  "source_snapshot_manifest_sha256": "b508c4493ce956853d74de9cb930a62671a597bb782ccb785b03bade07af4f3d",
   "evidence_kind": "SDK native offline suite; scoped ordinary-game acceptance is in the pinned SDK release manifest"
 }

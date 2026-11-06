@@ -174,7 +174,7 @@ def test_unlisted_old_library_runtime_stays_blocked(setup):
     game, profile, _, source = setup
     make_mod(source, "unreviewed", {"dinput8.dll": b"unreviewed source runtime"})
     prepared = analyze(game, discover([source]), ["app", "unreviewed"], profile=profile)
-    assert any(b["code"] == "runtime_conflict" for b in prepared.blockers)
+    assert any(b["code"] == "runtime_source_conflict" for b in prepared.blockers)
 
 
 def test_recovery_binds_the_full_relative_executable_path(setup):

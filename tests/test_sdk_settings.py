@@ -108,7 +108,8 @@ def test_same_bytes_created_by_another_writer_are_not_deleted(setup, monkeypatch
     original = settings.os.link
 
     def external_writer(source, target, **kwargs):
-        Path(target).write_bytes(DEFAULT)
+        if Path(target) == user / "cc2x/modes.ini":
+            Path(target).write_bytes(DEFAULT)
         return original(source, target, **kwargs)
 
     monkeypatch.setattr(settings.os, "link", external_writer)

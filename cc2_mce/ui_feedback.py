@@ -112,6 +112,26 @@ def explain_rejection(
         "encoding_conflict": tr("Файлы используют несовместимые кодировки."),
         "runtime_missing": tr("Не найден поддерживаемый загрузчик CC2X."),
         "runtime_conflict": tr("Установленный загрузчик CC2X не подходит этому набору."),
+        "runtime_source_conflict": tr(
+            "Не удалось проверить DLL библиотеки SDK. Повторите загрузку библиотеки."
+        ),
+        "managed_menu_collision": tr(
+            "Мод меняет главное меню, которым управляет ModLoader. "
+            "Отключите этот мод или обновите его."
+        ),
+        "screen_extension_invalid": tr(
+            "Изменения игрового экрана в этом моде не прошли проверку. Подробности — в меню."
+        ),
+        "screen_extension_conflict": tr(
+            "В сборке несколько SDK-расширений одного экрана. "
+            "Такое сочетание пока не поддерживается. Отключите один из модов."
+        ),
+        "screen_extension_limits": tr(
+            "В сборке превышен лимит расширений игровых экранов. Отключите один из модов."
+        ),
+        "screen_extension_collision": tr(
+            "Изменения игрового экрана в этом моде не прошли проверку. Подробности — в меню."
+        ),
         "sdk_api": tr("Для этой библиотеки нужна другая версия SDK."),
     }
     details: list[str] = []
@@ -127,6 +147,13 @@ def explain_rejection(
             ),
             set(),
         )
+        declared_participants = blocker.get("participants")
+        if (
+            isinstance(declared_participants, list)
+            and declared_participants
+            and all(isinstance(key, str) for key in declared_participants)
+        ):
+            participants = set(declared_participants)
         named = display(participants)
         if blocker["code"] == "conflict":
             reason = tr("Несовместимые изменения") + (": " + named if named else "") + "."
@@ -147,6 +174,45 @@ def explain_rejection(
             reason = messages.get(
                 blocker["code"], blocker.get("message", tr("Проверка не пройдена."))
             )
+            if blocker["code"] == "screen_extension_limits":
+                actual, maximum = blocker.get("actual"), blocker.get("maximum")
+                templates = {
+                    "entries": (
+                        "Слишком много расширений игровых экранов: {p0} при лимите {p1}. "
+                        "Отключите один из модов."
+                    ),
+                    "descriptor_bytes": (
+                        "Описание расширений игровых экранов слишком большое: "
+                        "{p0} байт при лимите {p1}. Отключите один из модов."
+                    ),
+                    "source_bytes": (
+                        "Код расширений игровых экранов слишком большой: "
+                        "{p0} байт при лимите {p1}. Отключите один из модов."
+                    ),
+                }
+                kind = blocker.get("limit_kind")
+                if (
+                    isinstance(kind, str)
+                    and kind in templates
+                    and type(actual) is int
+                    and type(maximum) is int
+                    and actual >= 0
+                    and maximum > 0
+                ):
+                    reason = tr(templates[kind], p0=actual, p1=maximum)
+            if (
+                blocker["code"]
+                in {
+                    "runtime_source_conflict",
+                    "managed_menu_collision",
+                    "screen_extension_invalid",
+                    "screen_extension_conflict",
+                    "screen_extension_limits",
+                    "screen_extension_collision",
+                }
+                and named
+            ):
+                reason = named + ": " + reason
         if not first_message:
             first_message = (logical[:160] + ": " if logical else "") + reason
         details.append(

@@ -4,13 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cc2-mce"
-version = "0.4.0b8"
+version = "0.4.0b12"
 description = "Offline compatibility analysis, verified packaging and activation for CC2 mods"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE", "NOTICE.md"]
-dependencies = ["jsonschema>=4.23,<5"]
+dependencies = [
+    "cryptography==50.0.2",
+    "jsonschema>=4.23,<5",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3,<9", "ruff>=0.11,<1", "mypy>=1.15,<2", "types-jsonschema>=4.23,<5"]

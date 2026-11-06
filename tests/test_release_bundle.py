@@ -73,6 +73,86 @@ def test_release_sdk_sources_match_certified_crlf_and_generated_inputs(reviewed_
 
 
 @pytest.mark.parametrize(
+    "corruption", [None, "pin", "runtime", "source", "build", "acceptance", "snapshot", "generated"]
+)
+def test_preserved_tested_runtime_requires_pinned_snapshot_and_exact_sources(
+    reviewed_native_source, corruption
+):
+    from tools.package_release import native_runtime_assets, sha
+
+    root, sdk, folder, _ = reviewed_native_source
+    profile_path = root / "cc2_mce/profiles/windows-1.5.18-r2.json"
+    profile = json.loads(profile_path.read_text())
+    original = json.loads((folder / "dinput8.build.json").read_text())
+    original.update(source_dirty=True, source_commit="b" * 40)
+    (folder / "dinput8.build.json").write_text(json.dumps(original))
+    snapshot = {
+        "runtime_sha256": profile["runtime_sha256"],
+        "exact_source_commit": profile["runtime_review"]["source_commit"],
+        "compiled_source_commit": original["source_commit"],
+        "source_snapshot_verified": True,
+        "original_build_record_retained": True,
+        "runtime_acceptance": {
+            "game_runtime_tested": True,
+            "runtime_sha256": profile["runtime_sha256"],
+        },
+    }
+    if corruption in {"runtime", "source", "build"}:
+        snapshot[
+            {
+                "runtime": "runtime_sha256",
+                "source": "exact_source_commit",
+                "build": "compiled_source_commit",
+            }[corruption]
+        ] = "wrong"
+    elif corruption == "acceptance":
+        snapshot["runtime_acceptance"]["game_runtime_tested"] = False
+    elif corruption == "snapshot":
+        snapshot["source_snapshot_verified"] = False
+    elif corruption == "generated":
+        (sdk / "build/unified/generated/sdk_data.h").write_bytes(b"different source")
+    data = json.dumps(snapshot).encode()
+    (folder / "SDK-RELEASE.json").write_bytes(data)
+    profile["runtime_review"]["source_snapshot_manifest_sha256"] = (
+        sha(data) if corruption != "pin" else "0" * 64
+    )
+    profile_path.write_text(json.dumps(profile))
+    if corruption:
+        with pytest.raises(ValueError):
+            native_runtime_assets(root, sdk)
+    else:
+        files, _, source = native_runtime_assets(root, sdk)
+        assert (
+            files[folder.relative_to(root).as_posix() + "/dinput8.dll"]
+            == (folder / "dinput8.dll").read_bytes()
+        )
+        with zipfile.ZipFile(io.BytesIO(source)) as archive:
+            assert archive.read("CC2X-source/src/runtime.c") == b"source\r\n"
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_release_keeps_exact_generated_waypoint_profile(reviewed_native_source, changed):
+    from tools.package_release import native_runtime_assets, sha
+
+    root, sdk, folder, _ = reviewed_native_source
+    logical = "build/unified/generated/waypoint_origin_profile.h"
+    data = b"/* generated from the reviewed profile */\n"
+    (sdk / logical).write_bytes(data)
+    metadata = folder / "dinput8.build.json"
+    report = json.loads(metadata.read_text())
+    report["source_sha256"][logical] = sha(data)
+    metadata.write_text(json.dumps(report))
+    if changed:
+        (sdk / logical).write_bytes(b"unreviewed generated header\n")
+        with pytest.raises(ValueError, match="Corresponding SDK source mismatch"):
+            native_runtime_assets(root, sdk)
+    else:
+        _, _, source = native_runtime_assets(root, sdk)
+        with zipfile.ZipFile(io.BytesIO(source)) as archive:
+            assert archive.read("CC2X-source/" + logical) == data
+
+
+@pytest.mark.parametrize(
     "corruption", ["runtime", "generated", "dirty", "commit", "source", "license"]
 )
 def test_release_rejects_uncertified_sdk_inputs(reviewed_native_source, corruption):

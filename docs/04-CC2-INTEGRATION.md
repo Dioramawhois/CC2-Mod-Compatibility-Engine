@@ -1,5 +1,48 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Source audit corrections (2026-11-07): serialize launch with activation, defer
+recovery while the game runs, publish complete journals atomically and clean
+owned pre-journal staging on failure. Preserve truthful recovery/row state and
+verified SDK dependencies; seed the signed bundled provider floor and avoid
+receipt-cache exhaustion. Schemas and native trust gates remain unchanged.
+See [ADR-0038](adr/0038-launch-recovery-and-provider-audit-fixes.md) and the
+[audit report](reviews/2026-11-07-modloader-bug-audit.md).
+
+Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
+SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
+retain native/plugin/path gates, transactional installation and Undo. Cache signed
+receipts without making absent DLLs preferred. Package schema 2 adds the optional
+provider envelope; all 14 UI catalogs retain complete offline coverage. See
+[ADR-0037](adr/0037-publisher-authenticated-sdk-updates.md).
+
+Beta 11 promotes the reviewed SDK provider to the preserved owner-tested
+0.10.0-dev DLL. The profile, bundled dependency and restore lock must agree.
+A pinned upstream snapshot receipt permits retaining its original build record
+only while every compiled source hash still matches. Existing schema-2 reports,
+reversible upgrades and unknown-loader refusal remain unchanged. See
+[ADR-0036](adr/0036-reviewed-carrier-motion-provider.md).
+
+Beta 10 keeps startup usable when an unselected package fails discovery, with
+explicit source quarantine and diagnostics; it grants no additional DLL or
+path approval. Launch refusals retain their real cause and require revalidation.
+**Disable all** clears mods/libraries through the normal closed-game transaction;
+running-game changes wait with an instruction to keep ModLoader open. Undo can
+restore the prior set; clearing does not uninstall an installed SDK runtime or
+touch source mods/saves. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
+Schema-2 addon screen declarations and the owned main menu share one validated
+SDK descriptor. Referenced Lua helpers remain byte-identical in owner namespaces;
+profile hashes/edits are preserved. Other cc2x resources retain native review.
+See [ADR-0033](adr/0033-validated-screen-extension-packaging.md).
+
+Beta 9 pins reviewed SDK 0.8.1 and preserves the existing framework/menu
+capabilities, adding `waypoint-origin-v1` and `screen-source-edits-v1`. A known
+older installed runtime is eligible for the existing closed-game upgrade with
+backup and Undo. A newer unsupported Workshop source is identified as a source
+library mismatch, not blamed on a correct installed loader. Unknown installed
+loaders stay untouched and blocked. This pin does not certify new real-game
+acceptance; see [ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 Beta 8 streams discovery of Workshop and local resource files without retaining
 unchecked content. Use the same bounded resource policy through selected-input
 reads, installed originals, staging and activation/reuse verification. A larger

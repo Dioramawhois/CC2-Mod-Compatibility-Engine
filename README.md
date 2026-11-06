@@ -4,11 +4,11 @@ Choose the Carrier Command 2 mods you want to play. ModLoader combines their
 files into one local mod, merges changes where possible, and starts the game
 with that build selected.
 
-**Windows x64 beta · 0.4.0 beta 8**
+**Windows x64 beta · 0.4.0 beta 12**
 
 [**Download CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 
-[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b8)
+[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b12)
 · [Build from source](docs/BUILDING.md) · [Detailed help](docs/INSTALLATION.md)
 
 ## Start here
@@ -33,6 +33,11 @@ Carrier Command 2/
 Ticking a box checks, combines and applies that selection automatically.
 Unticking a box rebuilds the result without that mod.
 
+Use **Disable all** to clear mods and libraries together. ModLoader applies the
+empty selection automatically; **Menu → Restore previous selection…** can undo
+the change. If the game is open, keep ModLoader open until the game closes.
+This action leaves downloaded mods and saves in place.
+
 ![Choose mods with checkboxes, wait for Ready, then select Launch game.](docs/images/01-choose-mods.png)
 
 *Example workspace: two Workshop mods selected; two local demonstration mods left off.*
@@ -53,6 +58,12 @@ Some mods use a shared library such as **CC2X SDK**. The **Libraries** tab lists
 these packages. Declared dependencies are included automatically when available;
 you can also select a library here. The SDK supplies tools for mods; gameplay
 features come from the separate mods you choose.
+
+The app includes a reviewed CC2X SDK fallback and accepts official signed SDK
+updates from Workshop. Compatible SDK updates no longer require replacing the
+ModLoader executable. Supported older installations are upgraded with backup and
+Undo. If a downloaded SDK version is unsupported, the warning identifies that
+library separately from an incompatible loader already installed in the game.
 
 ![The Libraries tab shows the selected CC2X shared runtime.](docs/images/03-libraries.png)
 
@@ -85,11 +96,11 @@ untick a mod if needed. **Menu → Later patches take priority** controls this p
   is rejected; **Menu → Restore previous selection…** offers the recorded undo.
 - **In the game:** the combined mod is selected before launch. Change the set
   in ModLoader with the game closed. The matching SDK's screen
-  extension to show **CC2 ModLoader** and selected mod names on the main menu,
+  extension shows **CC2 ModLoader** and selected mod names on the main menu,
   and to gray out its **Mods** entry. See the
   [beta 7 exact-build menu verification](docs/verification/main-menu-v4.md) for
-  that binary's acceptance status and scope; the beta 8 resource hotfix does
-  not claim a new exact-binary game test.
+  that binary's acceptance status and scope. Beta 9 changes the pinned runtime;
+  historical menu evidence does not certify its exact new binary pair.
 - **Your language:** the UI follows the system language. Choose another in
   **Menu → Language**; 14 offline languages are included.
 

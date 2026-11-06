@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "key_id": "cc2x-f8ce319b31317318",
+  "payload": {
+    "publisher": "cc2x",
+    "package_id": "cc2x.runtime",
+    "sequence": 1,
+    "version": "0.10.0-dev",
+    "game_sha256": "461e12623bacb7de29ca27b4614425c87e8df2c8327a5e958a957c850effe42a",
+    "runtime_sha256": "2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5",
+    "runtime_bytes": 1814528,
+    "api": 8,
+    "lua_api": 2,
+    "framework_api": 1,
+    "capabilities": [
+      "independent-lua-v1",
+      "ordered-module-bundles-v1",
+      "session-query-v1",
+      "lua-mod-api-v2",
+      "framework-c-api-v1",
+      "waypoint-origin-v1",
+      "screen-extensions-v1",
+      "screen-source-edits-v1",
+      "carrier-dock-v1",
+      "carrier-recovery-v1",
+      "module-settings-v1",
+      "vehicle-equipment-v1",
+      "tile-sites-v1"
+    ],
+    "previous_runtime_sha256": [
+      "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba",
+      "2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5",
+      "98ba9bfbc217767ecc5a30aaa3cd5de8d3d7de1f9e8a9164cd0e0e32a6bed085",
+      "c741ed111cdb186463c01f6e9e189fb80ee15b43bc52e6bacdd92fe88ee95d12",
+      "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
+      "d83d509dbc0cc8b4f01db26c55bb428fc904186155a492d4f14411f09726f85e",
+      "ed27641315e3957e991bb5fb00de8481c4a5ba7432d48a2638dee1d939110ff0"
+    ],
+    "source_commit": "4c9520608ec613280c95c8054227fdc0ecccaad4"
+  },
+  "signature": "0PAkUjgFvNl1xGsFwAuZLZa3WeuG/t23nKowulcFnW0wOKo+LmPMW79b3JNMriDg+HNlsbMJGc+bcy850DriCg=="
+}

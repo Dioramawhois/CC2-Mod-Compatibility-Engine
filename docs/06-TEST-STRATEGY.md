@@ -1,5 +1,64 @@
 # 06. Стратегия тестирования и Definition of Done
 
+Source audit corrections (2026-11-07): serialize launch with activation, defer
+recovery while the game runs, publish complete journals atomically and clean
+owned pre-journal staging on failure. Preserve truthful recovery/row state and
+verified SDK dependencies; seed the signed bundled provider floor and avoid
+receipt-cache exhaustion. Schemas and native trust gates remain unchanged.
+See [ADR-0038](adr/0038-launch-recovery-and-provider-audit-fixes.md) and the
+[audit report](reviews/2026-11-07-modloader-bug-audit.md).
+
+Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
+SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
+retain native/plugin/path gates, transactional installation and Undo. Cache signed
+receipts without making absent DLLs preferred. Package schema 2 adds the optional
+provider envelope; all 14 UI catalogs retain complete offline coverage. See
+[ADR-0037](adr/0037-publisher-authenticated-sdk-updates.md).
+
+Beta 11 promotes the reviewed SDK provider to the preserved owner-tested
+0.10.0-dev DLL. The profile, bundled dependency and restore lock must agree.
+A pinned upstream snapshot receipt permits retaining its original build record
+only while every compiled source hash still matches. Existing schema-2 reports,
+reversible upgrades and unknown-loader refusal remain unchanged. See
+[ADR-0036](adr/0036-reviewed-carrier-motion-provider.md).
+
+ADR-0035 fixtures cover explicit partial versus default-strict discovery,
+quarantine of ambiguous/unsafe sources, required unavailable dependencies,
+bounded diagnostic export, specific launch summaries and screen-owner/size
+refusals. GUI controls cover stable surviving rows/scroll, actual DLL labels,
+available/stale Undo history and one **Disable all** apply including required
+libraries, running-game deferral, automatic-launch cancellation and Undo.
+Validate all 14 catalogs. Keep existing native/path/snapshot/transaction gates
+and separate source fixtures from final full-suite, frozen-build and user-game
+acceptance. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
+ADR-0034 regressions distinguish a committed update with a denied optional
+settings-cache unlink from a pre-commit activation failure. Verify successful
+return and the new package/activation/settings/runtime, mock guarded launch,
+and subsequent Undo; retain rollback and unknown-loader refusal fixtures.
+GUI fixtures cover a runtime-provided SDK dependency with no library row,
+verified owned order despite reversed native activation, first native import,
+and dependency notes reconstructed after Undo from recorded metadata even if
+current Workshop metadata differs. Use owned temporary inputs and never execute
+fixture DLLs or mod Lua. These checks do not certify a new frozen binary,
+clean machine, game session or multiplayer. See
+[ADR-0034](adr/0034-committed-activation-and-gui-state.md).
+
+SDK screen-extension regressions cover schemas 1/2, exact profile preservation,
+namespace/shared-helper behavior, bounded/path/syntax/capability failures,
+duplicate targets, the managed menu and removal/Undo. Record final real GUI
+on/off and exact-runtime game smoke separately; see ADR-0033.
+
+ADR-0032 fixtures exercise a Workshop SDK source update while removing a
+gameplay mod, reversible previous-to-current runtime installation, a current
+installed provider with an unsupported source DLL, an unknown installed loader
+and an older reviewed source that must not downgrade the provider. Verify the
+source/installed diagnostic codes separately, blocked participant provenance,
+SDK row feedback and all 14 offline catalogs. Never execute fixture DLL bytes.
+SDK provenance/ABI review, upstream offline tests and these synthetic checks
+do not replace fresh exact-binary game-menu/gameplay acceptance. See
+[ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 ADR-0031 regressions cover a resource above the former 16 MiB limit and an
 installed collection above 256 MiB without retaining every resource in memory.
 Exercise streamed discovery, lazy-content size/hash revalidation, explicit

@@ -1,5 +1,35 @@
 # 01. Product Requirements (PRD)
 
+Source audit corrections (2026-11-07): serialize launch with activation, defer
+recovery while the game runs, publish complete journals atomically and clean
+owned pre-journal staging on failure. Preserve truthful recovery/row state and
+verified SDK dependencies; seed the signed bundled provider floor and avoid
+receipt-cache exhaustion. Schemas and native trust gates remain unchanged.
+See [ADR-0038](adr/0038-launch-recovery-and-provider-audit-fixes.md) and the
+[audit report](reviews/2026-11-07-modloader-bug-audit.md).
+
+Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
+SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
+retain native/plugin/path gates, transactional installation and Undo. Cache signed
+receipts without making absent DLLs preferred. Package schema 2 adds the optional
+provider envelope; all 14 UI catalogs retain complete offline coverage. See
+[ADR-0037](adr/0037-publisher-authenticated-sdk-updates.md).
+
+Beta 10 completes the ten original UX/state fixes and adds **Disable all**.
+Keep valid inventory visible with named, exportable diagnostics for quarantined
+sources; never silently omit a selected source or dependency. Preserve specific
+launch refusals, actionable screen-owner/limit messages, stable row navigation
+and checked Undo availability. Clearing mods and libraries is one reversible
+empty-set apply, deferred while the game runs, with no automatic game launch or
+implicit SDK removal. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
+Beta 9 synchronizes the reviewed provider with SDK 0.8.1. A source-library DLL
+mismatch must identify that SDK separately from an incompatible installed
+loader, including when the attempted checkbox action removes another mod.
+Keep the applied selection intact on refusal and use the existing reversible
+transaction for a reviewed previous-runtime upgrade. See
+[ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 Beta 8 startup fix: discovering large installed collections must not require
 retaining every unchecked resource in memory. Stream resource hashes with
 separate bounded collection and selected-build budgets; preserve source

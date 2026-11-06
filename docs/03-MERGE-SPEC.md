@@ -1,5 +1,41 @@
 # 03. Спецификация движка слияния
 
+Source audit corrections (2026-11-07): serialize launch with activation, defer
+recovery while the game runs, publish complete journals atomically and clean
+owned pre-journal staging on failure. Preserve truthful recovery/row state and
+verified SDK dependencies; seed the signed bundled provider floor and avoid
+receipt-cache exhaustion. Schemas and native trust gates remain unchanged.
+See [ADR-0038](adr/0038-launch-recovery-and-provider-audit-fixes.md) and the
+[audit report](reviews/2026-11-07-modloader-bug-audit.md).
+
+Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
+SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
+retain native/plugin/path gates, transactional installation and Undo. Cache signed
+receipts without making absent DLLs preferred. Package schema 2 adds the optional
+provider envelope; all 14 UI catalogs retain complete offline coverage. See
+[ADR-0037](adr/0037-publisher-authenticated-sdk-updates.md).
+
+ADR-0035 preserves ordinary resource merging while improving refusal reports.
+Managed-menu ownership collisions name their owners; SDK screen limits include
+the measured entry/descriptor/source count, maximum and contributors. Typed
+metadata still passes its exact safety gates. Partial inventory cannot supply
+an unavailable checked package or required dependency. **Disable all** uses the
+existing empty-selection transaction, not a new merge policy or implicit native
+uninstaller. See [ADR-0035](adr/0035-partial-inventory-diagnostics-and-ux-controls.md).
+
+SDK screen-extension schemas 1/2 are typed metadata, not ordinary resource
+merges or native DLLs. Compose distinct targets in selected order, preserve
+profile edits, namespace byte-identical helpers and reject duplicate targets.
+The SDK retains in-memory hash checks; see ADR-0033.
+
+Runtime DLLs are never text-merged. Under ADR-0032, an unsupported selected
+source runtime yields `runtime_source_conflict`, a blocked `dinput8.dll` file
+record with participant hashes and null output, and a matching blocker. A
+reviewed previous source can be recorded while the current provider is used;
+it cannot downgrade that provider. An incompatible installed loader retains
+the separate `runtime_conflict` refusal. Ordinary data merge rules are unchanged.
+See [ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 Resource input is deferred after streamed discovery. Before selected resources
 reach the merge adapter, enforce their aggregate budget and verify their bytes
 against the recorded size/SHA-256. Text-processing inputs retain 16 MiB/file,

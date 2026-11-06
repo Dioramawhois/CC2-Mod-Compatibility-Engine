@@ -1,7 +1,9 @@
 import ast
 from pathlib import Path
 
-from cc2_mce.i18n import Translator, language_for_locale
+import pytest
+
+from cc2_mce.i18n import LANGUAGES, Translator, language_for_locale
 from cc2_mce.translations import EN
 from cc2_mce.ui_feedback import explain_rejection
 from tests.test_ui_feedback import report
@@ -34,7 +36,7 @@ def test_english_messages_preserve_names_paths_and_values():
 def test_all_gui_message_ids_are_in_english_catalog():
     root = Path(__file__).resolve().parents[1] / "cc2_mce"
     messages = set()
-    for filename in ("gui.py", "ui_feedback.py"):
+    for filename in ("gui.py", "ui_feedback.py", "diagnostics.py"):
         for node in ast.walk(ast.parse((root / filename).read_text(encoding="utf-8"))):
             if (
                 isinstance(node, ast.Call)
@@ -86,6 +88,7 @@ def test_language_pack_has_complete_keys_and_preserves_placeholders():
     from cc2_mce.i18n import LANGUAGES
     from cc2_mce.language_packs import PACKS
 
+    assert len(LANGUAGES) == 14
     assert set(PACKS) == set(LANGUAGES) - {"ru", "en"}
     for language, catalog in PACKS.items():
         assert set(catalog) == set(EN), language
@@ -93,3 +96,64 @@ def test_language_pack_has_complete_keys_and_preserves_placeholders():
             assert translated.strip(), (language, key)
             assert set(re.findall(r"\{p\d+\}", translated)) == set(re.findall(r"\{p\d+\}", EN[key]))
         assert Translator(language)("Запустить игру") != EN["Запустить игру"]
+
+
+_UX_STATE_MESSAGES = (
+    "Восстановление не завершено. Запуск игры заблокирован.",
+    "Часть файлов могла быть восстановлена. Проверьте подробности и обновите список "
+    "для повторного восстановления.",
+    "Проверенные файлы набора: {p0}. Восстановление не завершено.",
+    "Текущий набор не подтверждён. Восстановление не завершено.",
+    "Состояние не подтверждено",
+    "Превышен предел чтения модов. Уменьшите набор папок и проверьте подробности.",
+    "Причина: ",
+    "Источник: ",
+    "Закройте игру — выбранные моды применятся автоматически. Оставьте ModLoader открытым.",
+    "Выключить все",
+    "Нет предыдущего набора для восстановления.",
+    "SDK-расширения экранов",
+    "Нативные файлы",
+    "Мод меняет главное меню, которым управляет ModLoader. Отключите этот мод или обновите его.",
+    "Слишком много расширений игровых экранов: {p0} при лимите {p1}. Отключите один из модов.",
+    "Описание расширений игровых экранов слишком большое: {p0} байт при лимите {p1}. "
+    "Отключите один из модов.",
+    "Код расширений игровых экранов слишком большой: {p0} байт при лимите {p1}. "
+    "Отключите один из модов.",
+    "В сборке превышен лимит расширений игровых экранов. Отключите один из модов.",
+    "Не удалось прочитать мод «{p0}». Проверьте его папку или обновите мод.",
+    "Не удалось прочитать папку модов. Проверьте доступ к ней.",
+    "Некоторые моды недоступны: {p0}. Они не будут включены.",
+    "Игра не запущена. Проверьте подробности проблемы.",
+    "Игра уже запущена или её файл недоступен. Закройте игру и проверьте файлы игры.",
+    "Набор модов в игре изменился. Обновите список, чтобы пересобрать его.",
+    "Файлы игры изменились. Обновите список, чтобы проверить набор заново.",
+    "Загрузчик SDK изменился. Обновите список, чтобы проверить набор заново.",
+    "Не удалось выполнить операцию. Проверьте подробности проблемы.",
+)
+
+
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_recovery_and_diagnostic_messages_render_in_every_offline_language(language):
+    from collections import Counter
+    from string import Formatter
+
+    from cc2_mce.language_packs import PACKS
+
+    catalog = {key: key for key in EN} if language == "ru" else EN
+    if language not in {"ru", "en"}:
+        catalog = PACKS[language]
+    tr = Translator(language)
+    sentinel = r"Aircraft_日本語 — C:\mods\проверка\{unchanged}"
+    for message in _UX_STATE_MESSAGES:
+        assert message in catalog, (language, message)
+        fields = [field for _, field, _, _ in Formatter().parse(message) if field]
+        translated_fields = [
+            field for _, field, _, _ in Formatter().parse(catalog[message]) if field
+        ]
+        assert Counter(translated_fields) == Counter(fields), (language, message)
+        values = {field: sentinel if field == "p0" else 16 for field in fields}
+        rendered = tr(message, **values)
+        assert rendered == catalog[message].format(**values), (language, message)
+        assert rendered.strip(), (language, message)
+        if "p0" in fields:
+            assert rendered.count(sentinel) == fields.count("p0"), (language, message)

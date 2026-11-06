@@ -1,5 +1,27 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
+ADR-0038 retains package schema 2, signed provider schema 1 and the
+non-installable diagnostic schema 1. The existing diagnostic string code
+`launch_recovery_pending` identifies a pending recovery refusal at the final
+launch boundary. Provider indexes are local signed-evidence locators, not a
+new trust source or generated game payload. Source/base/engine hashes, provider
+provenance and mod order keep their existing meanings.
+
+The screen-extension input schema accepts the released SDK schemas 1/2 with
+additional bounded semantic checks. Package schema 2 is unchanged: the composed
+descriptor records original descriptor hashes, and namespaced helper copies
+record their source/output hashes. Distinct screen_extension_invalid and
+screen_extension_conflict blockers identify rejected providers. See ADR-0033.
+
+ADR-0032 retains package schema 2 and adds `runtime_source_conflict` to the
+existing string status/code fields. A blocked source DLL has an ordinary
+`files` entry with `logical_path = dinput8.dll`, strategy `blocked`, participant
+`source_sha256`, null baseline/output hashes and diagnostics; the blocker uses
+the same file and code. `runtime_conflict` continues to mean the installed
+loader is incompatible. `runtime_inputs` still records reviewed current or
+previous source hashes separately from the chosen `runtime_sha256`. See
+[ADR-0032](adr/0032-reviewed-sdk-provider-synchronization.md).
+
 ADR-0031 changes resource storage/read budgets without changing JSON schemas.
 File `size` and SHA-256 fields still describe the full resource bytes, even
 when discovery retains a deferred file snapshot. Source/mod fingerprints and

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema", "key_id", "payload", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": 1},
+    "key_id": {"type": "string", "pattern": "^[a-zA-Z0-9._-]{1,64}$"},
+    "signature": {"type": "string", "minLength": 88, "maxLength": 88},
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publisher", "package_id", "sequence", "version", "game_sha256", "runtime_sha256", "runtime_bytes", "api", "lua_api", "framework_api", "capabilities", "previous_runtime_sha256", "source_commit"],
+      "properties": {
+        "publisher": {"const": "cc2x"},
+        "package_id": {"const": "cc2x.runtime"},
+        "sequence": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][a-zA-Z0-9.-]+)?$", "maxLength": 64},
+        "game_sha256": {"$ref": "#/$defs/hash"},
+        "runtime_sha256": {"$ref": "#/$defs/hash"},
+        "runtime_bytes": {"type": "integer", "minimum": 256, "maximum": 8388608},
+        "api": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "lua_api": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "framework_api": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "capabilities": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9-]{1,80}$"}},
+        "previous_runtime_sha256": {"type": "array", "maxItems": 128, "uniqueItems": true, "items": {"$ref": "#/$defs/hash"}},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    }
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

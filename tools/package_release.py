@@ -152,6 +152,35 @@ def write_zip(path: Path, contents: dict[str, bytes]) -> None:
             archive.writestr(info, data)
 
 
+def validate_runtime_provenance(folder: Path, review: dict, expected: str) -> dict:
+    """Retain an accepted binary's original record only with a pinned snapshot."""
+    provenance = json.loads((folder / "dinput8.build.json").read_text())
+    if not provenance["source_dirty"] and provenance["source_commit"] == review["source_commit"]:
+        return provenance
+    pin = review.get("source_snapshot_manifest_sha256")
+    snapshot_path = folder / "SDK-RELEASE.json"
+    if not pin or not snapshot_path.is_file():
+        raise ValueError("Runtime provenance mismatch")
+    data = snapshot_path.read_bytes()
+    if sha(data) != pin:
+        raise ValueError("Runtime source snapshot receipt mismatch")
+    snapshot = json.loads(data)
+    acceptance = snapshot.get("runtime_acceptance", {})
+    if (
+        snapshot.get("runtime_sha256") != expected
+        or snapshot.get("exact_source_commit") != review["source_commit"]
+        or snapshot.get("compiled_source_commit") != provenance["source_commit"]
+        or snapshot.get("source_snapshot_verified") is not True
+        or snapshot.get("original_build_record_retained") is not True
+        or acceptance.get("game_runtime_tested") is not True
+        or acceptance.get("runtime_sha256") != expected
+    ):
+        raise ValueError("Runtime source snapshot is not accepted for these bytes")
+    # native_runtime_assets still checks every compiled input against the
+    # committed archive/generated inputs before producing corresponding source.
+    return provenance
+
+
 def native_runtime_assets(
     root: Path, sdk: Path | None
 ) -> tuple[dict[str, bytes], list[dict], bytes | None]:
@@ -166,9 +195,7 @@ def native_runtime_assets(
     runtime = (folder / "dinput8.dll").read_bytes()
     if sha(runtime) != expected:
         raise ValueError("Reviewed runtime checksum mismatch")
-    provenance = json.loads((folder / "dinput8.build.json").read_text())
-    if provenance["source_dirty"] or provenance["source_commit"] != review["source_commit"]:
-        raise ValueError("Runtime provenance mismatch")
+    provenance = validate_runtime_provenance(folder, review, expected)
     if sdk is None:
         raise ValueError("The reviewed SDK source checkout is required: --sdk PATH")
     sdk = sdk.resolve(strict=True)
@@ -183,6 +210,7 @@ def native_runtime_assets(
         generated = {
             "build/unified/generated/sdk_data.h",
             "build/unified/generated/ui_library_shim_source.h",
+            "build/unified/generated/waypoint_origin_profile.h",
             "build/unified/generated/world_constants.inc",
         }
         for name, digest in provenance["source_sha256"].items():
@@ -303,6 +331,9 @@ def runtime_notices(root: Path) -> tuple[dict[str, bytes], list[dict]]:
         "referencing",
         "rpds-py",
         "pyinstaller",
+        "cryptography",
+        "cffi",
+        "pycparser",
     ):
         package = importlib.metadata.distribution(name)
         found = 0

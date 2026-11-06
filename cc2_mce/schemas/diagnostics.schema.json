@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cc2-mce.local/schemas/diagnostics.schema.json",
+  "title": "CC2 ModLoader non-installable diagnostic export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "schema_kind",
+    "owner",
+    "engine_version",
+    "engine_sha256",
+    "stage",
+    "installable",
+    "diagnostic_count",
+    "truncated",
+    "diagnostics"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "schema_kind": { "const": "diagnostics" },
+    "owner": { "const": "cc2-mce" },
+    "engine_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "engine_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "stage": { "type": "string", "maxLength": 32 },
+    "installable": { "const": false },
+    "diagnostic_count": { "type": "integer", "minimum": 0 },
+    "truncated": { "type": "boolean" },
+    "diagnostics": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/diagnostic" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "truncated": { "const": true } } },
+      "then": {
+        "properties": {
+          "diagnostic_count": { "minimum": 201 },
+          "diagnostics": { "minItems": 200 }
+        }
+      },
+      "else": { "properties": { "diagnostic_count": { "maximum": 200 } } }
+    }
+  ],
+  "$defs": {
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "stage",
+        "cause",
+        "source_id",
+        "source_name",
+        "source_path",
+        "resource_path",
+        "package_id",
+        "source_revision"
+      ],
+      "properties": {
+        "code": { "type": "string", "maxLength": 96 },
+        "stage": { "type": "string", "maxLength": 32 },
+        "cause": { "type": "string", "maxLength": 4096 },
+        "source_id": { "type": "string", "maxLength": 256 },
+        "source_name": { "type": "string", "maxLength": 256 },
+        "source_path": { "type": "string", "maxLength": 2048 },
+        "resource_path": { "type": "string", "maxLength": 2048 },
+        "package_id": { "type": "string", "maxLength": 256 },
+        "source_revision": { "type": "string", "maxLength": 128 }
+      }
+    }
+  }
+}

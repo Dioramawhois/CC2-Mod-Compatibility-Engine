@@ -1,4 +1,4 @@
-CC2 ModLoader 0.4.0 beta 4 - Windows x64
+CC2 ModLoader 0.4.0 beta 12 - Windows x64
 ======================================
 
 INSTALL THE READY APPLICATION
@@ -17,10 +17,10 @@ The build creates no new Workshop subscription or separate gameplay mod release.
 
 BUILD IT YOURSELF INSTEAD
 
-Application source is a separate asset: CC2ModLoader-0.4.0b4-source.zip.
-You can also clone release tag v0.4.0b4. The complete Windows source-build guide,
+Application source is a separate asset: CC2ModLoader-0.4.0b12-source.zip.
+You can also clone release tag v0.4.0b12. The complete Windows source-build guide,
 prerequisites, dependency downloads and offline options are here:
-https://github.com/Dioramawhois/CC2-ModLoader/blob/v0.4.0b4/docs/BUILDING.md
+https://github.com/Dioramawhois/CC2-ModLoader/blob/v0.4.0b12/docs/BUILDING.md
 
 Both routes produce the same graphical application. The source archive itself
 is not the executable. SDK and third-party tool source archives are separate
@@ -33,6 +33,13 @@ USING MODS
 - Local packages belong under mods/<package>/mod.xml + content/... or
   libraries/<package>/mod.xml + content/... next to the game. These input
   folders are prepared automatically. Add other collections through the menu.
+  Custom mods in the game's standard user-data mods folder are also discovered.
+- Disable all clears the selected mods and required libraries in one action.
+  The empty set applies automatically; Undo restores the previous selection.
+  This does not delete source mods, saves or an installed SDK DLL.
+- An unreadable package is shown in the diagnostics and cannot be selected.
+  Valid packages remain listed. Problem details and Save report preserve the
+  source and exact reason, even when no merged package could be prepared.
 - A package with valid library metadata appears as a library. The folder name
   alone does not change its type. Declared dependencies are resolved when possible.
 - Choose one version when local and Workshop editions of the same package are
@@ -55,7 +62,8 @@ vanilla resources, source mods and the game executable are preserved. The app
 manages its own generated output, activation and supported runtime/settings.
 
 Close the game before changing the active set. If it is running, the app waits
-and applies the pending change after it closes. Do not force-close the app
+and applies the pending change after it closes. Keep ModLoader open while waiting.
+Do not force-close the app
 while it reports that it is finishing an update/backup.
 
 Menu > Restore previous selection restores the recorded previous package and
@@ -70,7 +78,8 @@ catalogs and remembers an explicit choice. Mod names and contents are not sent
 to translation services.
 
 Menu > Launch game when opening ModLoader optionally prepares your set and
-starts Steam after successful validation. A rejected change cancels that launch.
+starts the game executable after successful validation. A rejected change cancels
+that launch. Disable all and Undo also cancel a pending automatic launch.
 
 UPDATING OR REMOVING THE APP
 
@@ -90,7 +99,7 @@ machine acceptance are not certified by this release.
 Documentation and issues:
 https://github.com/Dioramawhois/CC2-ModLoader
 Installation guide:
-https://github.com/Dioramawhois/CC2-ModLoader/blob/v0.4.0b4/docs/INSTALLATION.md
+https://github.com/Dioramawhois/CC2-ModLoader/blob/v0.4.0b12/docs/INSTALLATION.md
 
 When reporting a problem include app/game versions, selected mods, load order,
 reproduction steps and an exported GUI report. Review reports before sharing.

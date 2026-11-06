@@ -1,0 +1,29 @@
+{
+  "stage": "client-candidate",
+  "source_commit": "4c9520608ec613280c95c8054227fdc0ecccaad4",
+  "runtime_version": "0.10.0-dev",
+  "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/4c9520608ec613280c95c8054227fdc0ecccaad4",
+  "verified_scope": [
+    "screen-extension-offline-contract",
+    "unchanged-c-api-prefix",
+    "published-binary-source-provenance",
+    "native-offline-regressions",
+    "ordinary-game-owner-navigation-acceptance",
+    "modloader-combined-revolution-launch",
+    "preserved-tested-artifact-source-snapshot"
+  ],
+  "unverified_scope": [
+    "full-gameplay",
+    "remote-multiplayer",
+    "dedicated-server",
+    "changed-catalog-save-migration",
+    "full-flight-and-island-landing",
+    "clean-machine",
+    "macos-native-runtime"
+  ],
+  "multiplayer_verified": false,
+  "dedicated_verified": false,
+  "evidence_log_sha256": "c872f0d172d584d9144d744c8e69853c044c40339da7243445dc6f510bddc90c",
+  "source_snapshot_manifest_sha256": "b508c4493ce956853d74de9cb930a62671a597bb782ccb785b03bade07af4f3d",
+  "evidence_kind": "SDK native offline suite; scoped ordinary-game acceptance is in the pinned SDK release manifest"
+}

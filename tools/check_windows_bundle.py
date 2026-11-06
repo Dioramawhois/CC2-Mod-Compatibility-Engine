@@ -119,6 +119,7 @@ with tempfile.TemporaryDirectory(prefix="cc2-exe-smoke-") as cwd:
     )
     frozen_tools = json.loads(tool_result.read_text())
     assert frozen_tools["merge"] == "clean" and frozen_tools["syntax_only"] is True
+    assert frozen_tools["sdk_signature_verified"] is True
     process = subprocess.Popen(
         [str(exe)],
         cwd=cwd,

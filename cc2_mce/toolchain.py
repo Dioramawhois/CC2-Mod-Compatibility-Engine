@@ -47,6 +47,7 @@ def bundled_tools() -> Toolchain:
 
 def verify_bundle() -> dict[str, object]:
     """Developer/CI smoke inside the frozen executable; never executes mod Lua."""
+    from cc2_mce import runtime_providers
     from cc2_mce.merge import GitMergeAdapter
     from cc2_mce.validation import validate_content
 
@@ -67,10 +68,25 @@ def verify_bundle() -> dict[str, object]:
     invalid = validate_content("test.lua", b"function(\n", luac=str(tools.luac))
     if valid[0] != "valid" or invalid[0] != "validation_error":
         raise ToolError("Bundled Lua syntax-only smoke failed")
+    package = Path(__file__).parent
+    profile = json.loads((package / "profiles/windows-1.5.18-r2.json").read_text())
+    runtime = package / "runtime_data" / profile["runtime_sha256"]
+    receipt = runtime_providers.verify(
+        (runtime / "runtime-update.json").read_bytes(), profile["game_sha256"]
+    )
+    runtime_providers.validate_binary((runtime / "dinput8.dll").read_bytes(), receipt["payload"])
+    receipt["payload"]["runtime_sha256"] = "0" * 64
+    try:
+        runtime_providers.verify(runtime_providers.canonical(receipt), profile["game_sha256"])
+    except InputError:
+        pass
+    else:
+        raise ToolError("Bundled SDK signature negative control failed")
     return {
         "git": git.stdout.decode().strip(),
         "lua": "5.3.6",
         "manifest_sha256": tools.manifest_sha256,
         "merge": "clean",
         "syntax_only": True,
+        "sdk_signature_verified": True,
     }

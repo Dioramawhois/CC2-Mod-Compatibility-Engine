@@ -4,6 +4,104 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## Unreleased - beta 12 audit corrections (2026-11-07)
+
+- Serialize final game launch with apply/Undo; block pending recovery and defer
+  rollback after detecting a running game instead of changing live native files.
+- Publish complete pending journals atomically and remove verified owned staging
+  after pre-journal failures, preserving the existing working set.
+- Keep verified installed/bundled SDK dependencies usable when an unselected SDK
+  source is quarantined. Retain explicit bad-source and unknown-loader refusals.
+- Anchor SDK sequence selection to the authenticated bundled provider and index
+  signed receipts without the historical 256-entry lifetime limit.
+- Show truthful resource selection and an explicit blocked recovery state after
+  partial Undo; repair checkbox ownership when a package changes kind. Preserve
+  all 14 offline catalogs. See ADR-0038 and the dated source audit report.
+- Source fixtures do not establish a new released executable or game acceptance.
+
+## 0.4.0b12 - independent SDK updates (2026-11-07)
+
+- Accept official publisher-signed SDK updates from the selected library without
+  rebuilding/reinstalling ModLoader for each new compatible runtime hash.
+- Verify exact game/DLL bytes, signed API requirements and native architecture;
+  retain transactional installation, runtime backups, Undo and unknown-loader
+  protection. Cache verified receipts for installed SDKs when sources disappear.
+- Keep older selected libraries from downgrading an authenticated installed SDK.
+  Report invalid SDK downloads without telling users to replace the application.
+  Update all 14 offline languages. See ADR-0037 and runtime-provider schema 1.
+- Add the pinned signature-verification dependency and preserve its notices.
+  Source fixtures and frozen-GUI checks do not certify new game behavior.
+
+## 0.4.0b11 - Windows beta 11 candidate (2026-11-07)
+
+- Promote the reviewed SDK provider to the exact owner-tested 0.10.0-dev DLL for
+  Carrier: Autopilot Waypoints. Synchronize profile, bundled bytes and source
+  restore lock; retain 0.8.1/0.9 as reviewed predecessors for reversible upgrade.
+- Preserve the tested DLL's original build record with a pinned upstream source
+  snapshot receipt and exact compiled-input verification. Reject altered source,
+  mismatched provenance or missing exact-binary acceptance. See ADR-0036.
+- Preserve automatic GUI apply, runtime backups, unknown-loader refusal and all
+  14 language catalogs. SDK gameplay evidence does not certify a new packaged
+  ModLoader game run, clean machine, multiplayer or native macOS runtime.
+
+## 0.4.0b10 - Windows beta 10 (2026-11-04)
+
+- Keep a committed apply successful when optional settings-cache cleanup raises
+  an OS error. Preserve pre-commit rollback and unknown-loader protection.
+- Complete GUI apply when the reviewed bundled SDK supplies a dependency without
+  a selected library package or row; do not create a synthetic mod reference.
+- Retain verified owned merge order on reopening after native activation paths
+  change, while preserving first adoption of the game's native order.
+- Reconstruct dependency notes from the restored package after Undo, including
+  when the current source metadata has changed. See ADR-0034. These owned
+  regressions do not establish new frozen-binary or game acceptance.
+- Keep valid GUI inventory visible when another package is unreadable or
+  ambiguous. Quarantine failed sources explicitly, preserve strict discovery
+  by default, and block unavailable selected sources or dependencies. Retain
+  bounded source-aware diagnostics and export them even without a merge plan.
+- Preserve specific launch-guard reasons and require refresh/revalidation after
+  a refusal. Report managed-menu ownership and screen-extension budget failures
+  with supported actions, owners and actual/maximum values. Keep package schema
+  2; add the non-installable `schema_kind=diagnostics`, version-1 envelope.
+- Preserve surviving checkbox rows and scroll position on inventory changes,
+  label libraries by actual DLL resources, and enable Undo only with available
+  checked history, rechecking when invoked.
+- Add **Disable all** beside Launch. Clear mods and required libraries in one
+  normal empty-set transaction, retain Undo and running-game deferral, and
+  cancel the current automatic launch request. Do not implicitly uninstall the
+  SDK, delete source mods or start an unmodded game. Deferred-change wording
+  explicitly asks the user to keep ModLoader open. See ADR-0035.
+- Implement all ten original UX/state findings with focused source regressions.
+  Final full-suite/frozen-build results and user game acceptance are separate;
+  this entry does not certify new gameplay, multiplayer or clean-machine use.
+
+## 0.4.0b9 - Windows beta 9 (2026-11-04)
+
+- Package validated SDK screen-extension descriptors and referenced Lua helpers
+  alongside the managed menu. Preserve schema-2 profiles, namespace helper copies
+  and report unsupported duplicate screen targets; do not classify these typed
+  inputs as DLLs or overwrite their metadata. See ADR-0033.
+
+- Include the SDK's hash-pinned generated waypoint profile in its corresponding
+  source archive; reject altered generated bytes before packaging.
+
+- Synchronize the reviewed native profile, bundled provider and source-archive
+  restore pin with CC2X SDK **0.8.1-client-beta.1**, exact source
+  `f322938094bf7ea9e30f3be841b3c744687385b8`. Preserve existing capabilities and
+  recognize `waypoint-origin-v1` and `screen-source-edits-v1`. See ADR-0032.
+- Keep the reviewed 0.7.1 runtime eligible for journaled upgrade with backup
+  and Undo. A known older SDK source does not downgrade the current provider;
+  an unknown installed loader remains a blocking, preserved external file.
+- Distinguish `runtime_source_conflict` for an unsupported DLL in a selected
+  SDK package from `runtime_conflict` for the installed game-folder loader.
+  Record the blocked source file and participants so the GUI identifies the
+  actual library, including when the attempted action removes another mod.
+  All 14 offline catalogs include the source-library diagnostic.
+- Add offline regressions for source updates, removing a gameplay mod,
+  reversible provider upgrades, previous-source handling and unknown-loader
+  protection. These changes do not establish fresh exact-binary beta 9
+  game-menu, gameplay or multiplayer acceptance.
+
 ## 0.4.0b8 - Windows beta 8 (2026-11-04)
 
 - Fix startup failure `Input byte limit exceeded` for large installed mods and

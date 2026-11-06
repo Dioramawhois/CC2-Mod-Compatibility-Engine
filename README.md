@@ -4,8 +4,6 @@ Choose the Carrier Command 2 mods you want to play. ModLoader combines their
 files into one local mod, merges changes where possible, and starts the game
 with that build selected.
 
-**Windows x64 beta · 0.4.0 beta 12**
-
 [**Download CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 
 [Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b12)

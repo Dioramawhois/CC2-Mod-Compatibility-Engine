@@ -1,4 +1,4 @@
-CC2 ModLoader 0.4.0 beta 11 - Windows x64
+CC2 ModLoader 0.4.0 beta 12 - Windows x64
 ======================================
 
 INSTALL THE READY APPLICATION
@@ -17,10 +17,10 @@ The build creates no new Workshop subscription or separate gameplay mod release.
 
 BUILD IT YOURSELF INSTEAD
 
-Application source is a separate asset: CC2ModLoader-0.4.0b11-source.zip.
-You can also clone release tag v0.4.0b11. The complete Windows source-build guide,
+Application source is a separate asset: CC2ModLoader-0.4.0b12-source.zip.
+You can also clone release tag v0.4.0b12. The complete Windows source-build guide,
 prerequisites, dependency downloads and offline options are here:
-https://github.com/Dioramawhois/CC2-ModLoader/blob/v0.4.0b11/docs/BUILDING.md
+https://github.com/Dioramawhois/CC2-ModLoader/blob/v0.4.0b12/docs/BUILDING.md
 
 Both routes produce the same graphical application. The source archive itself
 is not the executable. SDK and third-party tool source archives are separate
@@ -99,7 +99,7 @@ machine acceptance are not certified by this release.
 Documentation and issues:
 https://github.com/Dioramawhois/CC2-ModLoader
 Installation guide:
-https://github.com/Dioramawhois/CC2-ModLoader/blob/v0.4.0b11/docs/INSTALLATION.md
+https://github.com/Dioramawhois/CC2-ModLoader/blob/v0.4.0b12/docs/INSTALLATION.md
 
 When reporting a problem include app/game versions, selected mods, load order,
 reproduction steps and an exported GUI report. Review reports before sharing.

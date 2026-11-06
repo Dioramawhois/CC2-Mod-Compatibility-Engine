@@ -18,7 +18,7 @@ from xml.etree import ElementTree as ET
 
 from jsonschema import Draft202012Validator
 
-from cc2_mce import APP_NAME, sdk_runtime, sdk_settings
+from cc2_mce import APP_NAME, runtime_providers, sdk_runtime, sdk_settings
 from cc2_mce.discovery import ModRef, Scan, fingerprint, snapshot_unchanged
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import (
@@ -172,7 +172,12 @@ def resolve_selection(
     return tuple(result)
 
 
-def _runtime(game: Installation, expected: str, previous: list[str] | None = None) -> Path | None:
+def _runtime(
+    game: Installation,
+    expected: str,
+    previous: list[str] | None = None,
+    source: Path | None = None,
+) -> Path | None:
     installed = game.root / "dinput8.dll"
     if installed.exists() or installed.is_symlink():
         installed_hash = digest(_read(installed, game.root))
@@ -180,6 +185,10 @@ def _runtime(game: Installation, expected: str, previous: list[str] | None = Non
             return installed
         if installed_hash not in (previous or []):
             raise InputError("В игре другой dinput8.dll. Он не будет перезаписан.")
+    if source is not None:
+        if digest(_read(source, input_root(source.parent))) != expected:
+            raise InputError("Signed SDK runtime changed since discovery")
+        return source
     bundled = RUNTIME_DATA / expected / "dinput8.dll"
     if bundled.exists():
         if digest(_read(bundled, input_root(bundled.parent))) != expected:
@@ -252,11 +261,14 @@ def analyze(
     profile: dict[str, Any] | None = None,
     tools: Toolchain | None = None,
     patch_priority: bool = False,
+    user_dir: Path | None = None,
 ) -> PackagePlan:
     profile = profile if profile is not None else review_profile(game)
     actual_game_hash = digest(_read(game.executable, input_root(game.executable.parent)))
     if actual_game_hash != profile["game_sha256"]:
         raise InputError("Сборка игры изменилась")
+    provider_user = user_dir if user_dir is not None else game_user_dir()
+    profile, _ = runtime_providers.select(game.root, (), profile, provider_user)
     provided: frozenset[str] = frozenset()
     if profile.get("runtime_sha256") and any("cc2x.runtime" in m.dependencies for m in scan.mods):
         try:
@@ -266,10 +278,26 @@ def analyze(
             pass  # Never satisfy a missing dependency using an unknown installed DLL.
     chosen = resolve_selection(scan, selected, provided_dependencies=provided)
     validate_selection_resources(chosen, limits=RESOURCE_LIMITS)
+    provider_source = None
+    provider_error = None
+    try:
+        profile, provider_source = runtime_providers.select(
+            game.root, chosen, profile, provider_user
+        )
+    except InputError as exc:
+        provider_error = str(exc)
     groups: dict[str, list[tuple[ModRef, Any]]] = defaultdict(list)
     screens = prepare_screen_extensions(chosen, profile, luac=str(tools.luac) if tools else None)
     bundle = prepare_modules(chosen, profile, luac=str(tools.luac) if tools else None)
     blockers: list[dict[str, str]] = [*screens.blockers, *bundle.blockers]
+    if provider_error:
+        blockers.append(
+            {
+                "code": "runtime_source_conflict",
+                "file": runtime_providers.DESCRIPTOR,
+                "message": provider_error,
+            }
+        )
     files: list[dict[str, Any]] = [*screens.files, *bundle.files]
     payload: dict[str, bytes] = {**screens.payload, **bundle.payload}
     needs_runtime = bool(bundle.modules or screens.handled) or any(
@@ -290,6 +318,20 @@ def analyze(
         ):
             blockers.append({"code": "sdk_api", "message": f"{mod.name}: нужна новая версия SDK"})
         for item in mod.files:
+            if item.key == runtime_providers.DESCRIPTOR:
+                if provider_error:
+                    files.append(
+                        {
+                            "logical_path": item.logical_path,
+                            "status": "runtime_source_conflict" if provider_error else "copied",
+                            "strategy": "publisher-signature",
+                            "source_sha256": {mod.id: item.sha256},
+                            "baseline_sha256": None,
+                            "output_sha256": None,
+                            "diagnostics": [provider_error] if provider_error else [],
+                        }
+                    )
+                continue
             if (mod.id, item.key) in bundle.handled or (mod.id, item.key) in screens.handled:
                 continue
             groups[item.key].append((mod, item))
@@ -544,7 +586,9 @@ def analyze(
         expected = profile.get("runtime_sha256")
         if expected:
             try:
-                runtime = _runtime(game, expected, profile.get("previous_runtime_sha256"))
+                runtime = _runtime(
+                    game, expected, profile.get("previous_runtime_sha256"), provider_source
+                )
             except InputError as exc:
                 blockers.append({"code": "runtime_conflict", "message": str(exc)})
         if runtime is None:
@@ -594,6 +638,8 @@ def analyze(
         report["runtime_inputs"] = runtime_inputs
     if needs_runtime and profile.get("runtime_review"):
         report["runtime_review"] = profile["runtime_review"]
+    if needs_runtime and profile.get("runtime_provider"):
+        report["runtime_provider"] = profile["runtime_provider"]
     if config_defaults:
         report["config_defaults"] = [
             {
@@ -856,9 +902,14 @@ def _apply_plan_locked(
         profile=plan.profile,
         tools=plan.tools,
         patch_priority=plan.report.get("merge_policy") == "ordered-patches",
+        user_dir=user,
     )
     if fresh.blockers or fresh.report != plan.report or fresh.payload != plan.payload:
         raise InputError("База, инструменты или игра изменились")
+    if plan.report.get("runtime_provider"):
+        runtime_providers.remember(
+            user, plan.report["runtime_provider"], plan.report["game_sha256"]
+        )
     old = _read(user / "mods.xml", user)
     xml = _parse_activation(old)
     mods = user / "mods"

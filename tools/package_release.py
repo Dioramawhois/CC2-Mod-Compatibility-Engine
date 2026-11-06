@@ -331,6 +331,9 @@ def runtime_notices(root: Path) -> tuple[dict[str, bytes], list[dict]]:
         "referencing",
         "rpds-py",
         "pyinstaller",
+        "cryptography",
+        "cffi",
+        "pycparser",
     ):
         package = importlib.metadata.distribution(name)
         found = 0

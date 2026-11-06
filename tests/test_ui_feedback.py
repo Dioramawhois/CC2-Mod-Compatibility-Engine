@@ -147,7 +147,8 @@ def test_sdk_source_conflict_names_provider_when_unrelated_mod_is_removed():
     )
     assert "disable «Island Airfields»" in feedback.title
     assert "CC2X SDK 0.8.1" in feedback.message
-    assert "Update ModLoader." in feedback.message
+    assert "Download the library again." in feedback.message
+    assert "Update ModLoader." not in feedback.message
     assert "installed" not in feedback.message.lower()
     assert "Island Airfields" not in feedback.message
     assert set(feedback.rows) == {"sdk"}
@@ -171,7 +172,7 @@ def test_sdk_source_conflict_message_is_complete_in_all_offline_languages():
     from cc2_mce.language_packs import PACKS
     from cc2_mce.translations import EN
 
-    key = "Эта версия выбранной библиотеки SDK пока не поддерживается. Обновите ModLoader."
+    key = "Не удалось проверить DLL библиотеки SDK. Повторите загрузку библиотеки."
     assert key in EN
     assert set(LANGUAGES) == {"ru", "en", *PACKS}
     for language in LANGUAGES:
@@ -182,7 +183,7 @@ def test_sdk_source_conflict_message_is_complete_in_all_offline_languages():
             runtime_source_report(), {"sdk"}, {"sdk"}, translate=Translator(language)
         )
         assert "CC2X SDK 0.8.1" in feedback.message
-        assert "ModLoader" in feedback.message
+        assert "ModLoader" not in feedback.message
         assert "CC2X SDK 0.8.1" in feedback.rows["sdk"]
         assert Translator(language)(key) in feedback.message
 

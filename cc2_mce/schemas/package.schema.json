@@ -22,31 +22,89 @@
   "properties": {
     "managed_menu": {
       "type": "object",
-      "required": ["policy", "logical_path", "input_sha256", "adapter_sha256", "output_sha256"],
+      "required": [
+        "policy",
+        "logical_path",
+        "input_sha256",
+        "adapter_sha256",
+        "output_sha256"
+      ],
       "additionalProperties": false,
       "properties": {
-        "policy": {"enum": ["read-only-mod-list-v1", "locked-mods-menu-v2", "modloader-main-menu-v3", "sdk-screen-extension-v4"]},
-        "logical_path": {"type": "string"},
-        "input_sha256": {"$ref": "#/$defs/hash"},
-        "adapter_sha256": {"$ref": "#/$defs/hash"},
-        "output_sha256": {"$ref": "#/$defs/hash"},
-        "source_path": {"const": "cc2x/ui/modloader_menu.lua"},
-        "descriptor_path": {"const": "cc2x/screen_extensions.json"},
-        "descriptor_sha256": {"$ref": "#/$defs/hash"}
+        "policy": {
+          "enum": [
+            "read-only-mod-list-v1",
+            "locked-mods-menu-v2",
+            "modloader-main-menu-v3",
+            "sdk-screen-extension-v4"
+          ]
+        },
+        "logical_path": {
+          "type": "string"
+        },
+        "input_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "adapter_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "output_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "source_path": {
+          "const": "cc2x/ui/modloader_menu.lua"
+        },
+        "descriptor_path": {
+          "const": "cc2x/screen_extensions.json"
+        },
+        "descriptor_sha256": {
+          "$ref": "#/$defs/hash"
+        }
       },
-      "if": {"properties": {"policy": {"const": "sdk-screen-extension-v4"}}},
-      "then": {"required": ["source_path", "descriptor_path", "descriptor_sha256"]}
+      "if": {
+        "properties": {
+          "policy": {
+            "const": "sdk-screen-extension-v4"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "source_path",
+          "descriptor_path",
+          "descriptor_sha256"
+        ]
+      }
     },
     "config_defaults": {
-      "type": "array", "maxItems": 256,
+      "type": "array",
+      "maxItems": 256,
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["filename", "sha256", "providers", "policy"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "filename",
+          "sha256",
+          "providers",
+          "policy"
+        ],
         "properties": {
-          "filename": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*\\.ini$"},
-          "sha256": {"$ref": "#/$defs/hash"},
-          "providers": {"type": "array", "items": {"$ref": "#/$defs/hash"}},
-          "policy": {"const": "create-missing-preserve-user"}
+          "filename": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_.-]*\\.ini$"
+          },
+          "sha256": {
+            "$ref": "#/$defs/hash"
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/hash"
+            }
+          },
+          "policy": {
+            "const": "create-missing-preserve-user"
+          }
         }
       }
     },
@@ -55,14 +113,32 @@
       "maxItems": 32,
       "items": {
         "type": "object",
-        "required": ["source_id", "owner_id", "container", "source_sha256", "manifest_sha256"],
+        "required": [
+          "source_id",
+          "owner_id",
+          "container",
+          "source_sha256",
+          "manifest_sha256"
+        ],
         "additionalProperties": false,
         "properties": {
-          "source_id": {"type": "string"},
-          "owner_id": {"type": "string", "maxLength": 64},
-          "container": {"type": "string", "pattern": "^m-[0-9a-f]{32}$"},
-          "source_sha256": {"$ref": "#/$defs/hash"},
-          "manifest_sha256": {"$ref": "#/$defs/hash"}
+          "source_id": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "container": {
+            "type": "string",
+            "pattern": "^m-[0-9a-f]{32}$"
+          },
+          "source_sha256": {
+            "$ref": "#/$defs/hash"
+          },
+          "manifest_sha256": {
+            "$ref": "#/$defs/hash"
+          }
         }
       }
     },
@@ -76,7 +152,10 @@
       "const": "CC2-MCE"
     },
     "merge_policy": {
-      "enum": ["strict", "ordered-patches"]
+      "enum": [
+        "strict",
+        "ordered-patches"
+      ]
     },
     "engine_sha256": {
       "$ref": "#/$defs/hash"
@@ -154,7 +233,10 @@
             ]
           },
           "baseline_source": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "output_sha256": {
             "anyOf": [
@@ -200,23 +282,77 @@
     },
     "runtime_review": {
       "type": "object",
-      "required": ["stage", "source_commit", "verified_scope", "unverified_scope", "multiplayer_verified", "dedicated_verified"],
+      "required": [
+        "stage",
+        "source_commit",
+        "verified_scope",
+        "unverified_scope",
+        "multiplayer_verified",
+        "dedicated_verified"
+      ],
       "properties": {
-        "stage": {"const": "client-candidate"},
-        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-        "runtime_version": {"type": "string", "maxLength": 64},
-        "source_url": {"type": "string", "maxLength": 512},
-        "verified_scope": {"type": "array", "maxItems": 32, "items": {"type": "string", "maxLength": 128}},
-        "unverified_scope": {"type": "array", "maxItems": 32, "items": {"type": "string", "maxLength": 128}},
-        "multiplayer_verified": {"const": false},
-        "dedicated_verified": {"const": false},
-        "evidence_log_sha256": {"$ref": "#/$defs/hash"}
+        "stage": {
+          "enum": [
+            "client-candidate",
+            "publisher-signed"
+          ]
+        },
+        "source_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "runtime_version": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "source_url": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "verified_scope": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "unverified_scope": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "multiplayer_verified": {
+          "const": false
+        },
+        "dedicated_verified": {
+          "const": false
+        },
+        "evidence_log_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "publisher_key": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._-]{1,64}$"
+        },
+        "source_snapshot_manifest_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "evidence_kind": {
+          "type": "string",
+          "maxLength": 512
+        }
       },
       "additionalProperties": false
     },
     "runtime_inputs": {
       "type": "object",
-      "additionalProperties": {"$ref": "#/$defs/hash"}
+      "additionalProperties": {
+        "$ref": "#/$defs/hash"
+      }
     },
     "runtime_sha256": {
       "anyOf": [
@@ -236,6 +372,114 @@
     },
     "package_metadata_sha256": {
       "$ref": "#/$defs/hash"
+    },
+    "runtime_provider": {
+      "type": "object",
+      "required": [
+        "schema",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": 1
+        },
+        "key_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._-]{1,64}$"
+        },
+        "signature": {
+          "type": "string",
+          "minLength": 88,
+          "maxLength": 88
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "publisher",
+            "package_id",
+            "sequence",
+            "version",
+            "game_sha256",
+            "runtime_sha256",
+            "runtime_bytes",
+            "api",
+            "lua_api",
+            "framework_api",
+            "capabilities",
+            "previous_runtime_sha256",
+            "source_commit"
+          ],
+          "properties": {
+            "publisher": {
+              "const": "cc2x"
+            },
+            "package_id": {
+              "const": "cc2x.runtime"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][a-zA-Z0-9.-]+)?$",
+              "maxLength": 64
+            },
+            "game_sha256": {
+              "$ref": "#/$defs/hash"
+            },
+            "runtime_sha256": {
+              "$ref": "#/$defs/hash"
+            },
+            "runtime_bytes": {
+              "type": "integer",
+              "minimum": 256,
+              "maximum": 8388608
+            },
+            "api": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "lua_api": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "framework_api": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "capabilities": {
+              "type": "array",
+              "maxItems": 64,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]{1,80}$"
+              }
+            },
+            "previous_runtime_sha256": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/hash"
+              }
+            },
+            "source_commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        }
+      }
     }
   },
   "if": {
@@ -258,5 +502,28 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "runtime_review"
+        ],
+        "properties": {
+          "runtime_review": {
+            "properties": {
+              "stage": {
+                "const": "publisher-signed"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "runtime_provider"
+        ]
+      }
+    }
+  ]
 }

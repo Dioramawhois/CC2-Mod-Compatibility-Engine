@@ -22,8 +22,8 @@ this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 directly. This permanent link is updated when a newer beta is published.
 
-Alternatively, open the [0.4.0 beta 11 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b11)
-and download **CC2ModLoader-0.4.0b11-windows-x64.zip** for the complete package with
+Alternatively, open the [0.4.0 beta 12 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b12)
+and download **CC2ModLoader-0.4.0b12-windows-x64.zip** for the complete package with
 its README, notices and metadata.
 
 Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links
@@ -306,3 +306,11 @@ For a bug report, include the application and game versions, selected mod names,
 load order, exact reproduction steps and an exported report from **Menu > Save
 report...**. Review the report before sharing it. Do not attach game files,
 personal saves or private paths unless specifically needed and appropriate.
+
+## SDK updates
+
+With beta 12 or later, official compatible SDK updates are applied from the
+selected SDK library automatically. Finish the Steam download, close the game,
+then open ModLoader and let the selected set apply. You do not replace the
+ModLoader EXE for every SDK update. Existing runtime backup and Undo remain
+available. If a library download fails verification, download that library again.

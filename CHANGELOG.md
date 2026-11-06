@@ -4,6 +4,19 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b12 - independent SDK updates (2026-11-07)
+
+- Accept official publisher-signed SDK updates from the selected library without
+  rebuilding/reinstalling ModLoader for each new compatible runtime hash.
+- Verify exact game/DLL bytes, signed API requirements and native architecture;
+  retain transactional installation, runtime backups, Undo and unknown-loader
+  protection. Cache verified receipts for installed SDKs when sources disappear.
+- Keep older selected libraries from downgrading an authenticated installed SDK.
+  Report invalid SDK downloads without telling users to replace the application.
+  Update all 14 offline languages. See ADR-0037 and runtime-provider schema 1.
+- Add the pinned signature-verification dependency and preserve its notices.
+  Source fixtures and frozen-GUI checks do not certify new game behavior.
+
 ## 0.4.0b11 - Windows beta 11 candidate (2026-11-07)
 
 - Promote the reviewed SDK provider to the exact owner-tested 0.10.0-dev DLL for

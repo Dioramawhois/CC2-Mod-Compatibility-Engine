@@ -1,5 +1,12 @@
 # 02. Архитектура
 
+Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
+SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
+retain native/plugin/path gates, transactional installation and Undo. Cache signed
+receipts without making absent DLLs preferred. Package schema 2 adds the optional
+provider envelope; all 14 UI catalogs retain complete offline coverage. See
+[ADR-0037](adr/0037-publisher-authenticated-sdk-updates.md).
+
 ADR-0035 makes partial discovery explicit for the GUI while keeping strict
 core/developer discovery as the default. Inventory issues carry bounded source
 context, participate in fingerprints and block unavailable selected sources or

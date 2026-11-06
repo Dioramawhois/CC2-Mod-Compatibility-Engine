@@ -1367,6 +1367,7 @@ class App(tk.Tk):
                 selected,
                 tools=bundled_tools(),
                 patch_priority=self.patch_priority,
+                user_dir=game_user_dir(),
             )
 
         def receive(result: PackagePlan) -> None:

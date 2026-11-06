@@ -1,5 +1,12 @@
 # 01. Product Requirements (PRD)
 
+Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
+SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
+retain native/plugin/path gates, transactional installation and Undo. Cache signed
+receipts without making absent DLLs preferred. Package schema 2 adds the optional
+provider envelope; all 14 UI catalogs retain complete offline coverage. See
+[ADR-0037](adr/0037-publisher-authenticated-sdk-updates.md).
+
 Beta 10 completes the ten original UX/state fixes and adds **Disable all**.
 Keep valid inventory visible with named, exportable diagnostics for quarantined
 sources; never silently omit a selected source or dependency. Preserve specific

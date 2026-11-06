@@ -1,5 +1,12 @@
 # 06. Стратегия тестирования и Definition of Done
 
+Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
+SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
+retain native/plugin/path gates, transactional installation and Undo. Cache signed
+receipts without making absent DLLs preferred. Package schema 2 adds the optional
+provider envelope; all 14 UI catalogs retain complete offline coverage. See
+[ADR-0037](adr/0037-publisher-authenticated-sdk-updates.md).
+
 Beta 11 promotes the reviewed SDK provider to the preserved owner-tested
 0.10.0-dev DLL. The profile, bundled dependency and restore lock must agree.
 A pinned upstream snapshot receipt permits retaining its original build record

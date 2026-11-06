@@ -1,5 +1,12 @@
 # 03. Спецификация движка слияния
 
+Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
+SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
+retain native/plugin/path gates, transactional installation and Undo. Cache signed
+receipts without making absent DLLs preferred. Package schema 2 adds the optional
+provider envelope; all 14 UI catalogs retain complete offline coverage. See
+[ADR-0037](adr/0037-publisher-authenticated-sdk-updates.md).
+
 ADR-0035 preserves ordinary resource merging while improving refusal reports.
 Managed-menu ownership collisions name their owners; SDK screen limits include
 the measured entry/descriptor/source count, maximum and contributors. Typed

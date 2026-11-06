@@ -4,11 +4,11 @@ Choose the Carrier Command 2 mods you want to play. ModLoader combines their
 files into one local mod, merges changes where possible, and starts the game
 with that build selected.
 
-**Windows x64 beta · 0.4.0 beta 11**
+**Windows x64 beta · 0.4.0 beta 12**
 
 [**Download CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 
-[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b11)
+[Complete download package](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b12)
 · [Build from source](docs/BUILDING.md) · [Detailed help](docs/INSTALLATION.md)
 
 ## Start here
@@ -59,8 +59,9 @@ these packages. Declared dependencies are included automatically when available;
 you can also select a library here. The SDK supplies tools for mods; gameplay
 features come from the separate mods you choose.
 
-The app includes the reviewed CC2X SDK 0.10.0-dev runtime matching the current supported
-Workshop package. Supported older installations are upgraded with backup and
+The app includes a reviewed CC2X SDK fallback and accepts official signed SDK
+updates from Workshop. Compatible SDK updates no longer require replacing the
+ModLoader executable. Supported older installations are upgraded with backup and
 Undo. If a downloaded SDK version is unsupported, the warning identifies that
 library separately from an incompatible loader already installed in the game.
 

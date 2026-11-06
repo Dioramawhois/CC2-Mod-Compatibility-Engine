@@ -1,6 +1,6 @@
 # Compatibility and verification
 
-CC2 ModLoader 0.4.0 beta 11 is a Windows x64 desktop beta. A successful file
+CC2 ModLoader 0.4.0 beta 12 is a Windows x64 desktop beta. A successful file
 merge is useful evidence about files; it does not establish gameplay compatibility.
 
 Beta 8 changes bounded resource discovery/reading to fix large-collection

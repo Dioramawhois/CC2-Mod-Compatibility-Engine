@@ -113,7 +113,7 @@ def explain_rejection(
         "runtime_missing": tr("Не найден поддерживаемый загрузчик CC2X."),
         "runtime_conflict": tr("Установленный загрузчик CC2X не подходит этому набору."),
         "runtime_source_conflict": tr(
-            "Эта версия выбранной библиотеки SDK пока не поддерживается. Обновите ModLoader."
+            "Не удалось проверить DLL библиотеки SDK. Повторите загрузку библиотеки."
         ),
         "managed_menu_collision": tr(
             "Мод меняет главное меню, которым управляет ModLoader. "

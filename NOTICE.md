@@ -30,3 +30,7 @@ Python dependencies. The release includes component licenses, exact versions and
 hashes in its SBOM, and corresponding source/build references. Keep these files
 when redistributing the package. The player's mods remain local and are never
 uploaded by ModLoader.
+
+SDK release signatures use cryptography 50.0.2 (Apache-2.0 or BSD-3-Clause),
+including the wheel's OpenSSL notices. Its cffi and pycparser dependency notices
+are retained in release LICENSES. No private publisher keys are distributed.

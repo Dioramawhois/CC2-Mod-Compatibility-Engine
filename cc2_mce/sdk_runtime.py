@@ -80,9 +80,17 @@ def _paths(record: dict[str, Any]) -> tuple[Path, Path, Path]:
     return root, root / "dinput8.dll", root / name
 
 
-def install(record: dict[str, Any] | None) -> None:
+def install(
+    record: dict[str, Any] | None, *, game_running: Callable[[], bool] | None = None
+) -> None:
     if record is None:
         return
+
+    def require_closed() -> None:
+        if game_running is not None and game_running():
+            raise InputError("Закройте игру — восстановим незавершённую сборку автоматически.")
+
+    require_closed()
     root, target, temporary = _paths(record)
     info = temporary.stat()
     if digest(_read(temporary, root)) != record["new_sha256"] or (
@@ -91,11 +99,13 @@ def install(record: dict[str, Any] | None) -> None:
     ) != (record["device"], record["inode"]):
         raise InputError("Staged runtime changed")
     if record["old_sha256"] is None:
+        require_closed()
         os.link(temporary, target)  # Atomic create, never overwrite a racing writer.
         temporary.unlink()
     else:
         if digest(_read(target, root)) != record["old_sha256"]:
             raise InputError("Installed runtime changed; upgrade stopped")
+        require_closed()
         os.replace(temporary, target)
 
 
@@ -103,9 +113,17 @@ def rollback(
     record: dict[str, Any] | None,
     state_dir: Path,
     replace_checked: Callable[[Path, bytes, bytes], None],
+    *,
+    game_running: Callable[[], bool] | None = None,
 ) -> None:
     if record is None:
         return
+
+    def require_closed() -> None:
+        if game_running is not None and game_running():
+            raise InputError("Закройте игру — восстановим незавершённую сборку автоматически.")
+
+    require_closed()
     root, target, temporary = _paths(record)
     current = _read(target, root) if target.exists() or target.is_symlink() else None
     current_hash = digest(current) if current is not None else None
@@ -116,6 +134,7 @@ def rollback(
         if (info.st_dev, info.st_ino) != (record["device"], record["inode"]):
             raise InputError("Runtime replaced externally; automatic restoration stopped")
         if record["backup"] is None:
+            require_closed()
             target.unlink()
         else:
             name = record["backup"]
@@ -125,6 +144,7 @@ def rollback(
             if digest(old) != record["old_sha256"]:
                 raise InputError("Runtime backup damaged")
             assert current is not None
+            require_closed()
             replace_checked(target, old, current)
     else:
         raise InputError("Runtime changed externally; automatic restoration stopped")
@@ -135,4 +155,5 @@ def rollback(
             info.st_ino,
         ) != (record["device"], record["inode"]):
             raise InputError("Staged runtime changed externally")
+        require_closed()
         temporary.unlink()

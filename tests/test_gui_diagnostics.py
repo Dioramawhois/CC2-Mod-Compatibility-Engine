@@ -173,6 +173,11 @@ def test_real_launch_guard_stays_refused_until_explicit_rebuild_after_game_chang
     ("error", "code", "summary"),
     [
         (
+            InputError("Pending activation recovery; close the game before retrying"),
+            "launch_recovery_pending",
+            "Recovery is incomplete. Game launch is blocked.",
+        ),
+        (
             InputError("Game is running or its executable is unavailable"),
             "launch_game_unavailable",
             "The game is already running or its executable is unavailable. "

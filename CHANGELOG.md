@@ -4,6 +4,21 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## Unreleased - beta 12 audit corrections (2026-11-07)
+
+- Serialize final game launch with apply/Undo; block pending recovery and defer
+  rollback after detecting a running game instead of changing live native files.
+- Publish complete pending journals atomically and remove verified owned staging
+  after pre-journal failures, preserving the existing working set.
+- Keep verified installed/bundled SDK dependencies usable when an unselected SDK
+  source is quarantined. Retain explicit bad-source and unknown-loader refusals.
+- Anchor SDK sequence selection to the authenticated bundled provider and index
+  signed receipts without the historical 256-entry lifetime limit.
+- Show truthful resource selection and an explicit blocked recovery state after
+  partial Undo; repair checkbox ownership when a package changes kind. Preserve
+  all 14 offline catalogs. See ADR-0038 and the dated source audit report.
+- Source fixtures do not establish a new released executable or game acceptance.
+
 ## 0.4.0b12 - independent SDK updates (2026-11-07)
 
 - Accept official publisher-signed SDK updates from the selected library without

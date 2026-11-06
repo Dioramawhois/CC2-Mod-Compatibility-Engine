@@ -26,6 +26,9 @@ SIGNING_DOMAIN = b"CC2X runtime provider v1\n"
 MAX_MANIFEST = 65536
 MAX_RUNTIME = 8 * 1024 * 1024
 SCHEMAS = Path(__file__).parent / "schemas"
+RUNTIME_DATA = Path(__file__).parent / "runtime_data"
+RUNTIME_INDEX = "by-runtime-v1"
+SEQUENCE_INDEX = "by-sequence-v1"
 
 
 def canonical(value: object) -> bytes:
@@ -98,16 +101,56 @@ def _cache(user: Path) -> Path:
     return user / "cc2-mce/runtime-providers"
 
 
-def cached(user: Path, game_sha256: str) -> list[dict[str, Any]]:
-    folder = _cache(user)
-    if not folder.exists() and not folder.is_symlink():
-        return []
-    root = input_root(folder)
-    budget = Budget(
-        Limits(max_entries=256, max_file_bytes=MAX_MANIFEST, max_total_bytes=256 * MAX_MANIFEST)
-    )
+def _indexed(user: Path, game_sha256: str, kind: str, name: str) -> dict[str, Any] | None:
+    folder = _cache(user) / kind / game_sha256
+    try:
+        if not folder.exists() and not folder.is_symlink():
+            return None
+        root = input_root(folder)
+        path = root / (name + ".json")
+        if not path.exists() and not path.is_symlink():
+            return None
+        value = verify(
+            read_regular(path, root, Budget(Limits(max_file_bytes=MAX_MANIFEST))),
+            game_sha256,
+        )
+        field = "runtime_sha256" if kind == RUNTIME_INDEX else "sequence"
+        if str(value["payload"][field]) != name:
+            return None
+        return value
+    except (InputError, OSError):
+        return None  # An index is only a locator; its contents never bypass verification.
+
+
+def cached(
+    user: Path,
+    game_sha256: str,
+    runtime_hashes: set[str],
+    *,
+    legacy_hashes: set[str],
+) -> list[dict[str, Any]]:
     result = []
-    for path in bounded_children(root, budget):
+    found = set()
+    for runtime_hash in sorted(runtime_hashes):
+        value = _indexed(user, game_sha256, RUNTIME_INDEX, runtime_hash)
+        if value is not None:
+            result.append(value)
+            found.add(runtime_hash)
+    if legacy_hashes.issubset(found):
+        return result
+    # Beta 12 stored envelope-hash receipts without a runtime index. Search that
+    # old layout only when an otherwise unknown runtime needs its proof. New
+    # writes retain every immutable receipt but require no directory enumeration.
+    folder = _cache(user)
+    budget = Budget(Limits(max_file_bytes=MAX_MANIFEST, max_total_bytes=256 * MAX_MANIFEST))
+    try:
+        if not folder.exists() and not folder.is_symlink():
+            return result
+        root = input_root(folder)
+        paths = bounded_children(root, budget)
+    except (InputError, OSError):
+        return result  # Exhausted/unrelated legacy input cannot reject reviewed bytes.
+    for path in paths:
         if re.fullmatch(r"[0-9a-f]{64}\.json", path.name) is None:
             continue
         try:
@@ -121,6 +164,37 @@ def cached(user: Path, game_sha256: str) -> list[dict[str, Any]]:
     return result
 
 
+def _profile_provider(profile: dict[str, Any]) -> dict[str, Any] | None:
+    game_hash = profile["game_sha256"]
+    envelope = profile.get("runtime_provider")
+    if envelope is not None:
+        envelope = verify(canonical(envelope), game_hash)
+    else:
+        runtime_hash = profile.get("runtime_sha256")
+        if not runtime_hash:
+            return None
+        folder = RUNTIME_DATA / runtime_hash
+        proof = folder / "runtime-update.json"
+        if not proof.exists() and not proof.is_symlink():
+            return None  # Legacy/custom reviewed profiles can predate signed bundles.
+        envelope = verify(
+            read_regular(proof, input_root(folder), Budget(Limits(max_file_bytes=MAX_MANIFEST))),
+            game_hash,
+        )
+    payload = envelope["payload"]
+    for field, signed in (
+        ("runtime_sha256", "runtime_sha256"),
+        ("runtime_api", "api"),
+        ("runtime_lua_api", "lua_api"),
+        ("runtime_framework_api", "framework_api"),
+    ):
+        if profile.get(field) != payload[signed]:
+            raise InputError("Signed SDK provider does not match the reviewed profile")
+    if sorted(profile.get("runtime_capabilities", [])) != sorted(payload["capabilities"]):
+        raise InputError("Signed SDK capabilities do not match the reviewed profile")
+    return envelope
+
+
 def select(
     game_root: Path,
     chosen: tuple[ModRef, ...],
@@ -131,7 +205,21 @@ def select(
     profile = copy.deepcopy(base)
     profile.pop("runtime_provider_source", None)
     game_hash = profile["game_sha256"]
-    receipts = cached(user, game_hash)
+    anchor = _profile_provider(profile)
+    installed = game_root / "dinput8.dll"
+    installed_hash = None
+    if installed.exists() or installed.is_symlink():
+        try:
+            installed_hash = digest(
+                read_regular(installed, input_root(game_root), Budget(Limits()))
+            )
+        except (InputError, OSError):
+            pass  # The normal runtime guard reports this only when an SDK is required.
+    known = {profile.get("runtime_sha256"), *profile.get("previous_runtime_sha256", [])}
+    wanted = {item.sha256 for mod in chosen for item in mod.files if item.key == "dinput8.dll"}
+    if installed_hash is not None:
+        wanted.add(installed_hash)
+    receipts = cached(user, game_hash, wanted, legacy_hashes=wanted - known)
     sources: dict[str, Path] = {}
     source_records: dict[str, dict[str, str]] = {}
     required = {mod.id for mod in chosen}
@@ -165,15 +253,6 @@ def select(
             "sha256": mod.sha256,
             "runtime_sha256": binary.sha256,
         }
-    installed = game_root / "dinput8.dll"
-    installed_hash = None
-    if receipts and (installed.exists() or installed.is_symlink()):
-        try:
-            installed_hash = digest(
-                read_regular(installed, input_root(game_root), Budget(Limits()))
-            )
-        except (InputError, OSError):
-            pass  # The normal runtime guard reports this only when an SDK is required.
     eligible = [
         value
         for value in receipts
@@ -182,19 +261,22 @@ def select(
     ]
     identities: dict[int, str] = {}
     allowed = {profile.get("runtime_sha256"), *profile.get("previous_runtime_sha256", [])}
-    for envelope in receipts:
+    for envelope in ([anchor] if anchor is not None else []) + receipts:
         payload = envelope["payload"]
         sequence, runtime_hash = payload["sequence"], payload["runtime_sha256"]
         identity = digest(canonical(payload))
         if sequence in identities and identities[sequence] != identity:
             raise InputError("Ambiguous signed SDK release sequence")
+        indexed = _indexed(user, game_hash, SEQUENCE_INDEX, str(sequence))
+        if indexed is not None and digest(canonical(indexed["payload"])) != identity:
+            raise InputError("Ambiguous signed SDK release sequence")
         identities[sequence] = identity
         allowed.update([runtime_hash, *payload["previous_runtime_sha256"]])
-    sequence = profile.get("runtime_provider", {}).get("payload", {}).get("sequence", 0)
+    sequence = anchor["payload"]["sequence"] if anchor is not None else 0
     if eligible:
         envelope = max(eligible, key=lambda value: value["payload"]["sequence"])
         payload = envelope["payload"]
-        if payload["sequence"] >= sequence:
+        if payload["sequence"] > sequence:
             profile.update(
                 runtime_sha256=payload["runtime_sha256"],
                 runtime_api=payload["api"],
@@ -235,19 +317,56 @@ def remember(user: Path, envelope: dict[str, Any], game_sha256: str) -> None:
     if target.exists() or target.is_symlink():
         if read_regular(target, folder, Budget(Limits())) != data:
             raise InputError("Signed SDK receipt cache changed")
-        return
-    # Immutable approval evidence, separate from activation preference. It never
-    # selects an absent/uninstalled runtime, including after Undo.
+    else:
+        _publish(folder, target, data, immutable=True)
+    payload = envelope["payload"]
+    sequence = str(payload["sequence"])
+    earlier = _indexed(user, game_sha256, SEQUENCE_INDEX, sequence)
+    if earlier is not None and canonical(earlier["payload"]) != canonical(payload):
+        raise InputError("Ambiguous signed SDK release sequence")
+    _index(user, game_sha256, SEQUENCE_INDEX, sequence, data)
+    runtime_hash = payload["runtime_sha256"]
+    earlier = _indexed(user, game_sha256, RUNTIME_INDEX, runtime_hash)
+    if earlier is None or earlier["payload"]["sequence"] < payload["sequence"]:
+        _index(user, game_sha256, RUNTIME_INDEX, runtime_hash, data)
+
+
+def _index(user: Path, game_sha256: str, kind: str, name: str, data: bytes) -> None:
+    folder = _cache(user) / kind
+    folder.mkdir(exist_ok=True)
+    input_root(folder)
+    folder /= game_sha256
+    folder.mkdir(exist_ok=True)
+    root = input_root(folder)
+    _publish(root, root / (name + ".json"), data, immutable=False)
+
+
+def _publish(folder: Path, target: Path, data: bytes, *, immutable: bool) -> None:
+    old = None
+    if target.exists() or target.is_symlink():
+        old = read_regular(target, folder, Budget(Limits(max_file_bytes=MAX_MANIFEST)))
+        if old == data:
+            return
+        if immutable:
+            raise InputError("Signed SDK receipt cache changed")
+    # Immutable approval evidence and atomic indexes are separate from activation
+    # preference. Neither selects an absent/uninstalled runtime after Undo.
     temporary = folder / ("." + uuid.uuid4().hex + ".tmp")
     try:
         with temporary.open("xb") as stream:
             stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
-        try:
-            os.link(temporary, target)
-        except FileExistsError:
-            if read_regular(target, folder, Budget(Limits())) != data:
-                raise InputError("Signed SDK receipt cache changed") from None
+        input_root(folder)
+        if old is None:
+            try:
+                os.link(temporary, target)
+            except FileExistsError:
+                if read_regular(target, folder, Budget(Limits())) != data:
+                    raise InputError("Signed SDK receipt cache changed") from None
+        else:
+            if read_regular(target, folder, Budget(Limits())) != old:
+                raise InputError("Signed SDK receipt cache changed")
+            os.replace(temporary, target)
     finally:
         temporary.unlink(missing_ok=True)

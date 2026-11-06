@@ -1,5 +1,13 @@
 # 03. Спецификация движка слияния
 
+Source audit corrections (2026-11-07): serialize launch with activation, defer
+recovery while the game runs, publish complete journals atomically and clean
+owned pre-journal staging on failure. Preserve truthful recovery/row state and
+verified SDK dependencies; seed the signed bundled provider floor and avoid
+receipt-cache exhaustion. Schemas and native trust gates remain unchanged.
+See [ADR-0038](adr/0038-launch-recovery-and-provider-audit-fixes.md) and the
+[audit report](reviews/2026-11-07-modloader-bug-audit.md).
+
 Beta 12 replaces per-SDK application rebuilds with offline publisher-authenticated
 SDK updates. Verify the signed descriptor, exact game/DLL hash and architecture;
 retain native/plugin/path gates, transactional installation and Undo. Cache signed

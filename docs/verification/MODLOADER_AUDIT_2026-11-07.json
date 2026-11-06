@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "schema_kind": "source-audit-verification",
+  "installable": false,
+  "date": "2026-11-07",
+  "audited_release": "v0.4.0b12",
+  "audited_release_commit": "ff1d16222ce68bde1f522479d73f4d85426e18b0",
+  "worktree_base": "3941dc11df8a39a0de029937b1baddb17e8919df",
+  "correction_branch": "codex/modloader-bug-audit",
+  "correction_status": "unreleased-source",
+  "engine_version": "0.4.0b12",
+  "engine_sha256": "40b81f3ffcd486c2759a7093cefd668265fa94951a24d28dbfb33b1a9735678d",
+  "source_sha256": {
+    "cc2_mce/__init__.py": "b1c0952150a69e466a5a2e2e04bab5a457a8fa2702becd1dd03251c3e7cd65ef",
+    "cc2_mce/__main__.py": "c27e54be719b4a22f4dcfa36d10af459629904e2a745fcfcfd2537dbd02f0606",
+    "cc2_mce/baseline.py": "78dd840df60b2aeab75700b3779c2b6e84dbebb390ccf20df14a36c5bde73291",
+    "cc2_mce/cli.py": "bc76d93a28bfe29fc904b73ccd57dd3a4a8f4ae85cde1d8129ecd67d34fc1d70",
+    "cc2_mce/diagnostics.py": "7a4f9c33ae4c89262b0c44849071459b92c2c7ca04422a74735219ae75b0a671",
+    "cc2_mce/discovery.py": "8edc4c0ba56586a629ef9925a5b0f4e6284f0d02e96f6ea998af2d7b3393eaf9",
+    "cc2_mce/doctor.py": "28ab96a034839b211bf4dfba1d121d50eba56aede043fa434f1f497005723ec1",
+    "cc2_mce/errors.py": "d1bb5f0590674bba2b4a3a1a235666e0bc4566e6e073396f3f5ab4c6182f32ef",
+    "cc2_mce/filesystem.py": "5ed4f8d23135bf051180443b37b80a5fb66679a83b865c61fdf4be18f2d1029e",
+    "cc2_mce/game_launch.py": "983487af7135f4b0e2730ed382a2331fc9513cb41cbe1b105ce8ce1c87be5ed1",
+    "cc2_mce/gui.py": "57e87883a54fa5677d034b30a338f50d7d27af068e33902660e97e9b8da774e8",
+    "cc2_mce/i18n.py": "8ffddf0ecd18ff62db1027336dd2960d613b2c724869281af2f0b56c86ad71f4",
+    "cc2_mce/installation.py": "86c873fcdda17abdc3b73298e6c03f16ac08e012c2a0fa8f7d167cd66b258fb0",
+    "cc2_mce/language_packs.py": "7b38744568b6c16d1b825bfaf8f7f6b3bf2be7578be64efa6e35075744b6c44f",
+    "cc2_mce/locking.py": "7d2115ebcc0a7cd5f5aaaacbc0bf990377b468fedbc45775b98096ffe2a719ad",
+    "cc2_mce/managed_menu.py": "13023c2440491a22b07d88d9de301bb37dc52c806fb03a7c7b59bdc43e9a6fd1",
+    "cc2_mce/merge.py": "a847eb6b44779bd2acf0e800b90ee1b0a29bc3c7de4c070c3345fe22113b10f1",
+    "cc2_mce/module_bundles.py": "bba254dceb59d8e7fe583dc44284bbbcf72ca8e35e2b3425933679df4da8802c",
+    "cc2_mce/planner.py": "33c0b63a5cace3cd3b185eb08d6efd0cf644b3220befe89410179f1e4478946a",
+    "cc2_mce/preferences.py": "7b33f7a9d13ea00604f4ce55c218fca45e2521e741e98c2417a3e83cdf9722d8",
+    "cc2_mce/reports.py": "7990edb9097ea75d7d4175f620757fad42c8f510aea91623e48258333c33758f",
+    "cc2_mce/resources.py": "bbcb0d284437bdc4151018e0250606b9b520fec2bba594d1751888870e265eb4",
+    "cc2_mce/runtime_providers.py": "5d0661c6bb60c8113e1c684c96e0f1300bc1ef9818a708c54a338087d165cfd3",
+    "cc2_mce/screen_extensions.py": "ceae49b77e0835b89c3114ab556b1bedd1c7cd38f24f63b9f21a594b62af1317",
+    "cc2_mce/sdk_runtime.py": "f608eb83e759fb77078a2605ed0cc570ca5c7c01dab0ab74aacd5e057b558baf",
+    "cc2_mce/sdk_settings.py": "5da4c30650d171a09b5e858cba5c28dbcc43ca85ad2336ca33117fac996ab962",
+    "cc2_mce/textmerge.py": "f817e7693204713249412a501b9581cf0c9baf2d80fecf181a6ca183cd22d93e",
+    "cc2_mce/toolchain.py": "c1f96b6e5d99c6cd891aba520a1627696f800cd70b5c181ab9cb3106d53ab3d7",
+    "cc2_mce/translations.py": "2edf223fb2f56fda3739f150d64278add59eeb8c2d43be6d49a72c1588a8e3c9",
+    "cc2_mce/ui_feedback.py": "687015bfed518f697db36847b94679af722af60a995be667878e9e7151e1dec3",
+    "cc2_mce/validation.py": "e703f87af99f1a39952de2946415dae21ee2cc4e0332e3ec0c211df4fa1159ea",
+    "cc2_mce/workflow.py": "17ea124a63b3d196bd5e10aa8fdd991fa0e1831ff365648305a61d0250956c63",
+    "cc2_mce/schemas/diagnostics.schema.json": "5e87c04b7a237cf7bf9b3a7eb6c715f5fb13f937a8005ece8fc1986b996720e2",
+    "cc2_mce/schemas/package.schema.json": "3101f1da912c9ae62617d6221974fec2416ca51af2e0d115cb1b609b17eb15a3",
+    "cc2_mce/schemas/report.schema.json": "5b39a83b6a4d785886c6dc4be55a7a47f97c1333dbdc2f5ea926184d91b542eb",
+    "cc2_mce/schemas/runtime-provider.schema.json": "4071500fc36e4c837b1c3e5d5d409b65a5add8c9e54f537b6c1bc92eff4276f9",
+    "cc2_mce/schemas/screen_extensions.schema.json": "c329dce7f7f61dca56aa1ca05848899c3e1698aa651c930144f4512c208c8ac6",
+    "cc2_mce/profiles/sdk-publishers.json": "5138859a65b3549159072a1e02e687f66e08368f6886875cea06d984162334af",
+    "cc2_mce/profiles/windows-1.5.18-r2.json": "f7a9e3495bfb0a63c14f14dc0d5a3dbaa56458543fc48f83d70f7fc08b802afb",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/dinput8.build.json": "a36937ec14c507a1bee8dc965f7766756a3a39e9da4b44268371fa2512384f3a",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/dinput8.dll": "2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/libcxx-LICENSE.txt": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/libcxxabi-LICENSE.txt": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/libunwind-LICENSE.txt": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/Lua-LICENSE.txt": "2c900706552b19a2b9c4e670f0b4abadb5b5f31b93725e8274e3651a101365a5",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/mingw-COPYING.txt": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/NativeBridge-NOTICE.original.md": "59479e8410eac6ffbdeb17efac05b5f19cacfa0ec8f23da3a8c654e84d2dabc5",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/NOTICE.md": "662404e6e40b9924d91456f2dbb7f6126f97e83e2df3f086327cf70c623eb0d8",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/review.json": "5fc981d374f087d4cee2758ed9b117980075c88c944dd5c16744b92b6ecbfd3c",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/runtime-update.json": "b35078c27ed7c518cbc0447436d99cc45b0ae4c6e3f2129993cf878a87db21ee",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/SDK-RELEASE.json": "b508c4493ce956853d74de9cb930a62671a597bb782ccb785b03bade07af4f3d",
+    "cc2_mce/runtime_data/2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5/Zig-LICENSE.txt": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
+    "cc2_mce/tools_data/manifest.json": "497e9b772d49a299c5c4228a7e46a63ad34ce5e377da742b94d41b867bba8255",
+    "tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tests/test_baseline.py": "a422f7054d7e9e44f0af2711474cfe5f629cbfe45c46f399f98fa49153e09652",
+    "tests/test_baseline_lookup_budget.py": "a47e2b9f8dd44869e767a1c0ae8f32c13433bb6038ea4753adf6aa10899b3899",
+    "tests/test_ci_lua_source.py": "ad62e58ef3cfb066153a782e40febc25c7294a0b182d218ca5246070e8a270b6",
+    "tests/test_cli.py": "d213df6b1eb77df69ea694558f736df3cb4b5f58a7dc138004a295cd62f86d6c",
+    "tests/test_discovery_diagnostics.py": "a175d889d9a7b06f9416c823d1d77331a6df7af2999d4e17ff1cb58e1d3085ff",
+    "tests/test_framework_api_requirements.py": "1b1b59472505eb31db55e26867d4a8f56f01f2941652b649f54589ae4cb21e6f",
+    "tests/test_game_launch.py": "d1e58e01a2c520b5ac1ae4b4d4f4b1975a695972c56ea67f9dba1ce59526b894",
+    "tests/test_golden.py": "74cb8c5654a400ac1a4bb672380f7b7ac5c2e7977bc620c6e9fa1430f573f694",
+    "tests/test_gui_audit_regressions.py": "49aff36c68c45d9d523e797092e6a7ca1561feb587831fb0597d2cfd1ba903c3",
+    "tests/test_gui_controls_recovery.py": "4abfcb48b3cb3a7cf2638bdc2f732fd99d707905b2672d8a99324b57b9125c3e",
+    "tests/test_gui_diagnostics.py": "475f3cddb3b44e8ca9586e4e71144cfe2cd6a525189bb1104375b6d3133cda30",
+    "tests/test_gui_discovery.py": "bb6af7548b059a7e0dedba57d60a4871efa83344f0c0c0b4ec63bfdd875351c1",
+    "tests/test_gui_state_boundaries.py": "f40fe0cfe535700d7b438d071c9532186384be114ae7403aff4513a30edf0992",
+    "tests/test_gui_state_recovery.py": "a26e89382ea2f1c47331c098d31d78a0adc16a94c8e3171cd00248c724f357b3",
+    "tests/test_i18n.py": "90402b31368237047b151c6309eec9c2b3418024048a0f9df3a0e15faded21f4",
+    "tests/test_installation.py": "c1e5691b0c9762cbb62023e03fffe1bc7b7f9f82a8125750c1f21783c0cbf9de",
+    "tests/test_large_resource_workflow.py": "f88082e533945a13e4010022e815ff9c586f9f1b6bcf789db7bd09dd77f283b6",
+    "tests/test_latest_beta.py": "b55cc7ca7a44dad222314fee1574b3fc8b7263a54212c18d96a483d63103755d",
+    "tests/test_launch_validation.py": "ee4308280bd12731e53f7e0bbe39d554de8f4c9ce8acc5bd718ea99bec986fc0",
+    "tests/test_lua_api_requirements.py": "7b4923bf98f4d5ad1d21c3c02529b87eb3a7f893ae2aec256fb6922c202b8332",
+    "tests/test_managed_menu.py": "7c51871c9eba96a469a34af45cdd28e7f8167f07c58ad93cc8bc76870651949f",
+    "tests/test_menu_delivery.py": "12d7c57d41377942ac8a97e20359932a04d95f4cef514ca499d7a128cf4deb5b",
+    "tests/test_merge.py": "7dfa14846a1477c5151d5d3f0f75dbae65a7c2e21e3597164f2c899f7229e479",
+    "tests/test_metadata.py": "1d2a1597da61807643ece885082d745b3a67c85cd2d89fa22bd5d09fee5b0f18",
+    "tests/test_module_bundles.py": "5b15ca61e36d48437f911926123b8a1723dba25945e778ecfacbef13ff6d4f8d",
+    "tests/test_package_versions.py": "7332684113bc6137330740d4f8d5a3c73f214b08b943568642dc6ea01cd0a3f1",
+    "tests/test_paths_discovery.py": "e7c098bddef3961ce1e3552db4a9fbd6ebaa2832aa476c809b8e4424e8541e91",
+    "tests/test_post_commit_settings_cleanup.py": "dd3d1cac613afbb7877a53c53958b64ae2173cae4044cd8bc45683140428d22a",
+    "tests/test_preferences.py": "fdae32ec1fb68e17b60d56024b78d4107334da2949786dbc087ee7dc12b4530e",
+    "tests/test_quarantined_runtime_dependencies.py": "4f7a9de46b85581ab3ff2e45b4ff9f6871e89637510576efbbe63ce8cbcceee0",
+    "tests/test_release_bundle.py": "64ee3d185c5d91f07c75bb087f1b52f5a06e4f52e9ef41408ba25224b61fe109",
+    "tests/test_runtime_bootstrap.py": "53f004ff3b357c538a142dfc3977a313484e7976ddf5bf3f803b07f4258cbdd6",
+    "tests/test_runtime_candidate_warning.py": "f03cc7e4642b4e9f0f32805bcf8e5574c38bc2dca75f6f0fd9f4120a852f4a49",
+    "tests/test_runtime_provider_lifecycle.py": "3a4773caab7073a58dab99c052d0eb5059b77f4ac546075775a668ae08a52ff1",
+    "tests/test_runtime_provider_sync.py": "3d16522fbb4029a972bd5cca89b81e1e3d8c4199c515b53156adbf7fc73d629a",
+    "tests/test_runtime_review_metadata.py": "f1092eb548917d94b670f8f0650d3f9ce50213024258c466f38df47e37f2023d",
+    "tests/test_runtime_upgrade.py": "7f732f65b111ee9486ed274888c7d0fa159769506bcbc38f715422fceebf520a",
+    "tests/test_safety_limits.py": "30e947b0d1a4f6150485bd3fc2695617c1f77f85a3c00df850f3721d30a9d32f",
+    "tests/test_screen_extension_refusals.py": "d5aaa9d84beaac38d9ce3e1a78a895793903cf9578f94dd6b3dc407481b95a48",
+    "tests/test_screen_extension_workflow.py": "193db68b920e7529ecadd62b156f86ff7f17b502a2d05ee4e97b4c7bd3a0e69d",
+    "tests/test_screen_extensions.py": "972ef655179a002c21af1631c182051a7ecf32e0911b00485f4ffd9fc059401e",
+    "tests/test_sdk_settings.py": "9aeb4b3b7f629f1a75a56f39584a4b37c9c8189b570d4b11f1552379e886caa9",
+    "tests/test_shipped_runtime.py": "f73aad83b751c220dfb816de2f0f173cf7d76d893a460e1e48799a0d480a62e2",
+    "tests/test_signed_runtime_provider.py": "ea5456d7875eca3d2349a3680a61f6295bd6d21258a161e475c1414faca5a799",
+    "tests/test_streamed_discovery.py": "78b629049a131d8aaadb4bc8496b4ab85ee44fcaaf40f7e7dc70a87688eba6bf",
+    "tests/test_textmerge.py": "0939991fc69741c06107abcfab64bdc1ee8968bfa18beb251ad0c5cc4bc20974",
+    "tests/test_tool_archive.py": "dc89336b277c49ac9e62b2e83644d7487e1b1bc385fdb01e07f46f88c7b1c891",
+    "tests/test_transaction_publication_safety.py": "a3f50937093f60ebafa16410dc025428179988844181b4e9d81cedf6fe0f23a2",
+    "tests/test_ui_feedback.py": "c7a839338462d657fcaa2eeb2eec0695c5c4e5a58032377521e967e4447fadbd",
+    "tests/test_verified_runtime_dependency_fallback.py": "adf8e54b0670eb910600e66858b3c7437fc65e10dacb5a3520beb3bfb6205e8f",
+    "tests/test_windows_bundle.py": "1776b6c73c4de139b020d1f423a693df60b462f3c3724d5fbfc4a4ae6a2d2c0c",
+    "tests/test_workflow.py": "d8bfe100b2a06f5d3b0510a3a774c9dba00f530b4b9db097630c69c69c3aca4f"
+  },
+  "host": {
+    "system": "Windows",
+    "python": "3.12.15"
+  },
+  "findings": {
+    "groups": 8,
+    "priority_1": 1,
+    "priority_2": 6,
+    "priority_3": 1
+  },
+  "full_suite": {
+    "tests": 679,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 10,
+    "passed": 669,
+    "seconds": 213.913,
+    "junit_sha256": "5f7d16d704c9cd88b7994a9930162197ab65fe10734e040cf6de2643f034668b",
+    "skips": [
+      {
+        "test": "tests.test_discovery_diagnostics::test_unsafe_link_candidate_is_not_followed_and_other_mods_remain_available",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "tests.test_gui_discovery::test_workshop_and_local_mod_names_show_without_moving_inputs",
+        "reason": "GUI display unavailable; not a GUI acceptance pass"
+      },
+      {
+        "test": "tests.test_installation::test_linked_game_is_rejected",
+        "reason": "symlink creation unavailable"
+      },
+      {
+        "test": "tests.test_managed_menu::test_real_lua_owned_menu_contract[False]",
+        "reason": "Lua interpreter unavailable; syntax and package checks run separately"
+      },
+      {
+        "test": "tests.test_managed_menu::test_real_lua_owned_menu_contract[True]",
+        "reason": "Lua interpreter unavailable; syntax and package checks run separately"
+      },
+      {
+        "test": "tests.test_paths_discovery::test_symlink_rejected",
+        "reason": "symlink creation unavailable"
+      },
+      {
+        "test": "tests.test_runtime_bootstrap::test_source_build_refuses_a_dependency_link",
+        "reason": "symlink creation unavailable"
+      },
+      {
+        "test": "tests.test_safety_limits::test_root_ancestor_link_is_rejected",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "tests.test_streamed_discovery::test_lazy_content_rechecks_root_and_ancestor_links[False]",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "tests.test_streamed_discovery::test_lazy_content_rechecks_root_and_ancestor_links[True]",
+        "reason": "symlinks unavailable"
+      }
+    ]
+  },
+  "isolated_gui_followup": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 1,
+    "seconds": 0.569,
+    "junit_sha256": "9110cc2f265263a652be66dbe8c84f4dbf95a6b38d5ec289becc231dcfee75d7",
+    "skips": []
+  },
+  "static_checks": {
+    "ruff": {
+      "result": "All checks passed!",
+      "log_sha256": "af352a86840ad0af3d37ea0d9197f868363a6dac6b1c2ef5d2722f6b41d2d9af"
+    },
+    "format": {
+      "result": "87 files already formatted",
+      "log_sha256": "e7bb1034893c3de39c61c100652786be1ddbbfbe6415b83aa8cc666e6c693d1c"
+    },
+    "mypy": {
+      "result": "Success: no issues found in 32 source files",
+      "log_sha256": "5c2d7f187d25ce9bca78943d486ecdaf833a9397278e68b44ebb48255d14a95d"
+    }
+  },
+  "offline_languages": 14,
+  "installed_set_analysis": {
+    "read_only": true,
+    "inventory_packages": 22,
+    "inventory_diagnostics": 0,
+    "selected": [
+      "3833014670",
+      "2824714936",
+      "3225306468",
+      "2816055960",
+      "3460002110",
+      "3470335216",
+      "3826940003",
+      "3834928522"
+    ],
+    "runtime_sha256": "2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5",
+    "blockers": [],
+    "observed_files_unchanged": true,
+    "game_spawned": false,
+    "activation_attempted": false
+  },
+  "observed_game_sha256": "461e12623bacb7de29ca27b4614425c87e8df2c8327a5e958a957c850effe42a",
+  "observed_installed_application_sha256": "d16bc3a3003e7ae1c9c95c8307d2f48c041b3be00031f03eb08624148c3fa4e6",
+  "not_verified_for_this_correction": [
+    "frozen-executable",
+    "macos-ci-or-package",
+    "live-gameplay",
+    "clean-machine",
+    "multiplayer",
+    "dedicated-server"
+  ]
+}

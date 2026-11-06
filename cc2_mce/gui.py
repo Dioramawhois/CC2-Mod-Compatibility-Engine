@@ -35,6 +35,7 @@ from cc2_mce.ui_feedback import OverrideWarning, Rejection, explain_overrides, e
 from cc2_mce.workflow import (
     PackagePlan,
     _running,
+    _verified_package,
     active_paths,
     analyze,
     apply_plan,
@@ -101,6 +102,7 @@ class App(tk.Tk):
         self.translator = Translator(self.language_choice)
         self.extra_roots = [Path(value) for value in self.preferences.extra_roots]
         self._activation_known = False
+        self._recovery_required = False
         self._launch_refused = False
         self._post_restore_diagnostic: Diagnostic | None = None
         self.checks: dict[str, ttk.Checkbutton] = {}
@@ -502,6 +504,7 @@ class App(tk.Tk):
             and (not self.needs_placement)
             and (self.scan is not None)
             and self._activation_known
+            and not self._recovery_required
             and not self._launch_refused
             and (not self.selection_dirty)
             and (not self.applying)
@@ -512,7 +515,10 @@ class App(tk.Tk):
         self.actions_menu.entryconfigure(
             self._undo_index,
             state="normal"
-            if not self.applying and not pending and self._history_available()
+            if not self.applying
+            and not pending
+            and not self._recovery_required
+            and self._history_available()
             else "disabled",
         )
         can_clear = (
@@ -521,15 +527,19 @@ class App(tk.Tk):
             and self.scan is not None
             and not self.applying
             and not pending
+            and not self._recovery_required
             and (
                 bool(self._desired_ids)
                 or any(value.get() for value in (*self.vars.values(), *self.library_vars.values()))
             )
         )
         self.disable_all_button.state(["!disabled"] if can_clear else ["disabled"])
-        if pending:
-            for check in self.checks.values():
-                check.state(["disabled"])
+        for check in self.checks.values():
+            check.state(
+                ["disabled"]
+                if pending or self._recovery_required or self.applying
+                else ["!disabled"]
+            )
         if self.selection_dirty or self.applying or (self.busy and self.scan is None):
             if not self.progress.winfo_manager():
                 self.progress.pack(fill="x", before=self.bottom, pady=(0, 10))
@@ -541,7 +551,9 @@ class App(tk.Tk):
     def _update_rows(self, pending_text: str | None = None) -> None:
         pending_text = pending_text or self.tr("Проверяем…")
         for key, value in self.row_status.items():
-            if self.selection_dirty and (
+            if self._recovery_required and not self._activation_known:
+                text = self.tr("Состояние не подтверждено")
+            elif self.selection_dirty and (
                 (key in self._desired_ids) != (key in self._applied_ids)
                 or (key in self._desired_ids and self._ordered_selection() != self._applied_order)
             ):
@@ -652,6 +664,74 @@ class App(tk.Tk):
             self._row_errors = dict(warning.rows)
             self.notice_frame.pack(fill="x", before=self.tabs, pady=(4, 4))
 
+    def _show_recovery_required(self, error: Diagnostic) -> None:
+        self._recovery_required = True
+        self._play_requested = False
+        self._launch_refused = True
+        if self._auto_timer is not None:
+            self.after_cancel(self._auto_timer)
+            self._auto_timer = None
+        self.selection_dirty = False
+        self.package_plan = None
+        self.active_package = None
+        self._activation_known = False
+        self._applied_ids.clear()
+        self._applied_order.clear()
+        self._required_notes.clear()
+        self._applied_warning = None
+        self._row_errors.clear()
+        diagnostics = [error]
+        names: list[str] = []
+        try:
+            user = input_root(game_user_dir())
+            paths = active_paths(user)
+            if paths:
+                if paths != (user / "mods/CC2-MCE",):
+                    raise InputError("Recovery selection is not a verified owned package")
+                report = _verified_package(paths[0])
+                self.active_package = paths[0]
+                self._applied_order = list(report["mod_order"])
+                self._applied_ids = set(self._applied_order)
+                source_names = {source["id"]: source["name"] for source in report["sources"]}
+                names = [source_names.get(key, key) for key in self._applied_order]
+                self._applied_patch_priority = report["merge_policy"] == "ordered-patches"
+                self.patch_priority = self._applied_patch_priority
+                self.priority_var.set(self.patch_priority)
+                self._refresh_dependency_notes(report["sources"])
+            self._activation_known = True
+        except (MCEError, OSError, ValueError, RecursionError) as exc:
+            diagnostics.append(error_diagnostic(exc, stage="restore"))
+        self._desired_ids = set(self._applied_ids)
+        self.mod_order = self._applied_order + [
+            key for key in self.mod_order if key not in self._applied_ids
+        ]
+        for key, variable in {**self.vars, **self.library_vars}.items():
+            variable.set(key in self._applied_ids)
+        self._show_diagnostics(tuple(diagnostics), stage=error.stage)
+        self._notice_source = "recovery"
+        title = self.tr("Восстановление не завершено. Запуск игры заблокирован.")
+        self.notice_title.set(title)
+        self.notice_text.set(
+            self.tr(
+                "Часть файлов могла быть восстановлена. Проверьте подробности и обновите "
+                "список для повторного восстановления."
+            )
+        )
+        self.status.set(title)
+        self.activation_status.set(
+            self.tr(
+                "Проверенные файлы набора: {p0}. Восстановление не завершено.",
+                p0=", ".join(names[:3])
+                + (self.tr(" и ещё {p0}", p0=len(names) - 3) if len(names) > 3 else "")
+                if names
+                else self.tr("нет модов"),
+            )
+            if self._activation_known
+            else self.tr("Текущий набор не подтверждён. Восстановление не завершено.")
+        )
+        self._update_rows()
+        self._render_order()
+
     def _reject_change(self, rejection: Rejection) -> None:
         self._play_requested = False
         if self._auto_timer is not None:
@@ -722,6 +802,10 @@ class App(tk.Tk):
                 self.busy = False
                 self._set_applying(False)
                 self.package_plan = None
+                if (game_user_dir() / "cc2-mce/pending.json").exists():
+                    self._show_recovery_required(error)
+                    self._refresh_controls()
+                    return
                 self._show_diagnostics((error,), stage=stage)
                 if self.selection_dirty and (
                     "Игра запущена" in error.cause or "Закройте игру" in error.cause
@@ -779,6 +863,7 @@ class App(tk.Tk):
         self.mod_order.clear()
         self._applied_order.clear()
         self._activation_known = False
+        self._recovery_required = False
         self._launch_refused = False
         self._post_restore_diagnostic = None
         self.active_package = None
@@ -900,11 +985,14 @@ class App(tk.Tk):
         library_roots = [selected_game.libraries_dir]
         previous_scan = self.scan
         desired = set(self._desired_ids) if preserve_selection else set()
+        recovering = self._recovery_required or (game_user_dir() / "cc2-mce/pending.json").exists()
+        recovery_diagnostic: Diagnostic | None = None
 
         def receive(combined: Scan) -> None:
             nonlocal desired
             if (
                 preserve_selection
+                and not recovering
                 and previous_scan is not None
                 and (combined.fingerprint == previous_scan.fingerprint)
                 and not (self._notice_source == "inventory" and not combined.issues)
@@ -912,6 +1000,10 @@ class App(tk.Tk):
                 return
             self.scan = combined
             self.library_scan = combined
+            self._recovery_required = False
+            if recovering:
+                self._launch_refused = recovery_diagnostic is not None
+                self._post_restore_diagnostic = recovery_diagnostic
             mods = tuple(mod for mod in combined.mods if mod.package_kind == "mod")
             libraries = tuple(mod for mod in combined.mods if mod.package_kind == "library")
             self.active_package = None
@@ -985,6 +1077,7 @@ class App(tk.Tk):
                 )
                 if (
                     not preserve_selection
+                    or recovering
                     or not self.notice_title.get()
                     or showing_warning
                     or self._notice_source == "inventory"
@@ -999,6 +1092,8 @@ class App(tk.Tk):
             except (MCEError, OSError, ValueError):
                 self._activation_known = False
                 self.activation_status.set(self.tr("Не удалось прочитать текущую активацию игры."))
+            self._remove_items(self.vars, set(self.vars) - {mod.id for mod in libraries})
+            self._remove_items(self.library_vars, set(self.library_vars) - {mod.id for mod in mods})
             self._display_items(self.list_frame, self.vars, mods)
             self._display_items(self.library_frame, self.library_vars, libraries, library=True)
             resumed_order = None
@@ -1082,6 +1177,7 @@ class App(tk.Tk):
             self._maybe_play()
 
         def scan() -> Scan:
+            nonlocal recovery_diagnostic
             try:
                 prepare_collections(selected_game)
             except (OSError, MCEError) as exc:
@@ -1090,10 +1186,40 @@ class App(tk.Tk):
                         "Не удалось подготовить mods и libraries. Проверьте доступ к папке игры."
                     )
                 ) from exc
-            recover_interrupted(game_user_dir())
+            user = game_user_dir()
+            recover_interrupted(user)
+            if recovering:
+                try:
+                    paths = active_paths(user)
+                    if not paths or paths == (user / "mods/CC2-MCE",):
+                        validate_launch(
+                            selected_game, user, paths[0] if paths else None, game_running=_running
+                        )
+                except (OSError, MCEError) as exc:
+                    recovery_diagnostic = error_diagnostic(
+                        exc, stage="launch", source_path=selected_game.root
+                    )
             return discover([*roots, *library_roots], collect_issues=True)
 
         self._background(scan, receive, stage="discovery")
+
+    def _remove_items(self, variables: dict[str, tk.BooleanVar], wanted: set[str]) -> None:
+        for key in list(variables):
+            if key in wanted and key in self._row_frames:
+                continue
+            row = self._row_frames.pop(key, None)
+            check = self.checks.pop(key, None)
+            label = self.row_labels.pop(key, None)
+            if row is not None:
+                row.destroy()
+            else:
+                if check is not None:
+                    check.destroy()
+                if label is not None:
+                    label.destroy()
+            variables.pop(key)
+            self.row_status.pop(key, None)
+            self.row_origins.pop(key, None)
 
     def _display_items(
         self,
@@ -1117,23 +1243,7 @@ class App(tk.Tk):
             ),
             None,
         )
-        wanted = {mod.id for mod in mods}
-        for key in list(variables):
-            if key in wanted and key in self._row_frames:
-                continue
-            row = self._row_frames.pop(key, None)
-            check = self.checks.pop(key, None)
-            label = self.row_labels.pop(key, None)
-            if row is not None:
-                row.destroy()
-            else:
-                if check is not None:
-                    check.destroy()
-                if label is not None:
-                    label.destroy()
-            variables.pop(key)
-            self.row_status.pop(key, None)
-            self.row_origins.pop(key, None)
+        self._remove_items(variables, {mod.id for mod in mods})
         placeholder = self._empty_rows.pop(frame, None)
         if placeholder is not None:
             placeholder.destroy()
@@ -1355,12 +1465,6 @@ class App(tk.Tk):
 
         def check() -> PackagePlan:
             scan = discover(roots, collect_issues=True)
-            scan.require_available(selected)
-            chosen = [mod for mod in scan.mods if mod.id in selected]
-            if {mod.id for mod in chosen} != set(selected):
-                raise InputError(
-                    self.tr("Выбранный мод исчез из папки. Верните его или снимите галочку.")
-                )
             return analyze(
                 selected_game,
                 scan,

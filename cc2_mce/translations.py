@@ -3,6 +3,11 @@
 # ruff: noqa: E501 -- message IDs and translations are kept as complete catalog entries.
 
 EN: dict[str, str] = {
+    "Восстановление не завершено. Запуск игры заблокирован.": "Recovery is incomplete. Game launch is blocked.",
+    "Часть файлов могла быть восстановлена. Проверьте подробности и обновите список для повторного восстановления.": "Some files may have been restored. Check the details and refresh the list to retry recovery.",
+    "Проверенные файлы набора: {p0}. Восстановление не завершено.": "Verified set files: {p0}. Recovery is incomplete.",
+    "Текущий набор не подтверждён. Восстановление не завершено.": "The current set could not be verified. Recovery is incomplete.",
+    "Состояние не подтверждено": "State not verified",
     "Превышен предел чтения модов. Уменьшите набор папок и проверьте подробности.": "Mod-reading limit exceeded. Use fewer source folders and check the problem details.",
     "Причина: ": "Reason: ",
     "Источник: ": "Source: ",

@@ -1,5 +1,12 @@
 # 05. CLI и контракты данных (проект, v0.1)
 
+ADR-0038 retains package schema 2, signed provider schema 1 and the
+non-installable diagnostic schema 1. The existing diagnostic string code
+`launch_recovery_pending` identifies a pending recovery refusal at the final
+launch boundary. Provider indexes are local signed-evidence locators, not a
+new trust source or generated game payload. Source/base/engine hashes, provider
+provenance and mod order keep their existing meanings.
+
 The screen-extension input schema accepts the released SDK schemas 1/2 with
 additional bounded semantic checks. Package schema 2 is unchanged: the composed
 descriptor records original descriptor hashes, and namespaced helper copies

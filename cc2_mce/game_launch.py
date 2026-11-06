@@ -10,6 +10,7 @@ from typing import Any
 from cc2_mce.errors import InputError
 from cc2_mce.filesystem import Budget, Limits, digest, input_root, is_link, read_regular
 from cc2_mce.installation import Installation
+from cc2_mce.locking import activation_lock
 from cc2_mce.workflow import _running, _verified_package, active_paths
 
 
@@ -22,6 +23,9 @@ def validate_launch(
 ) -> None:
     """Check the real pre-spawn guards without starting a process or changing files."""
     root = input_root(game.root)
+    pending = user_dir / "cc2-mce/pending.json"
+    if pending.exists() or pending.is_symlink():
+        raise InputError("Pending activation recovery; close the game before retrying")
     executable = game.executable
     if executable not in (
         root / "carrier_command.exe",
@@ -55,5 +59,6 @@ def launch_game(
     spawn: Callable[..., Any] = subprocess.Popen,
     game_running: Callable[[], bool] = _running,
 ) -> None:
-    validate_launch(game, user_dir, package, game_running=game_running)
-    spawn([str(game.executable)], cwd=str(input_root(game.root)), shell=False)
+    with activation_lock(user_dir):
+        validate_launch(game, user_dir, package, game_running=game_running)
+        spawn([str(game.executable)], cwd=str(input_root(game.root)), shell=False)

@@ -11,6 +11,7 @@ import unicodedata
 import uuid
 from collections import defaultdict
 from collections.abc import Callable
+from contextlib import ExitStack
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -107,7 +108,7 @@ def review_profile(game: Installation) -> dict[str, Any]:
 def resolve_selection(
     scan: Scan, selected: list[str], *, provided_dependencies: frozenset[str] = frozenset()
 ) -> tuple[ModRef, ...]:
-    scan.require_available(selected)
+    scan.require_available(selected, provided_dependencies=provided_dependencies)
     by_id: dict[str, ModRef] = {}
     versions: dict[str, list[ModRef]] = {}
     ambiguous = "Выберите одну версию мода: Workshop или локальную."
@@ -268,11 +269,18 @@ def analyze(
     if actual_game_hash != profile["game_sha256"]:
         raise InputError("Сборка игры изменилась")
     provider_user = user_dir if user_dir is not None else game_user_dir()
-    profile, _ = runtime_providers.select(game.root, (), profile, provider_user)
+    profile, available_runtime = runtime_providers.select(
+        game.root, (), profile, provider_user, available=scan.mods
+    )
     provided: frozenset[str] = frozenset()
     if profile.get("runtime_sha256") and any("cc2x.runtime" in m.dependencies for m in scan.mods):
         try:
-            if _runtime(game, profile["runtime_sha256"], profile.get("previous_runtime_sha256")):
+            if _runtime(
+                game,
+                profile["runtime_sha256"],
+                profile.get("previous_runtime_sha256"),
+                available_runtime,
+            ):
                 provided = frozenset({"cc2x.runtime"})
         except InputError:
             pass  # Never satisfy a missing dependency using an unknown installed DLL.
@@ -697,12 +705,72 @@ def active_paths(user_dir: Path) -> tuple[Path, ...]:
     )
 
 
-def _write_new(path: Path, content: bytes) -> None:
+def _write_new(path: Path, content: bytes) -> tuple[int, int]:
     input_root(path.parent)
-    with path.open("xb") as stream:
-        stream.write(content)
-        stream.flush()
-        os.fsync(stream.fileno())
+    identity: tuple[int, int] | None = None
+    try:
+        with path.open("xb") as stream:
+            info = os.fstat(stream.fileno())
+            identity = (info.st_dev, info.st_ino)
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except BaseException:
+        if identity is not None:
+            _discard_prepared_file(path, identity)
+        raise
+    assert identity is not None
+    return identity
+
+
+def _discard_prepared_file(path: Path, identity: tuple[int, int]) -> None:
+    """Remove only the inode created by this attempt; cleanup never hides its failure."""
+    try:
+        input_root(path.parent)
+        info = path.lstat()
+        if (info.st_dev, info.st_ino) == identity:
+            path.unlink()
+    except (OSError, InputError):
+        pass
+
+
+def _write_pending(path: Path, content: bytes) -> None:
+    """Publish the complete durable recovery record without exposing a partial JSON file."""
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    identity: tuple[int, int] | None = None
+    try:
+        identity = _write_new(temporary, content)
+        info = temporary.stat()
+        if (info.st_dev, info.st_ino) != identity or _read(temporary, temporary.parent) != content:
+            raise InputError("Recovery journal staging changed externally")
+        os.link(temporary, path)
+    finally:
+        if identity is not None:
+            # A failure removing this own alias cannot revoke a published journal.
+            _discard_prepared_file(temporary, identity)
+
+
+def _discard_unpublished(
+    stage: Path,
+    files: list[tuple[Path, tuple[int, int]]],
+    pending: Path,
+    journal: list[bytes],
+) -> None:
+    if journal:
+        try:
+            if (pending.exists() or pending.is_symlink()) and _read(pending, pending.parent) == (
+                journal[0]
+            ):
+                return  # Publication succeeded, including interruption immediately after link().
+        except (OSError, InputError):
+            return  # Preserve possible recovery inputs when journal ownership cannot be checked.
+    for path, identity in reversed(files):
+        _discard_prepared_file(path, identity)
+    try:
+        if stage.exists():
+            shutil.rmtree(input_root(stage))
+    except (OSError, InputError):
+        pass
 
 
 def _replace_checked(path: Path, content: bytes, expected: bytes) -> None:
@@ -817,12 +885,18 @@ def _cache_path(state_dir: Path, name: str) -> Path:
     return state_dir / normalized
 
 
-def _recover_pending(user: Path) -> None:
+def _require_closed(game_running: Callable[[], bool]) -> None:
+    if game_running():
+        raise InputError("Закройте игру — восстановим незавершённую сборку автоматически.")
+
+
+def _recover_pending(user: Path, *, game_running: Callable[[], bool] = _running) -> None:
     """Roll back an interrupted folder/config transaction before the next operation."""
     state_dir = input_root(user / "cc2-mce")
     pending = state_dir / "pending.json"
     if not pending.exists():
         return
+    _require_closed(game_running)
     journal = json.loads(_read(pending, state_dir))
     if journal.get("owner") != "cc2-mce":
         raise InputError("Неизвестный журнал незавершённой записи")
@@ -844,6 +918,7 @@ def _recover_pending(user: Path) -> None:
             backup.exists() or not journal["had_destination"]
         ):
             # Cache the complete failed candidate, never delete an unverified directory.
+            _require_closed(game_running)
             os.rename(destination, state_dir / ("discarded-" + uuid.uuid4().hex))
         elif current_hash != journal["old_manifest_sha256"] or backup.exists():
             raise InputError("Папка сборки изменена после сбоя")
@@ -851,6 +926,7 @@ def _recover_pending(user: Path) -> None:
         _verified_package(backup)
         if digest(_read(backup / "mce-manifest.json", backup)) != journal["old_manifest_sha256"]:
             raise InputError("Резервная сборка повреждена")
+        _require_closed(game_running)
         os.rename(backup, destination)
     elif journal["had_destination"] and not destination.exists():
         raise InputError("Не найдена предыдущая рабочая сборка")
@@ -861,22 +937,42 @@ def _recover_pending(user: Path) -> None:
             _verified_package(archived)
             if source.exists():
                 raise InputError("Прежняя папка модов занята")
+            _require_closed(game_running)
             os.rename(archived, source)
     if current != old:
+        _require_closed(game_running)
         _replace_checked(user / "mods.xml", old, current)
     state_file = state_dir / "activation.json"
     if journal["previous_state"]:
         previous = _read(_cache_path(state_dir, journal["previous_state"]), state_dir)
+        _require_closed(game_running)
         if state_file.exists():
             _replace_checked(state_file, previous, _read(state_file, state_dir))
         else:
             _write_new(state_file, previous)
     elif state_file.exists():
+        _require_closed(game_running)
         state_file.unlink()
-    sdk_settings.cleanup(user, state_dir, journal.get("config_created", []), remove_targets=True)
+    _require_closed(game_running)
+    sdk_settings.cleanup(
+        user,
+        state_dir,
+        journal.get("config_created", []),
+        remove_targets=True,
+        game_running=game_running,
+    )
     # Restore our resources/settings even if a separate writer replaced the DLL.
     # Preserve the pending journal and runtime backup if native rollback refuses.
-    sdk_runtime.rollback(journal.get("runtime_change"), state_dir, _replace_checked)
+    _require_closed(game_running)
+
+    def replace_runtime(path: Path, content: bytes, expected: bytes) -> None:
+        _require_closed(game_running)
+        _replace_checked(path, content, expected)
+
+    sdk_runtime.rollback(
+        journal.get("runtime_change"), state_dir, replace_runtime, game_running=game_running
+    )
+    _require_closed(game_running)
     pending.unlink()
 
 
@@ -894,7 +990,7 @@ def _apply_plan_locked(
     state_dir = user / "cc2-mce"
     state_dir.mkdir(exist_ok=True)
     input_root(state_dir)
-    _recover_pending(user)
+    _recover_pending(user, game_running=game_running)
     if not snapshot_unchanged(plan.scan):
         raise InputError("Исходные моды изменились. Повторите проверку.")
     fresh = analyze(
@@ -925,7 +1021,16 @@ def _apply_plan_locked(
         _verified_package(destination)
         old_manifest_hash = digest(_read(destination / "mce-manifest.json", destination))
     stage.mkdir()
-    try:
+    prepared_files: list[tuple[Path, tuple[int, int]]] = []
+    pending = state_dir / "pending.json"
+    pending_content: list[bytes] = []
+
+    def write_prepared(path: Path, content: bytes) -> None:
+        identity = _write_new(path, content)
+        prepared_files.append((path, identity))
+
+    with ExitStack() as preparation:
+        preparation.callback(_discard_unpublished, stage, prepared_files, pending, pending_content)
         (stage / "content").mkdir()
         for logical, content in sorted(plan.payload.items()):
             normalize_logical_path(logical)
@@ -938,118 +1043,122 @@ def _apply_plan_locked(
             (json.dumps(plan.report, ensure_ascii=False, indent=2) + "\n").encode(),
         )
         _verified_package(stage)
-    except (OSError, InputError):
-        # This exact directory was created above and cannot contain source files.
-        input_root(stage)
-        shutil.rmtree(stage)
-        raise
-    if game_running() or not snapshot_unchanged(plan.scan):
-        raise InputError("Игра запущена или входы изменились; пакет не активирован")
-    runtime_target = plan.game.root / "dinput8.dll"
-    active = xml.find("active_mod_folders")
-    assert active is not None
-    active.clear()
-    if plan.selected:
-        ET.SubElement(active, "path", value=str(destination))
-    new = ET.tostring(xml, encoding="utf-8", xml_declaration=True)
-    state_file = state_dir / "activation.json"
-    state: dict[str, Any] = {}
-    previous_state: bytes | None = None
-    if state_file.exists():
-        previous_state = _read(state_file, state_dir)
-        state = json.loads(previous_state)
-        if not isinstance(state, dict) or state.get("owner") != "cc2-mce":
-            raise InputError("Неверный журнал активации")
-    legacy_moves = []
-    for previous in bounded_children(mods, Budget(Limits())):
-        if not re.fullmatch(r"CC2-MCE-[0-9a-f]{16}", previous.name):
-            continue
-        manifest = previous / "mce-manifest.json"
-        if not manifest.exists():
-            continue
-        previous_root = input_root(previous)
-        metadata = json.loads(_read(manifest, previous_root))
-        if not isinstance(metadata, dict) or metadata.get("owner") != "cc2-mce":
-            continue
-        _verified_package(previous_root)
-        legacy_moves.append({"name": previous.name, "cache": "legacy-" + uuid.uuid4().hex})
-    same_activation = old == new
-    if state.get("owner") == "cc2-mce" and not same_activation:
-        saved_root = _parse_activation(_read(_cache_path(state_dir, state["backup"]), state_dir))
-        same_activation = (
-            len(xml) == len(saved_root) == 1
-            and xml.attrib == saved_root.attrib
-            and active_paths(user) == ((destination,) if plan.selected else ())
-            and all(
-                not (node.text or "").strip() and not (node.tail or "").strip()
-                for node in xml.iter()
+        if game_running() or not snapshot_unchanged(plan.scan):
+            raise InputError("Игра запущена или входы изменились; пакет не активирован")
+        runtime_target = plan.game.root / "dinput8.dll"
+        active = xml.find("active_mod_folders")
+        assert active is not None
+        active.clear()
+        if plan.selected:
+            ET.SubElement(active, "path", value=str(destination))
+        new = ET.tostring(xml, encoding="utf-8", xml_declaration=True)
+        state_file = state_dir / "activation.json"
+        state: dict[str, Any] = {}
+        previous_state: bytes | None = None
+        if state_file.exists():
+            previous_state = _read(state_file, state_dir)
+            state = json.loads(previous_state)
+            if not isinstance(state, dict) or state.get("owner") != "cc2-mce":
+                raise InputError("Неверный журнал активации")
+        legacy_moves = []
+        for previous in bounded_children(mods, Budget(Limits())):
+            if not re.fullmatch(r"CC2-MCE-[0-9a-f]{16}", previous.name):
+                continue
+            manifest = previous / "mce-manifest.json"
+            if not manifest.exists():
+                continue
+            previous_root = input_root(previous)
+            metadata = json.loads(_read(manifest, previous_root))
+            if not isinstance(metadata, dict) or metadata.get("owner") != "cc2-mce":
+                continue
+            _verified_package(previous_root)
+            legacy_moves.append({"name": previous.name, "cache": "legacy-" + uuid.uuid4().hex})
+        same_activation = old == new
+        if state.get("owner") == "cc2-mce" and not same_activation:
+            saved_root = _parse_activation(
+                _read(_cache_path(state_dir, state["backup"]), state_dir)
             )
-        )
-    if (
-        same_activation
-        and state.get("build_id") == plan.report["build_id"]
-        and old_manifest_hash == digest(_read(stage / "mce-manifest.json", stage))
-        and not legacy_moves
-        and not sdk_settings.missing(user, plan.config_defaults)
-        and (
-            plan.runtime_source is None
-            or (
-                runtime_target.exists()
-                and digest(_read(runtime_target, plan.game.root)) == plan.report["runtime_sha256"]
+            same_activation = (
+                len(xml) == len(saved_root) == 1
+                and xml.attrib == saved_root.attrib
+                and active_paths(user) == ((destination,) if plan.selected else ())
+                and all(
+                    not (node.text or "").strip() and not (node.tail or "").strip()
+                    for node in xml.iter()
+                )
             )
+        if (
+            same_activation
+            and state.get("build_id") == plan.report["build_id"]
+            and old_manifest_hash == digest(_read(stage / "mce-manifest.json", stage))
+            and not legacy_moves
+            and not sdk_settings.missing(user, plan.config_defaults)
+            and (
+                plan.runtime_source is None
+                or (
+                    runtime_target.exists()
+                    and digest(_read(runtime_target, plan.game.root))
+                    == plan.report["runtime_sha256"]
+                )
+            )
+        ):
+            return destination
+        backup_name = f"mods-{uuid.uuid4().hex}.xml"
+        config_created = sdk_settings.stage(
+            user, state_dir, plan.config_defaults, token, write_prepared
         )
-    ):
-        shutil.rmtree(input_root(stage))
-        return destination
-    backup_name = f"mods-{uuid.uuid4().hex}.xml"
-    config_created = sdk_settings.stage(user, state_dir, plan.config_defaults, token, _write_new)
-    runtime_change = sdk_runtime.stage(
-        plan.game, plan.runtime_source, plan.profile, state_dir, token, _write_new
-    )
-    _write_new(state_dir / backup_name, old)
-    updated = {
-        "owner": "cc2-mce",
-        "backup": backup_name,
-        "backup_sha256": digest(old),
-        "applied_sha256": digest(new),
-        "package": str(destination),
-        "runtime_created": runtime_change is not None and runtime_change["backup"] is None,
-        "runtime_change": runtime_change,
-        "runtime_target": str(runtime_target),
-        "runtime_sha256": plan.report["runtime_sha256"],
-        "engine_sha256": plan.report["engine_sha256"],
-        "mod_order": plan.report["mod_order"],
-        "build_id": plan.report["build_id"],
-        "package_backup": "package-" + token,
-        "old_manifest_sha256": old_manifest_hash,
-        "new_manifest_sha256": digest(_read(stage / "mce-manifest.json", stage)),
-        "legacy_moves": legacy_moves,
-        "config_created": config_created,
-    }
-    prior_name = "previous-state-" + token + ".json" if previous_state else None
-    if previous_state is not None:
-        assert prior_name is not None
-        _write_new(state_dir / prior_name, previous_state)
-    pending = state_dir / "pending.json"
-    journal = {**updated, "had_destination": destination.exists(), "previous_state": prior_name}
-    _write_new(pending, (json.dumps(journal, indent=2) + "\n").encode())
+        runtime_change = sdk_runtime.stage(
+            plan.game, plan.runtime_source, plan.profile, state_dir, token, write_prepared
+        )
+        write_prepared(state_dir / backup_name, old)
+        updated = {
+            "owner": "cc2-mce",
+            "backup": backup_name,
+            "backup_sha256": digest(old),
+            "applied_sha256": digest(new),
+            "package": str(destination),
+            "runtime_created": runtime_change is not None and runtime_change["backup"] is None,
+            "runtime_change": runtime_change,
+            "runtime_target": str(runtime_target),
+            "runtime_sha256": plan.report["runtime_sha256"],
+            "engine_sha256": plan.report["engine_sha256"],
+            "mod_order": plan.report["mod_order"],
+            "build_id": plan.report["build_id"],
+            "package_backup": "package-" + token,
+            "old_manifest_sha256": old_manifest_hash,
+            "new_manifest_sha256": digest(_read(stage / "mce-manifest.json", stage)),
+            "legacy_moves": legacy_moves,
+            "config_created": config_created,
+        }
+        prior_name = "previous-state-" + token + ".json" if previous_state else None
+        if previous_state is not None:
+            assert prior_name is not None
+            write_prepared(state_dir / prior_name, previous_state)
+        journal = {**updated, "had_destination": destination.exists(), "previous_state": prior_name}
+        pending_content.append((json.dumps(journal, indent=2) + "\n").encode())
+        _write_pending(pending, pending_content[0])
     try:
         if game_running():
             raise InputError("Игра запущена; применение остановлено")
         if destination.exists():
             _verified_package(destination)
+            _require_closed(game_running)
             os.rename(destination, state_dir / updated["package_backup"])
+        _require_closed(game_running)
         os.rename(stage, destination)
         for move in updated["legacy_moves"]:
+            _require_closed(game_running)
             os.rename(mods / move["name"], state_dir / move["cache"])
         # Commit the recovery journal before changing runtime/configuration.
         encoded = (json.dumps(updated, indent=2) + "\n").encode()
+        _require_closed(game_running)
         if previous_state is not None:
             _replace_checked(state_file, encoded, previous_state)
         else:
             _write_new(state_file, encoded)
-        sdk_settings.install(user, state_dir, config_created)
-        sdk_runtime.install(runtime_change)
+        _require_closed(game_running)
+        sdk_settings.install(user, state_dir, config_created, game_running=game_running)
+        sdk_runtime.install(runtime_change, game_running=game_running)
         if plan.runtime_source is not None and (
             digest(_read(runtime_target, plan.game.root)) != plan.report["runtime_sha256"]
         ):
@@ -1062,10 +1171,11 @@ def _apply_plan_locked(
             != plan.report["game_sha256"]
         ):
             raise InputError("Игра или моды обновились во время применения")
+        _require_closed(game_running)
         _replace_checked(user / "mods.xml", new, old)
         pending.unlink()
     except (OSError, InputError):
-        _recover_pending(user)
+        _recover_pending(user, game_running=game_running)
         raise
     try:
         sdk_settings.cleanup(user, state_dir, config_created, remove_targets=False)
@@ -1099,7 +1209,7 @@ def _restore_previous_locked(
         raise InputError("Закройте игру перед восстановлением")
     user = input_root(user_dir)
     state_dir = input_root(user / "cc2-mce")
-    _recover_pending(user)
+    _recover_pending(user, game_running=game_running)
     state_path = state_dir / "activation.json"
     state = json.loads(_read(state_path, state_dir))
     name = state["backup"]
@@ -1140,8 +1250,8 @@ def _restore_previous_locked(
             "had_destination": state["old_manifest_sha256"] is not None,
             "previous_state": None,
         }
-        _write_new(state_dir / "pending.json", (json.dumps(journal, indent=2) + "\n").encode())
-        _recover_pending(user)
+        _write_pending(state_dir / "pending.json", (json.dumps(journal, indent=2) + "\n").encode())
+        _recover_pending(user, game_running=game_running)
         return
     _replace_checked(user / "mods.xml", backup, current)
     state_path.unlink()
@@ -1181,4 +1291,4 @@ def recover_interrupted(user_dir: Path, *, game_running: Callable[[], bool] = _r
     if game_running():
         raise InputError("Закройте игру — восстановим незавершённую сборку автоматически.")
     with activation_lock(user_dir):
-        _recover_pending(input_root(user_dir))
+        _recover_pending(input_root(user_dir), game_running=game_running)

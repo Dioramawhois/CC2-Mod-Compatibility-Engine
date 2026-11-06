@@ -12,6 +12,10 @@ from cc2_mce.errors import DiagnosticError
 from cc2_mce.reports import engine_hash
 
 _LAUNCH_GUARDS = {
+    "Pending activation recovery; close the game before retrying": (
+        "launch_recovery_pending",
+        "Восстановление не завершено. Запуск игры заблокирован.",
+    ),
     "Game is running or its executable is unavailable": (
         "launch_game_unavailable",
         "Игра уже запущена или её файл недоступен. Закройте игру и проверьте файлы игры.",

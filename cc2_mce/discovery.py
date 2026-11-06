@@ -103,20 +103,25 @@ class Scan:
     def issue_count(self) -> int:
         return len(self.issues)
 
-    def require_available(self, selected: Iterable[str]) -> None:
-        pending = list(selected)
-        checked: set[str] = set()
+    def require_available(
+        self, selected: Iterable[str], *, provided_dependencies: frozenset[str] = frozenset()
+    ) -> None:
+        pending = [(key, False) for key in selected]
+        checked: set[tuple[str, bool]] = set()
         while pending:
-            key = pending.pop()
-            if key in checked:
+            key, dependency = pending.pop()
+            if (key, dependency) in checked:
                 continue
-            checked.add(key)
+            checked.add((key, dependency))
             exact = [mod for mod in self.mods if mod.id == key]
             available = exact or [mod for mod in self.mods if (mod.package_id or mod.id) == key]
             if available:
                 if len(available) == 1:
-                    pending.extend(available[0].dependencies)
+                    pending.extend((required, True) for required in available[0].dependencies)
                 continue  # The normal resolver handles ambiguous versions and runtime provision.
+            if dependency and key in provided_dependencies:
+                # Verified infrastructure supplies a dependency, never an explicit source.
+                continue
             issue = next(
                 (item for item in self.issues if key in {item.source_id, item.package_id}), None
             )

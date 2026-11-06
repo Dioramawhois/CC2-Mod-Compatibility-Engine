@@ -94,7 +94,13 @@ def stage(
     return records
 
 
-def install(user: Path, state_dir: Path, records: list[dict[str, Any]]) -> None:
+def install(
+    user: Path,
+    state_dir: Path,
+    records: list[dict[str, Any]],
+    *,
+    game_running: Callable[[], bool] | None = None,
+) -> None:
     for record in records:
         source = _cache(state_dir, record["cache"])
         data = read_regular(source, state_dir, Budget(Limits()))
@@ -107,6 +113,8 @@ def install(user: Path, state_dir: Path, records: list[dict[str, Any]]) -> None:
         root = input_root(user / "cc2x")
         # Atomic, full-content, no-overwrite publication. The staged inode was
         # journaled first: a crash/race cannot make another writer's file ours.
+        if game_running is not None and game_running():
+            raise InputError("Закройте игру — восстановим незавершённую сборку автоматически.")
         os.link(source, root / _name(record["name"]))
 
 
@@ -117,12 +125,18 @@ def _cache(state_dir: Path, value: str) -> Path:
 
 
 def cleanup(
-    user: Path, state_dir: Path, records: list[dict[str, Any]], *, remove_targets: bool
+    user: Path,
+    state_dir: Path,
+    records: list[dict[str, Any]],
+    *,
+    remove_targets: bool,
+    game_running: Callable[[], bool] | None = None,
 ) -> None:
     for record in records:
         name = _name(record["name"])
         if remove_targets:
             target = user / "cc2x" / name
+            remove_target = False
             try:
                 if target.exists() or target.is_symlink():
                     data = read_regular(target, user, Budget(Limits()))
@@ -131,9 +145,18 @@ def cleanup(
                         record["device"],
                         record["inode"],
                     ):
-                        target.unlink()
+                        remove_target = True
             except (OSError, InputError):
                 pass  # Preserve changed/inaccessible user files; rollback still proceeds.
+            if remove_target:
+                if game_running is not None and game_running():
+                    raise InputError(
+                        "Закройте игру — восстановим незавершённую сборку автоматически."
+                    )
+                try:
+                    target.unlink()
+                except OSError:
+                    pass
         source = _cache(state_dir, record["cache"])
         if source.exists():
             source.unlink()  # Own cache link only; the user settings link survives commit.

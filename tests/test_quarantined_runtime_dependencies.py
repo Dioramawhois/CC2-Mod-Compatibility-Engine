@@ -41,7 +41,7 @@ def prepared(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, broken: str):
     return game, profile, user, scan, candidate
 
 
-@pytest.mark.parametrize("selected", [["consumer"], ["broken-sdk"], ["cc2x.runtime"]])
+@pytest.mark.parametrize("selected", [["broken-sdk"], ["cc2x.runtime"]])
 def test_core_rejects_known_quarantined_runtime_before_builtin_fallback(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, selected: list[str]
 ) -> None:

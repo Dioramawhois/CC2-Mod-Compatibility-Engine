@@ -1,5 +1,6 @@
 import base64
 import json
+import shutil
 import struct
 
 import pytest
@@ -227,3 +228,19 @@ def test_signed_sdk_does_not_approve_an_arbitrary_plugin(signed_sdk):
         user_dir=user,
     )
     assert any(item["code"] == "native_plugin_review_required" for item in plan.blockers)
+
+
+def test_official_update_can_replace_backend_of_an_older_selected_library(signed_sdk):
+    game, profile, user, source, sdk, installed, update = signed_sdk
+    newer, descriptor = update()
+    downloaded = source / "official-downloaded-sdk"
+    shutil.copytree(sdk, downloaded)
+    (downloaded / "content/unselected-gameplay.lua").write_text('error("never enabled")')
+    descriptor.unlink()
+    (sdk / "content/dinput8.dll").write_bytes(installed.read_bytes())
+    plan = prepare(signed_sdk)
+    assert not plan.blockers
+    assert plan.report["runtime_sha256"] == digest(newer)
+    assert plan.report["runtime_provider_source"]["id"] == downloaded.name
+    assert "unselected-gameplay.lua" not in plan.payload
+    assert [mod.id for mod in plan.selected] == ["workshop-sdk"]

@@ -122,27 +122,49 @@ def cached(user: Path, game_sha256: str) -> list[dict[str, Any]]:
 
 
 def select(
-    game_root: Path, chosen: tuple[ModRef, ...], base: dict[str, Any], user: Path
+    game_root: Path,
+    chosen: tuple[ModRef, ...],
+    base: dict[str, Any],
+    user: Path,
+    available: tuple[ModRef, ...] = (),
 ) -> tuple[dict[str, Any], Path | None]:
     profile = copy.deepcopy(base)
+    profile.pop("runtime_provider_source", None)
     game_hash = profile["game_sha256"]
     receipts = cached(user, game_hash)
     sources: dict[str, Path] = {}
-    for mod in chosen:
+    source_records: dict[str, dict[str, str]] = {}
+    required = {mod.id for mod in chosen}
+    candidates = {mod.id: mod for mod in (*available, *chosen)}
+    for mod in candidates.values():
         descriptors = [item for item in mod.files if item.key == DESCRIPTOR]
         if not descriptors:
             continue
-        if mod.package_kind != "library" or mod.package_id != "cc2x.runtime" or mod.sdk != "cc2x":
-            raise InputError("SDK release metadata belongs to a different package")
-        if descriptors[0].size > MAX_MANIFEST:
-            raise InputError("Signed SDK manifest exceeds its bound")
-        envelope = verify(descriptors[0].content, game_hash)
-        binary = next((item for item in mod.files if item.key == "dinput8.dll"), None)
-        if binary is None or binary.size > MAX_RUNTIME:
-            raise InputError("Signed SDK package has no bounded runtime DLL")
-        validate_binary(binary.content, envelope["payload"])
+        try:
+            if (
+                mod.package_kind != "library"
+                or mod.package_id != "cc2x.runtime"
+                or mod.sdk != "cc2x"
+            ):
+                raise InputError("SDK release metadata belongs to a different package")
+            if descriptors[0].size > MAX_MANIFEST:
+                raise InputError("Signed SDK manifest exceeds its bound")
+            envelope = verify(descriptors[0].content, game_hash)
+            binary = next((item for item in mod.files if item.key == "dinput8.dll"), None)
+            if binary is None or binary.size > MAX_RUNTIME:
+                raise InputError("Signed SDK package has no bounded runtime DLL")
+            validate_binary(binary.content, envelope["payload"])
+        except InputError:
+            if mod.id in required:
+                raise
+            continue  # An unselected invalid download cannot reject a working set.
         receipts.append(envelope)
         sources[envelope["payload"]["runtime_sha256"]] = mod.root / "content" / binary.logical_path
+        source_records[envelope["payload"]["runtime_sha256"]] = {
+            "id": mod.id,
+            "sha256": mod.sha256,
+            "runtime_sha256": binary.sha256,
+        }
     installed = game_root / "dinput8.dll"
     installed_hash = None
     if receipts and (installed.exists() or installed.is_symlink()):
@@ -194,7 +216,10 @@ def select(
     profile["previous_runtime_sha256"] = sorted(
         value for value in allowed if value and value != profile.get("runtime_sha256")
     )
-    return profile, sources.get(profile.get("runtime_sha256", ""))
+    provider_hash = profile.get("runtime_sha256", "")
+    if provider_hash in source_records:
+        profile["runtime_provider_source"] = source_records[provider_hash]
+    return profile, sources.get(provider_hash)
 
 
 def remember(user: Path, envelope: dict[str, Any], game_sha256: str) -> None:

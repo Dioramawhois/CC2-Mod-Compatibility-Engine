@@ -17,7 +17,12 @@ ModLoader; a package cannot supply its own trust key. Verify signatures using
 the pinned cryptography dependency, never a custom cryptographic implementation.
 SDK source DLLs are read/hash/PE-checked, never loaded by development utilities.
 
-Only a declared `cc2x.runtime` SDK library can provide the descriptor. A valid
+Only a declared `cc2x.runtime` SDK library can provide the descriptor. A downloaded
+authenticated official SDK can supply the common backend while an older local
+library wrapper stays selected, just as the bundled provider previously did. Its
+source identity/hash is recorded in `runtime_provider_source`; unrelated unselected
+resources and gameplay modules are never enabled. Invalid unselected downloads
+grant no approval and cannot reject the working set. A valid
 newer signed release supplies the effective provider without changing the bundled
 fallback. Preserve the existing exact game identity, resource paths, bounds,
 plugin reviews and syntax gates. This authorizes SDK infrastructure updates,

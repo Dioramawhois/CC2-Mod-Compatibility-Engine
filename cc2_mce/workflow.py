@@ -282,7 +282,7 @@ def analyze(
     provider_error = None
     try:
         profile, provider_source = runtime_providers.select(
-            game.root, chosen, profile, provider_user
+            game.root, chosen, profile, provider_user, available=scan.mods
         )
     except InputError as exc:
         provider_error = str(exc)
@@ -640,6 +640,8 @@ def analyze(
         report["runtime_review"] = profile["runtime_review"]
     if needs_runtime and profile.get("runtime_provider"):
         report["runtime_provider"] = profile["runtime_provider"]
+        if profile.get("runtime_provider_source"):
+            report["runtime_provider_source"] = profile["runtime_provider_source"]
     if config_defaults:
         report["config_defaults"] = [
             {

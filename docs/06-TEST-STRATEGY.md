@@ -1,5 +1,12 @@
 # 06. Стратегия тестирования и Definition of Done
 
+Beta 11 promotes the reviewed SDK provider to the preserved owner-tested
+0.10.0-dev DLL. The profile, bundled dependency and restore lock must agree.
+A pinned upstream snapshot receipt permits retaining its original build record
+only while every compiled source hash still matches. Existing schema-2 reports,
+reversible upgrades and unknown-loader refusal remain unchanged. See
+[ADR-0036](adr/0036-reviewed-carrier-motion-provider.md).
+
 ADR-0035 fixtures cover explicit partial versus default-strict discovery,
 quarantine of ambiguous/unsafe sources, required unavailable dependencies,
 bounded diagnostic export, specific launch summaries and screen-owner/size

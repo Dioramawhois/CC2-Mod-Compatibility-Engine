@@ -18,7 +18,7 @@ The SDK's C/C++ source and compiler-library sources are published separately.
 Recompiling those native components is a separate developer task and is not
 required to build the ModLoader executable from its Python source.
 
-The app pins CC2X SDK **0.8.1-client-beta.1**. Its bundled runtime, source-archive
+The app pins CC2X SDK **0.10.0-dev**. Its bundled runtime, source-archive
 restore lock and native profile must identify the same reviewed DLL. Previous
 runtime hashes permit a journaled upgrade or a known older source package;
 they do not select a different provider or authorize arbitrary new DLL bytes.
@@ -60,7 +60,7 @@ for the same self-build route.
 ### Clone the release tag
 
 ```powershell
-git clone --branch v0.4.0b10 --depth 1 https://github.com/Dioramawhois/CC2-ModLoader.git
+git clone --branch v0.4.0b11 --depth 1 https://github.com/Dioramawhois/CC2-ModLoader.git
 Set-Location CC2-ModLoader
 ```
 
@@ -70,8 +70,8 @@ require initializing Git submodules.
 
 ### Download the release source ZIP
 
-From the [same release page](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b10),
-download **CC2ModLoader-0.4.0b10-source.zip**. Extract it, open its extracted root
+From the [same release page](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b11),
+download **CC2ModLoader-0.4.0b11-source.zip**. Extract it, open its extracted root
 folder, and open PowerShell there. The root contains `pyproject.toml`,
 `build_windows.bat`, `cc2_mce`, `tests` and `tools`.
 
@@ -173,7 +173,7 @@ The file must match the expected reviewed runtime hash; an incompatible or
 unknown file is rejected. These environment variables apply only to the current
 PowerShell session unless you deliberately persist them.
 
-The matching `CC2ModLoader-0.4.0b10-sdk-runtime.zip` can also restore the native
+The matching `CC2ModLoader-0.4.0b11-sdk-runtime.zip` can also restore the native
 dependency: extract its directory structure into the application source root,
 so the files appear under `cc2_mce\runtime_data\<reviewed-hash>\`. Do not put
 the DLL at the application source root or in `tools_data`.
@@ -243,7 +243,7 @@ an existing numbered beta. See [ADR-0027](adr/0027-standalone-exe-and-rolling-be
 The normal application build packages the reviewed SDK DLL; it does not compile
 that C/C++ dependency from its source. If you also want to rebuild the SDK, use
 the corresponding `-sdk-source.zip` and `-sdk-toolchain-sources.zip` assets and
-the [exact SDK source revision](https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/f322938094bf7ea9e30f3be841b3c744687385b8).
+the [exact SDK source revision](https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/50f197b406314c52ac53148bdddd599eeb1a0007).
 The exact native source revision, compiler hash and input hashes are recorded
 in its `dinput8.build.json`.
 

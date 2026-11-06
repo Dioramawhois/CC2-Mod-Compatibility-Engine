@@ -1,5 +1,12 @@
 # 04. Интеграция Carrier Command 2 / CC2X
 
+Beta 11 promotes the reviewed SDK provider to the preserved owner-tested
+0.10.0-dev DLL. The profile, bundled dependency and restore lock must agree.
+A pinned upstream snapshot receipt permits retaining its original build record
+only while every compiled source hash still matches. Existing schema-2 reports,
+reversible upgrades and unknown-loader refusal remain unchanged. See
+[ADR-0036](adr/0036-reviewed-carrier-motion-provider.md).
+
 Beta 10 keeps startup usable when an unselected package fails discovery, with
 explicit source quarantine and diagnostics; it grants no additional DLL or
 path approval. Launch refusals retain their real cause and require revalidation.

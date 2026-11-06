@@ -4,6 +4,18 @@ This file records project history. Historical validation and limitations describ
 that entry's date; use the [README](README.md) and [current guides](docs/README.md)
 for installation, self-build and support information.
 
+## 0.4.0b11 - Windows beta 11 candidate (2026-11-07)
+
+- Promote the reviewed SDK provider to the exact owner-tested 0.10.0-dev DLL for
+  Carrier: Autopilot Waypoints. Synchronize profile, bundled bytes and source
+  restore lock; retain 0.8.1/0.9 as reviewed predecessors for reversible upgrade.
+- Preserve the tested DLL's original build record with a pinned upstream source
+  snapshot receipt and exact compiled-input verification. Reject altered source,
+  mismatched provenance or missing exact-binary acceptance. See ADR-0036.
+- Preserve automatic GUI apply, runtime backups, unknown-loader refusal and all
+  14 language catalogs. SDK gameplay evidence does not certify a new packaged
+  ModLoader game run, clean machine, multiplayer or native macOS runtime.
+
 ## 0.4.0b10 - Windows beta 10 (2026-11-04)
 
 - Keep a committed apply successful when optional settings-cache cleanup raises

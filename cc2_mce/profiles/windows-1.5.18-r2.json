@@ -59,7 +59,7 @@
     "scripts/vr_bindings_oculus_touch.json": "bd4ef597d848300eb029eade0eab1c1d3d88cb8390a85401f91e568fff374341",
     "scripts/vr_bindings_vive_controller.json": "ff0e507562fe7ca7e8d669e2c401956d00bf7d378a5e4af9bf8e3dadf905270f"
   },
-  "runtime_sha256": "98ba9bfbc217767ecc5a30aaa3cd5de8d3d7de1f9e8a9164cd0e0e32a6bed085",
+  "runtime_sha256": "2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5",
   "runtime_api": 8,
   "native_plugins": {
     "60383f2845a5d5dc601f6196fb3716340aa0ca21437052ad1bbd7681b384591d": {
@@ -123,7 +123,9 @@
     "2453ba5a368943812954902685211db497d30d3052939f91d826d0c4883280ba",
     "ce4fc1c883c70af6c40f5431003d17584e9b2becb502ac840d22f73be9d7a7f3",
     "ed27641315e3957e991bb5fb00de8481c4a5ba7432d48a2638dee1d939110ff0",
-    "c741ed111cdb186463c01f6e9e189fb80ee15b43bc52e6bacdd92fe88ee95d12"
+    "c741ed111cdb186463c01f6e9e189fb80ee15b43bc52e6bacdd92fe88ee95d12",
+    "98ba9bfbc217767ecc5a30aaa3cd5de8d3d7de1f9e8a9164cd0e0e32a6bed085",
+    "d83d509dbc0cc8b4f01db26c55bb428fc904186155a492d4f14411f09726f85e"
   ],
   "runtime_capabilities": [
     "independent-lua-v1",
@@ -133,18 +135,26 @@
     "framework-c-api-v1",
     "waypoint-origin-v1",
     "screen-extensions-v1",
-    "screen-source-edits-v1"
+    "screen-source-edits-v1",
+    "carrier-dock-v1",
+    "carrier-recovery-v1",
+    "module-settings-v1",
+    "vehicle-equipment-v1",
+    "tile-sites-v1"
   ],
   "runtime_review": {
     "stage": "client-candidate",
-    "source_commit": "f322938094bf7ea9e30f3be841b3c744687385b8",
-    "runtime_version": "0.8.1-client-beta.1",
-    "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/f322938094bf7ea9e30f3be841b3c744687385b8",
+    "source_commit": "50f197b406314c52ac53148bdddd599eeb1a0007",
+    "runtime_version": "0.10.0-dev",
+    "source_url": "https://github.com/Dioramawhois/Carrier-Command-2-extender/tree/50f197b406314c52ac53148bdddd599eeb1a0007",
     "verified_scope": [
       "screen-extension-offline-contract",
       "unchanged-c-api-prefix",
       "published-binary-source-provenance",
-      "native-offline-regressions"
+      "native-offline-regressions",
+      "ordinary-game-owner-navigation-acceptance",
+      "modloader-combined-revolution-launch",
+      "preserved-tested-artifact-source-snapshot"
     ],
     "unverified_scope": [
       "full-gameplay",
@@ -157,7 +167,9 @@
     ],
     "multiplayer_verified": false,
     "dedicated_verified": false,
-    "evidence_log_sha256": "9bbb31e8ea00b6c8bf01b25be18aa514185326e515b5a6bca2a6b503675d4678"
+    "evidence_log_sha256": "c872f0d172d584d9144d744c8e69853c044c40339da7243445dc6f510bddc90c",
+    "source_snapshot_manifest_sha256": "d616d66796bde898fd1e7ef2af72a86e40a1542f6a8211a88246de252ba62ae7",
+    "evidence_kind": "SDK native offline suite; scoped ordinary-game acceptance is in the pinned SDK release manifest"
   },
   "runtime_lua_api": 2,
   "runtime_framework_api": 1

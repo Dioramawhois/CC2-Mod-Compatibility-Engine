@@ -22,8 +22,8 @@ this Windows release. See [compatibility and verification](COMPATIBILITY.md).
 Download [**CC2ModLoader.exe — latest Windows beta**](https://github.com/Dioramawhois/CC2-ModLoader/releases/download/latest-beta/CC2ModLoader.exe)
 directly. This permanent link is updated when a newer beta is published.
 
-Alternatively, open the [0.4.0 beta 10 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b10)
-and download **CC2ModLoader-0.4.0b10-windows-x64.zip** for the complete package with
+Alternatively, open the [0.4.0 beta 11 release](https://github.com/Dioramawhois/CC2-ModLoader/releases/tag/v0.4.0b11)
+and download **CC2ModLoader-0.4.0b11-windows-x64.zip** for the complete package with
 its README, notices and metadata.
 
 Choose the EXE or Windows ZIP for this route. GitHub's automatic **Source code** links

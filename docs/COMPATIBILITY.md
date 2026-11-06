@@ -1,6 +1,6 @@
 # Compatibility and verification
 
-CC2 ModLoader 0.4.0 beta 10 is a Windows x64 desktop beta. A successful file
+CC2 ModLoader 0.4.0 beta 11 is a Windows x64 desktop beta. A successful file
 merge is useful evidence about files; it does not establish gameplay compatibility.
 
 Beta 8 changes bounded resource discovery/reading to fix large-collection
@@ -47,15 +47,15 @@ The equivalent discovery path on macOS is
 
 ## Current native dependency
 
-The pinned [SDK release](https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/tag/0.8.1-client-beta.1)
+The pinned [SDK release](https://github.com/Dioramawhois/Carrier-Command-2-extender/releases/tag/0.10.0-dev)
 and the ModLoader release metadata identify the current dependency:
 
 | Identity | Value |
 | --- | --- |
-| Runtime version | `0.8.1-client-beta.1` |
-| DLL SHA-256 | `98ba9bfbc217767ecc5a30aaa3cd5de8d3d7de1f9e8a9164cd0e0e32a6bed085` |
-| Source revision | `f322938094bf7ea9e30f3be841b3c744687385b8` |
-| Added reviewed capabilities | `waypoint-origin-v1`, `screen-source-edits-v1` |
+| Runtime version | `0.10.0-dev` |
+| DLL SHA-256 | `2e799fd21ee3571b7d316cf0f25e7649e55b52a2777b2dc0bb84751018dc7ad5` |
+| Source revision | `50f197b406314c52ac53148bdddd599eeb1a0007` |
+| APIs | C 8 / Lua 2 / framework 1, with optional docking, recovery, settings, equipment and carrier motion |
 
 The reviewed 0.7.1 runtime (`c741ed11…`) remains a previous version eligible for
 the journaled upgrade. It is not the new provider, and recognizing it does not
@@ -99,3 +99,7 @@ the exact version and hashes. Numbered release tags and original archives stay f
 For redistribution, retain the complete ZIP's notices and corresponding source
 materials. See [NOTICE.md](../NOTICE.md), [Building from source](BUILDING.md),
 [Contributing](../CONTRIBUTING.md) and [Security](../SECURITY.md).
+
+Beta 11 candidate pins SDK 0.10.0-dev for Carrier: Autopilot Waypoints. Its
+ordinary-game owner acceptance is scoped to the SDK/mod pair and does not certify
+a new frozen ModLoader game run. See ADR-0036 for exact hashes and provenance.
